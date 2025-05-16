@@ -1,25 +1,45 @@
 import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { ThemeProvider } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import theme from './theme/theme';
+import MainLayout from './components/layout/MainLayout';
+
+// Pages
+import HomePage from './components/home/HomePage';
+import HealthRecordsPage from './components/health-records/HealthRecordsPage';
+import MedicationPage from './components/medication/MedicationPage';
+import MedicalEventsPage from './components/medical-events/MedicalEventsPage';
+import VaccinationPage from './components/vaccination/VaccinationPage';
+import HealthCheckPage from './components/health-check/HealthCheckPage';
+import DashboardPage from './components/dashboard/DashboardPage';
+import UserProfilePage from './components/user/UserProfilePage';
+import AdminPage from './components/admin/AdminPage';
+import LoginPage from './components/user/LoginPage';
+import RegisterPage from './components/user/RegisterPage';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Router>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/" element={<MainLayout />}>
+            <Route index element={<HomePage />} />
+            <Route path="health-records" element={<HealthRecordsPage />} />
+            <Route path="medication" element={<MedicationPage />} />
+            <Route path="medical-events" element={<MedicalEventsPage />} />
+            <Route path="vaccination" element={<VaccinationPage />} />
+            <Route path="health-check" element={<HealthCheckPage />} />
+            <Route path="dashboard" element={<DashboardPage />} />
+            <Route path="profile" element={<UserProfilePage />} />
+            <Route path="admin" element={<AdminPage />} />
+          </Route>
+        </Routes>
+      </Router>
+    </ThemeProvider>
   );
 }
 
