@@ -1,4 +1,10 @@
-export type Role = 'admin' | 'manager' | 'nurse' | 'teacher' | 'parent' | 'student';
+export type Role =
+  | "admin"
+  | "manager"
+  | "nurse"
+  | "teacher"
+  | "parent"
+  | "student";
 
 export interface User {
   id: string;
@@ -18,7 +24,7 @@ export interface Student {
   firstName: string;
   lastName: string;
   dateOfBirth: Date;
-  gender: 'male' | 'female' | 'other';
+  gender: "male" | "female" | "other";
   grade: string;
   class: string;
   parentId: string;
@@ -33,7 +39,7 @@ export interface HealthRecord {
   studentId: string;
   height: number; // in cm
   weight: number; // in kg
-  bloodType?: 'A+' | 'A-' | 'B+' | 'B-' | 'AB+' | 'AB-' | 'O+' | 'O-';
+  bloodType?: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-";
   allergies: Allergy[];
   chronicConditions: ChronicCondition[];
   visionAssessment?: VisionAssessment;
@@ -46,7 +52,7 @@ export interface HealthRecord {
 export interface Allergy {
   id: string;
   name: string;
-  severity: 'mild' | 'moderate' | 'severe';
+  severity: "mild" | "moderate" | "severe";
   symptoms: string;
   treatment: string;
   dateIdentified: Date;
@@ -72,8 +78,8 @@ export interface VisionAssessment {
 export interface HearingAssessment {
   id: string;
   date: Date;
-  leftEar: 'normal' | 'mild loss' | 'moderate loss' | 'severe loss';
-  rightEar: 'normal' | 'mild loss' | 'moderate loss' | 'severe loss';
+  leftEar: "normal" | "mild loss" | "moderate loss" | "severe loss";
+  rightEar: "normal" | "mild loss" | "moderate loss" | "severe loss";
   notes?: string;
 }
 
@@ -118,12 +124,12 @@ export interface MedicalEvent {
   id: string;
   studentId: string;
   date: Date;
-  type: 'injury' | 'illness' | 'emergency' | 'other';
+  type: "injury" | "illness" | "emergency" | "other";
   description: string;
   symptoms: string[];
   treatment: string;
   medicationsGiven: MedicationGiven[];
-  outcome: 'resolved' | 'referred' | 'sent home' | 'hospitalized';
+  outcome: "resolved" | "referred" | "sent home" | "hospitalized";
   attendedBy: string;
   notifiedParent: boolean;
   notifiedAt?: Date;
@@ -142,10 +148,10 @@ export interface MedicationGiven {
 
 export interface HealthCheckup {
   id: string;
-  type: 'routine' | 'specialized' | 'follow-up';
+  type: "routine" | "specialized" | "follow-up";
   schoolYear: string;
   scheduledDate: Date;
-  status: 'scheduled' | 'completed' | 'cancelled';
+  status: "scheduled" | "completed" | "cancelled";
   students: StudentCheckup[];
   conductor: string;
   notes?: string;
@@ -179,7 +185,7 @@ export interface VaccinationProgram {
   targetGrades: string[];
   scheduledDate: Date;
   consentDeadline: Date;
-  status: 'planned' | 'consent_collection' | 'in_progress' | 'completed';
+  status: "planned" | "consent_collection" | "in_progress" | "completed";
   students: StudentVaccination[];
   notes?: string;
 }
@@ -203,7 +209,7 @@ export interface StudentVaccination {
 export interface MedicalSupply {
   id: string;
   name: string;
-  category: 'medication' | 'first aid' | 'equipment' | 'other';
+  category: "medication" | "first aid" | "equipment" | "other";
   quantity: number;
   unit: string;
   expiryDate?: Date;
@@ -216,11 +222,43 @@ export interface MedicalSupply {
 export interface MedicalSupplyTransaction {
   id: string;
   supplyId: string;
-  type: 'restock' | 'use' | 'disposal';
+  type: "restock" | "use" | "disposal";
   quantity: number;
   date: Date;
   performedBy: string;
   reason?: string;
   eventId?: string;
   notes?: string;
-} 
+}
+
+export interface MedicationRequest {
+  id: string;
+  studentId: string;
+  studentName: string;
+  parentId: string;
+  medicationName: string;
+  dosage: string;
+  instructions: string;
+  daysRequired: number;
+  startDate: Date;
+  endDate: Date;
+  status: "requested" | "received" | "completed" | "cancelled";
+  receivedBy?: string;
+  receivedAt?: Date;
+  notes?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface MedicationLog {
+  id: string;
+  medicationRequestId: string;
+  studentId: string;
+  medicationName: string;
+  administeredAt: Date;
+  administeredBy: string;
+  dosage: string;
+  studentConditionBefore?: string;
+  studentConditionAfter?: string;
+  notes?: string;
+}
