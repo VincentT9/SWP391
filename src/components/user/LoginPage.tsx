@@ -1,30 +1,26 @@
 import React, { useState } from 'react';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import {
-  Avatar,
   Button,
   TextField,
   FormControlLabel,
   Checkbox,
-  Link,
-  Paper,
   Box,
-  Grid,
   Typography,
   Container,
   InputAdornment,
   IconButton,
-  Alert
+  Alert,
+  Paper
 } from '@mui/material';
 import {
-  LockOutlined as LockOutlinedIcon,
   Visibility,
   VisibilityOff
 } from '@mui/icons-material';
 import { useForm, Controller } from 'react-hook-form';
 
 type FormData = {
-  email: string;
+  username: string;
   password: string;
   remember: boolean;
 };
@@ -36,22 +32,20 @@ const LoginPage = () => {
 
   const { control, handleSubmit, formState: { errors } } = useForm<FormData>({
     defaultValues: {
-      email: '',
+      username: '',
       password: '',
       remember: false
     }
   });
 
   const onSubmit = (data: FormData) => {
-    // In a real application, this would make a call to the authentication API
     console.log('Login form submitted:', data);
 
-    // For demonstration, we'll simulate a successful login for specific credentials
-    if (data.email === 'admin@example.com' && data.password === 'password') {
-      // Navigate to home page after successful login
+    // Simulate login validation
+    if (data.username === 'admin' && data.password === 'password') {
       navigate('/');
     } else {
-      setLoginError('Email hoặc mật khẩu không đúng. Vui lòng thử lại.');
+      setLoginError('Tên truy cập hoặc mật khẩu không đúng. Vui lòng thử lại.');
     }
   };
 
@@ -60,74 +54,90 @@ const LoginPage = () => {
   };
 
   return (
-    <Container component="main" maxWidth="xs">
-      <Box
+    <Box
+      sx={{
+        height: '100vh',
+        width: '100vw',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundImage: 'url(https://musical-indigo-mongoose.myfilebase.com/ipfs/Qme1KPa7qkgoWKaacDmnFcDWw5znEm3QRUK7EiijmQrS4L)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
+    >
+      <Paper
+        elevation={3}
         sx={{
-          marginTop: 8,
+          width: 400,
+          padding: 4,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
+          backgroundColor: '#0066b3',
+          color: 'white',
         }}
       >
-        <Avatar sx={{ m: 1, bgcolor: 'primary.main' }}>
-          <LockOutlinedIcon />
-        </Avatar>
-        <Typography component="h1" variant="h5">
-          Đăng nhập
-        </Typography>
-        <Box component="form" onSubmit={handleSubmit(onSubmit)} sx={{ mt: 1, width: '100%' }}>
+        <Box sx={{ mb: 4 }}>
+          <img src="https://musical-indigo-mongoose.myfilebase.com/ipfs/QmPfdMNtJhcNfztJtxK88SXCrqWm54KuSWHKBW4TNhPr3x" alt="FPTMED" width="200" />
+        </Box>
+
+        <Box component="form" onSubmit={handleSubmit(onSubmit)} sx={{ width: '100%' }}>
           {loginError && (
             <Alert severity="error" sx={{ mb: 2 }}>
               {loginError}
             </Alert>
           )}
+          
+          <Typography sx={{ mb: 1 }}>Tên truy cập:</Typography>
           <Controller
-            name="email"
+            name="username"
             control={control}
             rules={{
-              required: 'Email là bắt buộc',
-              pattern: {
-                value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                message: 'Email không hợp lệ',
-              },
+              required: 'Tên truy cập là bắt buộc',
             }}
             render={({ field }) => (
               <TextField
                 {...field}
-                margin="normal"
-                required
                 fullWidth
-                id="email"
-                label="Email"
-                autoComplete="email"
-                autoFocus
-                error={!!errors.email}
-                helperText={errors.email?.message}
+                id="username"
+                placeholder="Tên truy cập"
+                variant="outlined"
+                error={!!errors.username}
+                helperText={errors.username?.message}
+                sx={{ 
+                  mb: 2,
+                  backgroundColor: 'white',
+                  borderRadius: 1,
+                  '& .MuiOutlinedInput-notchedOutline': { border: 'none' }
+                }}
               />
             )}
           />
+          
+          <Typography sx={{ mb: 1 }}>Mật khẩu:</Typography>
           <Controller
             name="password"
             control={control}
             rules={{
               required: 'Mật khẩu là bắt buộc',
-              minLength: {
-                value: 6,
-                message: 'Mật khẩu phải có ít nhất 6 ký tự',
-              },
             }}
             render={({ field }) => (
               <TextField
                 {...field}
-                margin="normal"
-                required
                 fullWidth
-                label="Mật khẩu"
                 type={showPassword ? 'text' : 'password'}
                 id="password"
-                autoComplete="current-password"
+                placeholder="Mật khẩu"
+                variant="outlined"
                 error={!!errors.password}
                 helperText={errors.password?.message}
+                sx={{ 
+                  mb: 2,
+                  backgroundColor: 'white',
+                  borderRadius: 1,
+                  '& .MuiOutlinedInput-notchedOutline': { border: 'none' }
+                }}
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
@@ -144,45 +154,60 @@ const LoginPage = () => {
               />
             )}
           />
-          <Controller
-            name="remember"
-            control={control}
-            render={({ field }) => (
-              <FormControlLabel
-                control={<Checkbox {...field} color="primary" />}
-                label="Ghi nhớ đăng nhập"
-              />
-            )}
-          />
+          
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Controller
+              name="remember"
+              control={control}
+              render={({ field }) => (
+                <FormControlLabel
+                  control={
+                    <Checkbox 
+                      {...field} 
+                      sx={{ 
+                        color: 'white',
+                        '&.Mui-checked': {
+                          color: 'white',
+                        },
+                      }} 
+                    />
+                  }
+                  label="Lưu thông tin"
+                  sx={{ color: 'white' }}
+                />
+              )}
+            />
+            <RouterLink to="/forgot-password" style={{ color: 'white', textDecoration: 'none' }}>
+              Quên mật khẩu
+            </RouterLink>
+          </Box>
+          
           <Button
             type="submit"
             fullWidth
             variant="contained"
-            sx={{ mt: 3, mb: 2 }}
+            sx={{ 
+              mt: 1, 
+              mb: 2, 
+              py: 1.5,
+              backgroundColor: '#75c043',
+              '&:hover': {
+                backgroundColor: '#65b033',
+              }
+            }}
           >
             Đăng nhập
           </Button>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-            <Box>
-              <Link component={RouterLink} to="#" variant="body2">
-                Quên mật khẩu?
-              </Link>
-            </Box>
-            <Box>
-              <Link component={RouterLink} to="/register" variant="body2">
-                {"Chưa có tài khoản? Đăng ký"}
-              </Link>
-            </Box>
+          
+          <Box sx={{ textAlign: 'center' }}>
+            <Typography variant="body2" color="white">
+              Không có tài khoản? <RouterLink to="/register" style={{ color: 'yellow', textDecoration: 'none' }}>Đăng ký</RouterLink>
+            </Typography>
           </Box>
         </Box>
-      </Box>
-      <Box sx={{ mt: 8, mb: 4, textAlign: 'center' }}>
-        <Typography variant="body2" color="text.secondary">
-          © {new Date().getFullYear()} Hệ thống quản lý y tế học đường
-        </Typography>
-      </Box>
-    </Container>
+      </Paper>
+    </Box>
   );
 };
 
-export default LoginPage; 
+export default LoginPage;

@@ -9,7 +9,7 @@ import {
   Link,
   Box,
   Typography,
-  Container,
+  Paper,
   MenuItem,
   InputAdornment,
   IconButton,
@@ -24,6 +24,8 @@ import {
   VisibilityOff,
 } from '@mui/icons-material';
 import { useForm, Controller } from 'react-hook-form';
+// Import the background image if you're using the import method
+// import bgImage from '../../assets/Picture2.png';
 
 type FormData = {
   firstName: string;
@@ -39,9 +41,8 @@ type FormData = {
 
 const roles = [
   { value: 'parent', label: 'Phụ huynh' },
-  { value: 'nurse', label: 'Nhân viên y tế' },
-  { value: 'teacher', label: 'Giáo viên' },
-  { value: 'manager', label: 'Quản lý' },
+  { value: 'nurse', label: 'Y tá' },
+  { value: 'student', label: 'Học sinh' },
 ];
 
 const steps = ['Thông tin tài khoản', 'Thông tin cá nhân', 'Xác nhận'];
@@ -101,23 +102,59 @@ const RegisterPage = () => {
   };
 
   return (
-    <Container component="main" maxWidth="sm">
-      <Box
+    <Box
+      sx={{
+        height: '100vh',
+        width: '100vw',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundImage: 'url(https://musical-indigo-mongoose.myfilebase.com/ipfs/Qme1KPa7qkgoWKaacDmnFcDWw5znEm3QRUK7EiijmQrS4L)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
+    >
+      <Paper
+        elevation={3}
         sx={{
-          marginTop: 8,
+          width: 600,
+          padding: 4,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
+          backgroundColor: '#0066b3',
+          color: 'white',
+          maxHeight: '90vh',
+          overflowY: 'auto',
         }}
       >
         <Avatar sx={{ m: 1, bgcolor: 'secondary.main' }}>
           <PersonAddIcon />
         </Avatar>
-        <Typography component="h1" variant="h5">
+        <Typography component="h1" variant="h5" sx={{ color: 'white' }}>
           Đăng ký tài khoản
         </Typography>
         
-        <Stepper activeStep={activeStep} sx={{ width: '100%', mt: 3, mb: 4 }}>
+        <Stepper 
+          activeStep={activeStep} 
+          sx={{ 
+            width: '100%', 
+            mt: 3, 
+            mb: 4,
+            '& .MuiStepLabel-label': {
+              color: 'white',
+            },
+            '& .MuiStepIcon-root': {
+              color: '#75c043',
+            },
+            '& .MuiStepIcon-root.Mui-active': {
+              color: 'yellow',
+            },
+            '& .MuiStepIcon-root.Mui-completed': {
+              color: 'white',
+            }
+          }}
+        >
           {steps.map((label) => (
             <Step key={label}>
               <StepLabel>{label}</StepLabel>
@@ -136,6 +173,7 @@ const RegisterPage = () => {
             <>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
                 <Box sx={{ flexBasis: { xs: '100%', sm: 'calc(50% - 8px)' } }}>
+                  <Typography sx={{ mb: 1, color: 'white' }}>Họ:</Typography>
                   <Controller
                     name="firstName"
                     control={control}
@@ -147,15 +185,23 @@ const RegisterPage = () => {
                         required
                         fullWidth
                         id="firstName"
-                        label="Họ"
+                        placeholder="Họ"
                         autoFocus
                         error={!!errors.firstName}
                         helperText={errors.firstName?.message}
+                        sx={{ 
+                          mb: 2,
+                          backgroundColor: 'white',
+                          borderRadius: 1,
+                          '& .MuiOutlinedInput-notchedOutline': { border: 'none' }
+                        }}
+                        variant="outlined"
                       />
                     )}
                   />
                 </Box>
                 <Box sx={{ flexBasis: { xs: '100%', sm: 'calc(50% - 8px)' } }}>
+                  <Typography sx={{ mb: 1, color: 'white' }}>Tên:</Typography>
                   <Controller
                     name="lastName"
                     control={control}
@@ -166,15 +212,23 @@ const RegisterPage = () => {
                         required
                         fullWidth
                         id="lastName"
-                        label="Tên"
+                        placeholder="Tên"
                         autoComplete="family-name"
                         error={!!errors.lastName}
                         helperText={errors.lastName?.message}
+                        sx={{ 
+                          mb: 2,
+                          backgroundColor: 'white',
+                          borderRadius: 1,
+                          '& .MuiOutlinedInput-notchedOutline': { border: 'none' }
+                        }}
+                        variant="outlined"
                       />
                     )}
                   />
                 </Box>
                 <Box sx={{ width: '100%' }}>
+                  <Typography sx={{ mb: 1, color: 'white' }}>Email:</Typography>
                   <Controller
                     name="email"
                     control={control}
@@ -191,15 +245,23 @@ const RegisterPage = () => {
                         required
                         fullWidth
                         id="email"
-                        label="Email"
+                        placeholder="Email"
                         autoComplete="email"
                         error={!!errors.email}
                         helperText={errors.email?.message}
+                        sx={{ 
+                          mb: 2,
+                          backgroundColor: 'white',
+                          borderRadius: 1,
+                          '& .MuiOutlinedInput-notchedOutline': { border: 'none' }
+                        }}
+                        variant="outlined"
                       />
                     )}
                   />
                 </Box>
                 <Box sx={{ width: '100%' }}>
+                  <Typography sx={{ mb: 1, color: 'white' }}>Mật khẩu:</Typography>
                   <Controller
                     name="password"
                     control={control}
@@ -215,12 +277,19 @@ const RegisterPage = () => {
                         {...field}
                         required
                         fullWidth
-                        label="Mật khẩu"
+                        placeholder="Mật khẩu"
                         type={showPassword ? 'text' : 'password'}
                         id="password"
                         autoComplete="new-password"
                         error={!!errors.password}
                         helperText={errors.password?.message}
+                        sx={{ 
+                          mb: 2,
+                          backgroundColor: 'white',
+                          borderRadius: 1,
+                          '& .MuiOutlinedInput-notchedOutline': { border: 'none' }
+                        }}
+                        variant="outlined"
                         InputProps={{
                           endAdornment: (
                             <InputAdornment position="end">
@@ -239,6 +308,7 @@ const RegisterPage = () => {
                   />
                 </Box>
                 <Box sx={{ width: '100%' }}>
+                  <Typography sx={{ mb: 1, color: 'white' }}>Xác nhận mật khẩu:</Typography>
                   <Controller
                     name="confirmPassword"
                     control={control}
@@ -251,11 +321,18 @@ const RegisterPage = () => {
                         {...field}
                         required
                         fullWidth
-                        label="Xác nhận mật khẩu"
+                        placeholder="Xác nhận mật khẩu"
                         type={showConfirmPassword ? 'text' : 'password'}
                         id="confirmPassword"
                         error={!!errors.confirmPassword}
                         helperText={errors.confirmPassword?.message}
+                        sx={{ 
+                          mb: 2,
+                          backgroundColor: 'white',
+                          borderRadius: 1,
+                          '& .MuiOutlinedInput-notchedOutline': { border: 'none' }
+                        }}
+                        variant="outlined"
                         InputProps={{
                           endAdornment: (
                             <InputAdornment position="end">
@@ -281,6 +358,7 @@ const RegisterPage = () => {
             <>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
                 <Box sx={{ width: '100%' }}>
+                  <Typography sx={{ mb: 1, color: 'white' }}>Vai trò:</Typography>
                   <Controller
                     name="role"
                     control={control}
@@ -290,9 +368,16 @@ const RegisterPage = () => {
                         {...field}
                         select
                         fullWidth
-                        label="Vai trò"
+                        placeholder="Vai trò"
                         error={!!errors.role}
                         helperText={errors.role?.message}
+                        sx={{ 
+                          mb: 2,
+                          backgroundColor: 'white',
+                          borderRadius: 1,
+                          '& .MuiOutlinedInput-notchedOutline': { border: 'none' }
+                        }}
+                        variant="outlined"
                       >
                         {roles.map((option) => (
                           <MenuItem key={option.value} value={option.value}>
@@ -304,6 +389,7 @@ const RegisterPage = () => {
                   />
                 </Box>
                 <Box sx={{ width: '100%' }}>
+                  <Typography sx={{ mb: 1, color: 'white' }}>Số điện thoại:</Typography>
                   <Controller
                     name="phone"
                     control={control}
@@ -319,15 +405,23 @@ const RegisterPage = () => {
                         {...field}
                         required
                         fullWidth
-                        label="Số điện thoại"
+                        placeholder="Số điện thoại"
                         autoComplete="tel"
                         error={!!errors.phone}
                         helperText={errors.phone?.message}
+                        sx={{ 
+                          mb: 2,
+                          backgroundColor: 'white',
+                          borderRadius: 1,
+                          '& .MuiOutlinedInput-notchedOutline': { border: 'none' }
+                        }}
+                        variant="outlined"
                       />
                     )}
                   />
                 </Box>
                 <Box sx={{ width: '100%' }}>
+                  <Typography sx={{ mb: 1, color: 'white' }}>Địa chỉ:</Typography>
                   <Controller
                     name="address"
                     control={control}
@@ -337,11 +431,18 @@ const RegisterPage = () => {
                         {...field}
                         required
                         fullWidth
-                        label="Địa chỉ"
+                        placeholder="Địa chỉ"
                         multiline
                         rows={3}
                         error={!!errors.address}
                         helperText={errors.address?.message}
+                        sx={{ 
+                          mb: 2,
+                          backgroundColor: 'white',
+                          borderRadius: 1,
+                          '& .MuiOutlinedInput-notchedOutline': { border: 'none' }
+                        }}
+                        variant="outlined"
                       />
                     )}
                   />
@@ -352,10 +453,10 @@ const RegisterPage = () => {
 
           {activeStep === 2 && (
             <>
-              <Typography variant="h6" gutterBottom>
+              <Typography variant="h6" gutterBottom sx={{ color: 'white' }}>
                 Xác nhận thông tin
               </Typography>
-              <Typography variant="body1" paragraph>
+              <Typography variant="body1" paragraph sx={{ color: 'white' }}>
                 Vui lòng kiểm tra lại thông tin đăng ký trước khi hoàn tất.
               </Typography>
               <Controller
@@ -367,11 +468,17 @@ const RegisterPage = () => {
                     control={
                       <Checkbox
                         {...field}
-                        color="primary"
+                        sx={{ 
+                          color: 'white',
+                          '&.Mui-checked': {
+                            color: 'white',
+                          },
+                        }}
                         checked={field.value}
                       />
                     }
                     label="Tôi đồng ý với các điều khoản và chính sách bảo mật"
+                    sx={{ color: 'white' }}
                   />
                 )}
               />
@@ -388,13 +495,26 @@ const RegisterPage = () => {
               disabled={activeStep === 0}
               onClick={handleBack}
               variant="outlined"
+              sx={{ 
+                color: 'white',
+                borderColor: 'white',
+                '&:hover': {
+                  borderColor: 'white',
+                  backgroundColor: 'rgba(255,255,255,0.1)',
+                }
+              }}
             >
               Quay lại
             </Button>
             <Button
               type="submit"
               variant="contained"
-              color="primary"
+              sx={{ 
+                backgroundColor: '#75c043',
+                '&:hover': {
+                  backgroundColor: '#65b033',
+                }
+              }}
             >
               {activeStep === steps.length - 1 ? 'Đăng ký' : 'Tiếp theo'}
             </Button>
@@ -403,21 +523,16 @@ const RegisterPage = () => {
           {activeStep === 0 && (
             <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
               <Box>
-                <Link component={RouterLink} to="/login" variant="body2">
+                <Link component={RouterLink} to="/login" variant="body2" sx={{ color: 'yellow' }}>
                   Đã có tài khoản? Đăng nhập
                 </Link>
               </Box>
             </Box>
           )}
         </Box>
-      </Box>
-      <Box sx={{ mt: 5, mb: 4, textAlign: 'center' }}>
-        <Typography variant="body2" color="text.secondary">
-          © {new Date().getFullYear()} Hệ thống quản lý y tế học đường
-        </Typography>
-      </Box>
-    </Container>
+      </Paper>
+    </Box>
   );
 };
 
-export default RegisterPage; 
+export default RegisterPage;
