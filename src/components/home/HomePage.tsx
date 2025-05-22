@@ -21,11 +21,11 @@ import {
 
 // This would normally come from the API
 const schoolInfo = {
-  name: 'Trường THCS Nguyễn Huệ',
+  name: 'Trường THPT  Fschool',
   address: '123 Đường Lê Lợi, Quận 1, TP. Hồ Chí Minh',
   phone: '(028) 3822 XXXX',
-  email: 'info@nguyenhue.edu.vn',
-  description: 'Trường THCS Nguyễn Huệ là một trong những trường có chất lượng giáo dục hàng đầu tại TP. Hồ Chí Minh. Trường luôn đặt sức khỏe của học sinh lên hàng đầu với đội ngũ y tế chuyên nghiệp và trang thiết bị hiện đại.',
+  email: 'info@fpt.edu.vn',
+  description: 'Trường Fschool là một trong những trường có chất lượng giáo dục hàng đầu tại Việt Nam. Trường luôn đặt sự phát triển toàn diện của học sinh lên hàng đầu với chương trình học hiện đại, đội ngũ giáo viên tận tâm, và cơ sở vật chất tiên tiến.',
   features: [
     {
       title: 'Phòng y tế hiện đại',
