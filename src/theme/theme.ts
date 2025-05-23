@@ -27,8 +27,8 @@ const theme = createTheme({
       main: '#4caf50',
     },
     background: {
-      default: '#f5f5f5',
-      paper: '#ffffff',
+      default: '#f5f5f5',  // Light gray background
+      paper: '#ffffff',    // White for cards and containers
     },
   },
   typography: {
@@ -64,6 +64,14 @@ const theme = createTheme({
     },
   },
   components: {
+    MuiCssBaseline: {
+      styleOverrides: {
+        body: {
+          backgroundColor: '#f5f5f5',
+          backgroundImage: 'none',
+        },
+      },
+    },
     MuiButton: {
       styleOverrides: {
         root: {
@@ -78,6 +86,7 @@ const theme = createTheme({
         root: {
           borderRadius: 8,
           boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
+          backgroundColor: '#ffffff',
         },
       },
     },
