@@ -52,10 +52,10 @@ interface MenuItem {
 const menuItems: MenuItem[] = [
   { text: 'Trang chủ', path: '/', icon: <HomeIcon /> },
   { text: 'Hồ sơ sức khỏe', path: '/health-records', icon: <MedicalServicesIcon />, role: ['student']},
-  { text: 'Học sinh', path: '/Students', icon: <MedicalServicesIcon />, role: ['nurse', 'parent']},
-  { text: 'Dịch vụ y tế', path: '/medication-services', icon: <MedicationIcon />, role: ['nurse', 'parent', 'admin'] },
+  { text: 'Học sinh', path: '/health-records', icon: <MedicalServicesIcon />, role: ['nurse', 'parent']},
+  { text: 'Dịch vụ y tế', path: '/medication', icon: <MedicationIcon />, role: ['nurse', 'parent', 'admin'] },
   { text: 'Sự kiện y tế', path: '/medical-events', icon: <EventIcon /> },
-  { text: 'Vật tư Y tế', path: '/Storage', icon: <MedicalServicesIcon />, role: ['nurse', 'admin']},
+  { text: 'Vật tư Y tế', path: '/dashboard', icon: <MedicalServicesIcon />, role: ['nurse', 'admin']},
   { text: 'Quản lí tài khoản', path: '/admin', icon: <SettingsIcon />, role: ['admin'] },
 ];
 
@@ -68,7 +68,7 @@ const MainLayout = () => {
   const [user] = useState({
     isAuthenticated: true,
     name: 'luanpro',
-    role: 'parent',
+    role: 'student',
     avatar: '',
   });
 
