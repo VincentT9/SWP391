@@ -1,47 +1,43 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Container, Typography, Box, Alert } from "@mui/material";
 import ParentMedicationDashboard from "./parent/ParentMedicationDashboard";
 import NurseMedicationDashboard from "./nurse/NurseMedicationDashboard";
-
-// In a real app, this would come from authentication context
-const mockUserRole = "nurse"; // Change to 'nurse' to see the nurse view
-const mockUserId = "5"; // Parent ID or Nurse ID
-const getMockUserName = (role: string) => {
-  switch (role) {
-    case 'parent':
-      return 'Trần Văn Phụ Huynh';
-    case 'nurse':
-      return 'Nguyễn Thị Y Tá';
-    case 'admin':
-      return 'Lê Văn Quản Trị';
-    case 'student':
-      return 'Phạm Học Sinh';
-    default:
-      return 'Người dùng';
-  }
-};
-
-const mockUserName = getMockUserName(mockUserRole);
+import { useAuth } from '../auth/AuthContext';
 
 const MedicationPage: React.FC = () => {
-  const [userRole, setUserRole] = useState<string | null>(null);
-
-  // In a real app, this would use React context or Redux for auth state
-  useEffect(() => {
-    // Simulate getting user role from auth system
-    setUserRole(mockUserRole);
-  }, []);
+  const { user } = useAuth();
 
   const renderDashboardByRole = () => {
-    switch (userRole) {
+    if (!user?.isAuthenticated) {
+      return (
+        <Alert severity="error">
+          Bạn cần đăng nhập để truy cập chức năng này.
+        </Alert>
+      );
+    }
+
+    switch (user.role) {
       case "parent":
-        return <ParentMedicationDashboard parentId={mockUserId} />;
+        return <ParentMedicationDashboard parentId={user.id} />;
       case "nurse":
         return (
           <NurseMedicationDashboard
-            nurseId={mockUserId}
-            nurseName={mockUserName}
+            nurseId={user.id}
+            nurseName={user.name}
           />
+        );
+      case "admin":
+        return (
+          <NurseMedicationDashboard
+            nurseId={user.id}
+            nurseName={user.name}
+          />
+        );
+      case "student":
+        return (
+          <Alert severity="info">
+            Học sinh không có quyền quản lý thuốc. Vui lòng liên hệ y tá hoặc phụ huynh.
+          </Alert>
         );
       default:
         return (
@@ -52,14 +48,20 @@ const MedicationPage: React.FC = () => {
     }
   };
 
+  if (!user) {
+    return (
+      <Container maxWidth="lg">
+        <Box sx={{ my: 4 }}>
+          <Typography variant="body1">Đang tải thông tin người dùng...</Typography>
+        </Box>
+      </Container>
+    );
+  }
+
   return (
     <Container maxWidth="lg">
       <Box sx={{ my: 4 }}>
-        {userRole ? (
-          renderDashboardByRole()
-        ) : (
-          <Typography variant="body1">Đang tải...</Typography>
-        )}
+        {renderDashboardByRole()}
       </Box>
     </Container>
   );

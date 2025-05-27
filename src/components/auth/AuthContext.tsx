@@ -20,7 +20,6 @@ interface AuthContextType {
   user: User | null;
   login: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
-  switchRole: (role: User['role']) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -72,7 +71,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // Find user by username
       const foundUser = mockUsers[username];
       
-      console.log('Found user:', foundUser);
+      console.log('Found user:');
       
       // Check if user exists and password matches
       if (foundUser && password === 'password123') {
@@ -84,7 +83,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setUser(authenticatedUser);
         localStorage.setItem('mockUser', JSON.stringify(authenticatedUser));
         
-        console.log('Login successful for user:', authenticatedUser);
+        console.log('Login successful for user:');
         return true;
       }
       
@@ -119,7 +118,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     user,
     login,
     logout,
-    switchRole,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

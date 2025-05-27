@@ -52,12 +52,11 @@ interface MenuItem {
 
 const menuItems: MenuItem[] = [
   { text: 'Trang chủ', path: '/', icon: <HomeIcon /> },
-  { text: 'Hồ sơ sức khỏe', path: '/my-health', icon: <MedicalServicesIcon />, role: ['student'] },
+  { text: 'Sức khỏe của tôi', path: '/my-health', icon: <MedicalServicesIcon />, role: ['student'] },
   { text: 'Hồ sơ học sinh', path: '/student-records', icon: <MedicalServicesIcon />, role: ['nurse'] },
-  { text: 'Sức khỏe con em', path: '/child-health', icon: <MedicalServicesIcon />, role: ['parent'] },
-  { text: 'Quản lý thuốc', path: '/medications', icon: <MedicationIcon />, role: ['nurse', 'admin'] },
-  { text: 'Lịch khám sức khỏe', path: '/health-events', icon: <EventIcon /> },
-  { text: 'Dịch vụ y tế', path: '/health-services', icon: <MedicationIcon />, role: ['nurse'] },
+  { text: 'Sức khỏe con em', path: '/health-records', icon: <MedicalServicesIcon />, role: ['parent'] },
+  { text: 'Quản lý thuốc', path: '/medication', icon: <MedicationIcon />, role: ['nurse', 'admin'] },
+  { text: 'Gửi thuốc đến trường', path: '/medication', icon: <MedicationIcon />, role: ['parent'] },
   { text: 'Trang thiết bị', path: '/equipment', icon: <MedicalServicesIcon />, role: ['nurse', 'admin'] },
   { text: 'Quản lý người dùng', path: '/user-management', icon: <SettingsIcon />, role: ['admin'] },
   { text: 'Cài đặt hệ thống', path: '/settings', icon: <SettingsIcon />, role: ['admin'] },
@@ -70,7 +69,7 @@ const MainLayout = () => {
   const navigate = useNavigate();
   
   // Use AuthContext instead of mock user
-  const { user, logout, switchRole } = useAuth();
+  const { user, logout} = useAuth();
 
   // Redirect to login if not authenticated
   useEffect(() => {
