@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Outlet, Link, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   AppBar,
   Box,
@@ -37,6 +37,7 @@ import {
   Search as SearchIcon,
   Notifications as NotificationsIcon,
 } from '@mui/icons-material';
+import { useAuth } from '../auth/AuthContext'; // Import useAuth
 import { NurseMedicalEventsDashboard } from '../medical-events/nurse';
 
 // Increased drawer width from 150 to 180 pixels
@@ -51,26 +52,31 @@ interface MenuItem {
 
 const menuItems: MenuItem[] = [
   { text: 'Trang chủ', path: '/', icon: <HomeIcon /> },
-  { text: 'Hồ sơ sức khỏe', path: '/health-records', icon: <MedicalServicesIcon />, role: ['student']},
-  { text: 'Học sinh', path: '/health-records', icon: <MedicalServicesIcon />, role: ['nurse', 'parent']},
-  { text: 'Dịch vụ y tế', path: '/medication', icon: <MedicationIcon />, role: ['nurse', 'parent', 'admin'] },
-  { text: 'Sự kiện y tế', path: '/medical-events', icon: <EventIcon /> },
-  { text: 'Vật tư Y tế', path: '/dashboard', icon: <MedicalServicesIcon />, role: ['nurse', 'admin']},
-  { text: 'Quản lí tài khoản', path: '/admin', icon: <SettingsIcon />, role: ['admin'] },
+  { text: 'Sức khỏe của tôi', path: '/my-health', icon: <MedicalServicesIcon />, role: ['student'] },
+  { text: 'Hồ sơ học sinh', path: '/student-records', icon: <MedicalServicesIcon />, role: ['nurse'] },
+  { text: 'Sức khỏe con em', path: '/health-records', icon: <MedicalServicesIcon />, role: ['parent'] },
+  { text: 'Quản lý thuốc', path: '/medication', icon: <MedicationIcon />, role: ['nurse', 'admin'] },
+  { text: 'Gửi thuốc đến trường', path: '/medication', icon: <MedicationIcon />, role: ['parent'] },
+  { text: 'Trang thiết bị', path: '/equipment', icon: <MedicalServicesIcon />, role: ['nurse', 'admin'] },
+  { text: 'Quản lý người dùng', path: '/user-management', icon: <SettingsIcon />, role: ['admin'] },
+  { text: 'Cài đặt hệ thống', path: '/settings', icon: <SettingsIcon />, role: ['admin'] },
 ];
 
 const MainLayout = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const location = useLocation();
+  const navigate = useNavigate();
   
-  // Mock user state - in a real app, this would come from authentication context
-  const [user] = useState({
-    isAuthenticated: true,
-    name: 'luanpro',
-    role: 'student',
-    avatar: '',
-  });
+  // Use AuthContext instead of mock user
+  const { user, logout} = useAuth();
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!user?.isAuthenticated) {
+      navigate('/login');
+    }
+  }, [user, navigate]);
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -83,6 +89,18 @@ const MainLayout = () => {
   const handleClose = () => {
     setAnchorEl(null);
   };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+    handleClose();
+  };
+
+
+  // Show loading or redirect if user is not authenticated
+  if (!user?.isAuthenticated) {
+    return null; // or a loading spinner
+  }
 
   const drawer = (
     <Box sx={{ bgcolor: '#f0f0f0', height: '100%' }}>
@@ -145,7 +163,7 @@ const MainLayout = () => {
       <AppBar
         position="fixed"
         sx={{
-          zIndex: (theme) => theme.zIndex.drawer + 1, // Keep this to make sure AppBar is above drawer
+          zIndex: (theme) => theme.zIndex.drawer + 1,
           bgcolor: '#034EA1',
           boxShadow: 'none',
         }}
@@ -164,15 +182,13 @@ const MainLayout = () => {
             </IconButton>
             
             {/* FPTMED Logo */}
-            
-              <Box 
-                marginLeft={4}
-                component="img" 
-                src="https://musical-indigo-mongoose.myfilebase.com/ipfs/QmPfdMNtJhcNfztJtxK88SXCrqWm54KuSWHKBW4TNhPr3x" 
-                alt="FPTMED"
-                sx={{ height: 35, mr: 1 }}
-              />
-   
+            <Box 
+              marginLeft={4}
+              component="img" 
+              src="https://musical-indigo-mongoose.myfilebase.com/ipfs/QmPfdMNtJhcNfztJtxK88SXCrqWm54KuSWHKBW4TNhPr3x" 
+              alt="FPTMED"
+              sx={{ height: 35, mr: 1 }}
+            />
           </Box>
           
           {/* Center section with search box */}
@@ -212,10 +228,13 @@ const MainLayout = () => {
           
           {/* Right section with user info */}
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            {user.isAuthenticated ? (
+            {user?.isAuthenticated ? (
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <Typography variant="body2" sx={{ mr: 1, fontSize: '14px' }}>
                   Xin chào, {user.name}
+                </Typography>
+                <Typography variant="caption" sx={{ mr: 1, fontSize: '12px', opacity: 0.8 }}>
+                  ({user.role})
                 </Typography>
                 <IconButton
                   size="small"
@@ -246,8 +265,12 @@ const MainLayout = () => {
                   open={Boolean(anchorEl)}
                   onClose={handleClose}
                 >
-                  <MenuItem component={Link} to="/profile" onClick={handleClose}>Trang cá nhân</MenuItem>
-                  <MenuItem onClick={handleClose}>Đăng xuất</MenuItem>
+                  <MenuItem component={Link} to="/profile" onClick={handleClose}>
+                    Trang cá nhân
+                  </MenuItem>
+                  <MenuItem onClick={handleLogout}>
+                    Đăng xuất
+                  </MenuItem>
                 </Menu>
               </Box>
             ) : (
@@ -264,7 +287,6 @@ const MainLayout = () => {
         </Toolbar>
       </AppBar>
       
-      {/* MODIFY THIS: Adjust the spacer to perfectly match toolbar height */}
       <Toolbar sx={{ minHeight: '48px', display: 'block' }} />  
       
       <Box sx={{ display: 'flex', flexGrow: 1 }}>
@@ -291,7 +313,7 @@ const MainLayout = () => {
             open={mobileOpen}
             onClose={handleDrawerToggle}
             ModalProps={{
-              keepMounted: true, // Better mobile performance
+              keepMounted: true,
             }}
             sx={{
               display: { xs: 'block', sm: 'none' },

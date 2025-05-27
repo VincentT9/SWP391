@@ -1,34 +1,44 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Container, Typography, Box, Alert } from "@mui/material";
 import { NurseMedicalEventsDashboard } from "./nurse";
 import { ParentMedicalEventsDashboard } from "./parent";
-
-// In a real app, this would come from authentication context
-const mockUserRole = "nurse"; // Change to 'parent' to see the parent view
-const mockUserId = mockUserRole === "nurse" ? "3" : "5"; // Nurse ID or Parent ID
-const mockUserName =
-  mockUserRole === "nurse" ? "Nguyễn Thị Y Tá" : "Trần Văn Phụ Huynh";
+import { useAuth } from '../auth/AuthContext';
 
 const MedicalEventsPage: React.FC = () => {
-  const [userRole, setUserRole] = useState<string | null>(null);
-
-  // In a real app, this would use React context or Redux for auth state
-  useEffect(() => {
-    // Simulate getting user role from auth system
-    setUserRole(mockUserRole);
-  }, []);
+  const { user } = useAuth();
 
   const renderDashboardByRole = () => {
-    switch (userRole) {
+    if (!user?.isAuthenticated) {
+      return (
+        <Alert severity="error">
+          Bạn cần đăng nhập để truy cập chức năng này.
+        </Alert>
+      );
+    }
+
+    switch (user.role) {
       case "nurse":
         return (
           <NurseMedicalEventsDashboard
-            nurseId={mockUserId}
-            nurseName={mockUserName}
+            nurseId={user.id}
+            nurseName={user.name}
           />
         );
       case "parent":
-        return <ParentMedicalEventsDashboard parentId={mockUserId} />;
+        return <ParentMedicalEventsDashboard parentId={user.id} />;
+      case "admin":
+        return (
+          <NurseMedicalEventsDashboard
+            nurseId={user.id}
+            nurseName={user.name}
+          />
+        );
+      case "student":
+        return (
+          <Alert severity="info">
+            Học sinh có thể xem lịch khám sức khỏe trong mục "Hồ sơ sức khỏe".
+          </Alert>
+        );
       default:
         return (
           <Alert severity="warning">
@@ -38,14 +48,21 @@ const MedicalEventsPage: React.FC = () => {
     }
   };
 
+  // Show loading if user is not yet loaded
+  if (!user) {
+    return (
+      <Container maxWidth="lg">
+        <Box sx={{ my: 4 }}>
+          <Typography variant="body1">Đang tải thông tin người dùng...</Typography>
+        </Box>
+      </Container>
+    );
+  }
+
   return (
     <Container maxWidth="lg">
       <Box sx={{ my: 4 }}>
-        {userRole ? (
-          renderDashboardByRole()
-        ) : (
-          <Typography variant="body1">Đang tải...</Typography>
-        )}
+        {renderDashboardByRole()}
       </Box>
     </Container>
   );
