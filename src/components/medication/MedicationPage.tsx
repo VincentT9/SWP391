@@ -4,10 +4,24 @@ import ParentMedicationDashboard from "./parent/ParentMedicationDashboard";
 import NurseMedicationDashboard from "./nurse/NurseMedicationDashboard";
 
 // In a real app, this would come from authentication context
-const mockUserRole = "parent"; // Change to 'nurse' to see the nurse view
+const mockUserRole = "nurse"; // Change to 'nurse' to see the nurse view
 const mockUserId = "5"; // Parent ID or Nurse ID
-const mockUserName =
-  mockUserRole === "parent" ? "Trần Văn Phụ Huynh" : "Nguyễn Thị Y Tá";
+const getMockUserName = (role: string) => {
+  switch (role) {
+    case 'parent':
+      return 'Trần Văn Phụ Huynh';
+    case 'nurse':
+      return 'Nguyễn Thị Y Tá';
+    case 'admin':
+      return 'Lê Văn Quản Trị';
+    case 'student':
+      return 'Phạm Học Sinh';
+    default:
+      return 'Người dùng';
+  }
+};
+
+const mockUserName = getMockUserName(mockUserRole);
 
 const MedicationPage: React.FC = () => {
   const [userRole, setUserRole] = useState<string | null>(null);

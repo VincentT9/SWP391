@@ -115,18 +115,18 @@ const RegisterPage = () => {
       }}
     >
       <Paper
-        elevation={3}
-        sx={{
-          width: 600,
-          padding: 4,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          backgroundColor: '#0066b3',
-          color: 'white',
-          maxHeight: '90vh',
-          overflowY: 'auto',
-        }}
+  elevation={3}
+  sx={{
+    width: { xs: '90%', sm: 600 },
+    padding: { xs: 2, sm: 4 },
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    backgroundColor: '#0066b3',
+    color: 'white',
+    maxHeight: '95vh',  // Increased from 90vh to 95vh
+    overflow: 'hidden', // Changed from 'auto' to 'hidden'
+  }}
       >
         <Avatar sx={{ m: 1, bgcolor: 'secondary.main' }}>
           <PersonAddIcon />

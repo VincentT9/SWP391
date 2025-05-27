@@ -18,6 +18,7 @@ import {
   VisibilityOff
 } from '@mui/icons-material';
 import { useForm, Controller } from 'react-hook-form';
+import { useAuth } from '../auth/AuthContext'; 
 
 type FormData = {
   username: string;
@@ -29,7 +30,7 @@ const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
   const navigate = useNavigate();
-
+   const { login } = useAuth();
   const { control, handleSubmit, formState: { errors } } = useForm<FormData>({
     defaultValues: {
       username: '',
@@ -38,14 +39,24 @@ const LoginPage = () => {
     }
   });
 
-  const onSubmit = (data: FormData) => {
-    console.log('Login form submitted:', data);
-
-    // Simulate login validation
-    if (data.username === 'admin' && data.password === 'password') {
-      navigate('/');
-    } else {
-      setLoginError('Tên truy cập hoặc mật khẩu không đúng. Vui lòng thử lại.');
+  const onSubmit = async (data: FormData) => {
+    try {
+      setLoginError(null); // Clear previous errors
+      
+      console.log('Login form submitted:', data);
+      
+      // Use the login function from AuthContext
+      const success = await login(data.username, data.password);
+      
+      if (success) {
+        console.log('Login successful');
+        navigate('/'); // Navigate to dashboard on successful login
+      } else {
+        setLoginError('Tên truy cập hoặc mật khẩu không đúng. Vui lòng thử lại.');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      setLoginError('Đã xảy ra lỗi khi đăng nhập. Vui lòng thử lại.');
     }
   };
 
@@ -210,4 +221,4 @@ const LoginPage = () => {
   );
 };
 
-export default LoginPage;
+export default LoginPage; 

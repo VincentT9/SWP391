@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
+import { AuthProvider } from './components/auth/AuthContext';
 import CssBaseline from '@mui/material/CssBaseline';
 import theme from './theme/theme';
 import MainLayout from './components/layout/MainLayout';
@@ -20,6 +21,7 @@ import RegisterPage from './components/user/RegisterPage';
 
 function App() {
   return (
+    <AuthProvider>
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Router>
@@ -40,6 +42,7 @@ function App() {
         </Routes>
       </Router>
     </ThemeProvider>
+    </AuthProvider>
   );
 }
 
