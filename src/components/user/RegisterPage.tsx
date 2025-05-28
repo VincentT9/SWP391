@@ -10,13 +10,9 @@ import {
   Box,
   Typography,
   Paper,
-  MenuItem,
   InputAdornment,
   IconButton,
   Alert,
-  Stepper,
-  Step,
-  StepLabel,
 } from '@mui/material';
 import {
   PersonAdd as PersonAddIcon,
@@ -24,72 +20,63 @@ import {
   VisibilityOff,
 } from '@mui/icons-material';
 import { useForm, Controller } from 'react-hook-form';
-// Import the background image if you're using the import method
-// import bgImage from '../../assets/Picture2.png';
 
 type FormData = {
-  firstName: string;
-  lastName: string;
-  email: string;
+  username: string;
   password: string;
   confirmPassword: string;
-  role: string;
   phone: string;
-  address: string;
   acceptTerms: boolean;
 };
 
-const roles = [
-  { value: 'parent', label: 'Phụ huynh' },
-  { value: 'nurse', label: 'Y tá' },
-  { value: 'student', label: 'Học sinh' },
-];
-
-const steps = ['Thông tin tài khoản', 'Thông tin cá nhân', 'Xác nhận'];
-
 const RegisterPage = () => {
-  const [activeStep, setActiveStep] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [registerError, setRegisterError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const { control, handleSubmit, watch, formState: { errors } } = useForm<FormData>({
     defaultValues: {
-      firstName: '',
-      lastName: '',
-      email: '',
+      username: '',
       password: '',
       confirmPassword: '',
-      role: 'parent',
       phone: '',
-      address: '',
       acceptTerms: false,
     },
   });
 
   const password = watch('password');
+  const username = watch('username');
 
-  const handleNext = () => {
-    setActiveStep((prevActiveStep) => prevActiveStep + 1);
-  };
+  const onSubmit = async (data: FormData) => {
+    setLoading(true);
+    setRegisterError(null);
 
-  const handleBack = () => {
-    setActiveStep((prevActiveStep) => prevActiveStep - 1);
-  };
+    try {
+      // Add role as parent by default, use username as name
+      const registerData = {
+        ...data,
+        firstName: username, // Sử dụng username làm tên
+        lastName: '',
+        name: username, // Tên hiển thị
+        role: 'parent', // Mặc định là parent
+      };
 
-  const onSubmit = (data: FormData) => {
-    // In a real application, this would make a call to the registration API
-    console.log('Registration form submitted:', data);
+      console.log('Registration form submitted:', registerData);
 
-    // For demonstration, we'll simulate a successful registration
-    if (activeStep === steps.length - 1) {
-      // Navigate to login page after successful registration
-      setTimeout(() => {
-        navigate('/login');
-      }, 1500);
-    } else {
-      handleNext();
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      // Show success message and navigate to login
+      alert('Đăng ký thành công! Vui lòng đăng nhập.');
+      navigate('/login');
+
+    } catch (error) {
+      console.error('Registration error:', error);
+      setRegisterError('Đã xảy ra lỗi khi đăng ký. Vui lòng thử lại.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -115,52 +102,26 @@ const RegisterPage = () => {
       }}
     >
       <Paper
-  elevation={3}
-  sx={{
-    width: { xs: '90%', sm: 600 },
-    padding: { xs: 2, sm: 4 },
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    backgroundColor: '#0066b3',
-    color: 'white',
-    maxHeight: '95vh',  // Increased from 90vh to 95vh
-    overflow: 'hidden', // Changed from 'auto' to 'hidden'
-  }}
+        elevation={3}
+        sx={{
+          width: { xs: '90%', sm: 490 }, // Giảm từ 550 xuống 480 - vừa đủ cho text
+          padding: 4,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          backgroundColor: '#0066b3',
+          color: 'white',
+        }}
       >
-        <Avatar sx={{ m: 1, bgcolor: 'secondary.main' }}>
+        <Avatar sx={{ m: 1, bgcolor: '#75c043' }}>
           <PersonAddIcon />
         </Avatar>
-        <Typography component="h1" variant="h5" sx={{ color: 'white' }}>
+        <Typography component="h1" variant="h5" sx={{ color: 'white', mb: 1 }}>
           Đăng ký tài khoản
         </Typography>
-        
-        <Stepper 
-          activeStep={activeStep} 
-          sx={{ 
-            width: '100%', 
-            mt: 3, 
-            mb: 4,
-            '& .MuiStepLabel-label': {
-              color: 'white',
-            },
-            '& .MuiStepIcon-root': {
-              color: '#75c043',
-            },
-            '& .MuiStepIcon-root.Mui-active': {
-              color: 'yellow',
-            },
-            '& .MuiStepIcon-root.Mui-completed': {
-              color: 'white',
-            }
-          }}
-        >
-          {steps.map((label) => (
-            <Step key={label}>
-              <StepLabel>{label}</StepLabel>
-            </Step>
-          ))}
-        </Stepper>
+        <Typography variant="body2" sx={{ color: 'white', mb: 3, textAlign: 'center' }}>
+          Đăng ký tài khoản phụ huynh để theo dõi sức khỏe con em
+        </Typography>
         
         {registerError && (
           <Alert severity="error" sx={{ mb: 2, width: '100%' }}>
@@ -168,367 +129,208 @@ const RegisterPage = () => {
           </Alert>
         )}
         
-        <Box component="form" onSubmit={handleSubmit(onSubmit)} sx={{ mt: 1, width: '100%' }}>
-          {activeStep === 0 && (
-            <>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-                <Box sx={{ flexBasis: { xs: '100%', sm: 'calc(50% - 8px)' } }}>
-                  <Typography sx={{ mb: 1, color: 'white' }}>Họ:</Typography>
-                  <Controller
-                    name="firstName"
-                    control={control}
-                    rules={{ required: 'Họ là bắt buộc' }}
-                    render={({ field }) => (
-                      <TextField
-                        {...field}
-                        autoComplete="given-name"
-                        required
-                        fullWidth
-                        id="firstName"
-                        placeholder="Họ"
-                        autoFocus
-                        error={!!errors.firstName}
-                        helperText={errors.firstName?.message}
-                        sx={{ 
-                          mb: 2,
-                          backgroundColor: 'white',
-                          borderRadius: 1,
-                          '& .MuiOutlinedInput-notchedOutline': { border: 'none' }
-                        }}
-                        variant="outlined"
-                      />
-                    )}
-                  />
-                </Box>
-                <Box sx={{ flexBasis: { xs: '100%', sm: 'calc(50% - 8px)' } }}>
-                  <Typography sx={{ mb: 1, color: 'white' }}>Tên:</Typography>
-                  <Controller
-                    name="lastName"
-                    control={control}
-                    rules={{ required: 'Tên là bắt buộc' }}
-                    render={({ field }) => (
-                      <TextField
-                        {...field}
-                        required
-                        fullWidth
-                        id="lastName"
-                        placeholder="Tên"
-                        autoComplete="family-name"
-                        error={!!errors.lastName}
-                        helperText={errors.lastName?.message}
-                        sx={{ 
-                          mb: 2,
-                          backgroundColor: 'white',
-                          borderRadius: 1,
-                          '& .MuiOutlinedInput-notchedOutline': { border: 'none' }
-                        }}
-                        variant="outlined"
-                      />
-                    )}
-                  />
-                </Box>
-                <Box sx={{ width: '100%' }}>
-                  <Typography sx={{ mb: 1, color: 'white' }}>Email:</Typography>
-                  <Controller
-                    name="email"
-                    control={control}
-                    rules={{
-                      required: 'Email là bắt buộc',
-                      pattern: {
-                        value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                        message: 'Email không hợp lệ',
-                      },
-                    }}
-                    render={({ field }) => (
-                      <TextField
-                        {...field}
-                        required
-                        fullWidth
-                        id="email"
-                        placeholder="Email"
-                        autoComplete="email"
-                        error={!!errors.email}
-                        helperText={errors.email?.message}
-                        sx={{ 
-                          mb: 2,
-                          backgroundColor: 'white',
-                          borderRadius: 1,
-                          '& .MuiOutlinedInput-notchedOutline': { border: 'none' }
-                        }}
-                        variant="outlined"
-                      />
-                    )}
-                  />
-                </Box>
-                <Box sx={{ width: '100%' }}>
-                  <Typography sx={{ mb: 1, color: 'white' }}>Mật khẩu:</Typography>
-                  <Controller
-                    name="password"
-                    control={control}
-                    rules={{
-                      required: 'Mật khẩu là bắt buộc',
-                      minLength: {
-                        value: 6,
-                        message: 'Mật khẩu phải có ít nhất 6 ký tự',
-                      },
-                    }}
-                    render={({ field }) => (
-                      <TextField
-                        {...field}
-                        required
-                        fullWidth
-                        placeholder="Mật khẩu"
-                        type={showPassword ? 'text' : 'password'}
-                        id="password"
-                        autoComplete="new-password"
-                        error={!!errors.password}
-                        helperText={errors.password?.message}
-                        sx={{ 
-                          mb: 2,
-                          backgroundColor: 'white',
-                          borderRadius: 1,
-                          '& .MuiOutlinedInput-notchedOutline': { border: 'none' }
-                        }}
-                        variant="outlined"
-                        InputProps={{
-                          endAdornment: (
-                            <InputAdornment position="end">
-                              <IconButton
-                                aria-label="toggle password visibility"
-                                onClick={handleClickShowPassword}
-                                edge="end"
-                              >
-                                {showPassword ? <VisibilityOff /> : <Visibility />}
-                              </IconButton>
-                            </InputAdornment>
-                          ),
-                        }}
-                      />
-                    )}
-                  />
-                </Box>
-                <Box sx={{ width: '100%' }}>
-                  <Typography sx={{ mb: 1, color: 'white' }}>Xác nhận mật khẩu:</Typography>
-                  <Controller
-                    name="confirmPassword"
-                    control={control}
-                    rules={{
-                      required: 'Vui lòng xác nhận mật khẩu',
-                      validate: (value) => value === password || 'Mật khẩu không khớp',
-                    }}
-                    render={({ field }) => (
-                      <TextField
-                        {...field}
-                        required
-                        fullWidth
-                        placeholder="Xác nhận mật khẩu"
-                        type={showConfirmPassword ? 'text' : 'password'}
-                        id="confirmPassword"
-                        error={!!errors.confirmPassword}
-                        helperText={errors.confirmPassword?.message}
-                        sx={{ 
-                          mb: 2,
-                          backgroundColor: 'white',
-                          borderRadius: 1,
-                          '& .MuiOutlinedInput-notchedOutline': { border: 'none' }
-                        }}
-                        variant="outlined"
-                        InputProps={{
-                          endAdornment: (
-                            <InputAdornment position="end">
-                              <IconButton
-                                aria-label="toggle password visibility"
-                                onClick={handleClickShowConfirmPassword}
-                                edge="end"
-                              >
-                                {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-                              </IconButton>
-                            </InputAdornment>
-                          ),
-                        }}
-                      />
-                    )}
-                  />
-                </Box>
-              </Box>
-            </>
-          )}
-
-          {activeStep === 1 && (
-            <>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-                <Box sx={{ width: '100%' }}>
-                  <Typography sx={{ mb: 1, color: 'white' }}>Vai trò:</Typography>
-                  <Controller
-                    name="role"
-                    control={control}
-                    rules={{ required: 'Vai trò là bắt buộc' }}
-                    render={({ field }) => (
-                      <TextField
-                        {...field}
-                        select
-                        fullWidth
-                        placeholder="Vai trò"
-                        error={!!errors.role}
-                        helperText={errors.role?.message}
-                        sx={{ 
-                          mb: 2,
-                          backgroundColor: 'white',
-                          borderRadius: 1,
-                          '& .MuiOutlinedInput-notchedOutline': { border: 'none' }
-                        }}
-                        variant="outlined"
-                      >
-                        {roles.map((option) => (
-                          <MenuItem key={option.value} value={option.value}>
-                            {option.label}
-                          </MenuItem>
-                        ))}
-                      </TextField>
-                    )}
-                  />
-                </Box>
-                <Box sx={{ width: '100%' }}>
-                  <Typography sx={{ mb: 1, color: 'white' }}>Số điện thoại:</Typography>
-                  <Controller
-                    name="phone"
-                    control={control}
-                    rules={{
-                      required: 'Số điện thoại là bắt buộc',
-                      pattern: {
-                        value: /^[0-9]{10}$/,
-                        message: 'Số điện thoại không hợp lệ',
-                      },
-                    }}
-                    render={({ field }) => (
-                      <TextField
-                        {...field}
-                        required
-                        fullWidth
-                        placeholder="Số điện thoại"
-                        autoComplete="tel"
-                        error={!!errors.phone}
-                        helperText={errors.phone?.message}
-                        sx={{ 
-                          mb: 2,
-                          backgroundColor: 'white',
-                          borderRadius: 1,
-                          '& .MuiOutlinedInput-notchedOutline': { border: 'none' }
-                        }}
-                        variant="outlined"
-                      />
-                    )}
-                  />
-                </Box>
-                <Box sx={{ width: '100%' }}>
-                  <Typography sx={{ mb: 1, color: 'white' }}>Địa chỉ:</Typography>
-                  <Controller
-                    name="address"
-                    control={control}
-                    rules={{ required: 'Địa chỉ là bắt buộc' }}
-                    render={({ field }) => (
-                      <TextField
-                        {...field}
-                        required
-                        fullWidth
-                        placeholder="Địa chỉ"
-                        multiline
-                        rows={3}
-                        error={!!errors.address}
-                        helperText={errors.address?.message}
-                        sx={{ 
-                          mb: 2,
-                          backgroundColor: 'white',
-                          borderRadius: 1,
-                          '& .MuiOutlinedInput-notchedOutline': { border: 'none' }
-                        }}
-                        variant="outlined"
-                      />
-                    )}
-                  />
-                </Box>
-              </Box>
-            </>
-          )}
-
-          {activeStep === 2 && (
-            <>
-              <Typography variant="h6" gutterBottom sx={{ color: 'white' }}>
-                Xác nhận thông tin
-              </Typography>
-              <Typography variant="body1" paragraph sx={{ color: 'white' }}>
-                Vui lòng kiểm tra lại thông tin đăng ký trước khi hoàn tất.
-              </Typography>
-              <Controller
-                name="acceptTerms"
-                control={control}
-                rules={{ required: 'Bạn phải đồng ý với điều khoản' }}
-                render={({ field }) => (
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        {...field}
-                        sx={{ 
-                          color: 'white',
-                          '&.Mui-checked': {
-                            color: 'white',
-                          },
-                        }}
-                        checked={field.value}
-                      />
-                    }
-                    label="Tôi đồng ý với các điều khoản và chính sách bảo mật"
-                    sx={{ color: 'white' }}
-                  />
-                )}
+        <Box component="form" onSubmit={handleSubmit(onSubmit)} sx={{ width: '100%' }}>
+          {/* Tên đăng nhập */}
+          <Typography sx={{ mb: 1, color: 'white' }}>Tên đăng nhập:</Typography>
+          <Controller
+            name="username"
+            control={control}
+            rules={{
+              required: 'Tên đăng nhập là bắt buộc',
+              minLength: {
+                value: 3,
+                message: 'Tên đăng nhập phải có ít nhất 3 ký tự',
+              },
+              pattern: {
+                value: /^[a-zA-Z0-9_]+$/,
+                message: 'Tên đăng nhập chỉ chứa chữ cái, số và dấu gạch dưới',
+              },
+            }}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                fullWidth
+                placeholder="Tên đăng nhập (sẽ được dùng làm tên hiển thị)"
+                error={!!errors.username}
+                helperText={errors.username?.message}
+                sx={{ 
+                  mb: 2,
+                  backgroundColor: 'white',
+                  borderRadius: 1,
+                  '& .MuiOutlinedInput-notchedOutline': { border: 'none' }
+                }}
               />
-              {errors.acceptTerms && (
-                <Typography color="error" variant="caption">
-                  {errors.acceptTerms.message}
-                </Typography>
-              )}
-            </>
+            )}
+          />
+
+          {/* Mật khẩu */}
+          <Typography sx={{ mb: 1, color: 'white' }}>Mật khẩu:</Typography>
+          <Controller
+            name="password"
+            control={control}
+            rules={{
+              required: 'Mật khẩu là bắt buộc',
+              minLength: {
+                value: 6,
+                message: 'Mật khẩu phải có ít nhất 6 ký tự',
+              },
+            }}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                fullWidth
+                placeholder="Mật khẩu"
+                type={showPassword ? 'text' : 'password'}
+                error={!!errors.password}
+                helperText={errors.password?.message}
+                sx={{ 
+                  mb: 2,
+                  backgroundColor: 'white',
+                  borderRadius: 1,
+                  '& .MuiOutlinedInput-notchedOutline': { border: 'none' }
+                }}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        onClick={handleClickShowPassword}
+                        edge="end"
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            )}
+          />
+
+          {/* Xác nhận mật khẩu */}
+          <Typography sx={{ mb: 1, color: 'white' }}>Xác nhận mật khẩu:</Typography>
+          <Controller
+            name="confirmPassword"
+            control={control}
+            rules={{
+              required: 'Vui lòng xác nhận mật khẩu',
+              validate: (value) => value === password || 'Mật khẩu không khớp',
+            }}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                fullWidth
+                placeholder="Xác nhận mật khẩu"
+                type={showConfirmPassword ? 'text' : 'password'}
+                error={!!errors.confirmPassword}
+                helperText={errors.confirmPassword?.message}
+                sx={{ 
+                  mb: 2,
+                  backgroundColor: 'white',
+                  borderRadius: 1,
+                  '& .MuiOutlinedInput-notchedOutline': { border: 'none' }
+                }}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        onClick={handleClickShowConfirmPassword}
+                        edge="end"
+                      >
+                        {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            )}
+          />
+
+          {/* Số điện thoại */}
+          <Typography sx={{ mb: 1, color: 'white' }}>Số điện thoại:</Typography>
+          <Controller
+            name="phone"
+            control={control}
+            rules={{
+              required: 'Số điện thoại là bắt buộc',
+              pattern: {
+                value: /^[0-9]{10,11}$/,
+                message: 'Số điện thoại không hợp lệ (10-11 số)',
+              },
+            }}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                fullWidth
+                placeholder="Số điện thoại"
+                error={!!errors.phone}
+                helperText={errors.phone?.message}
+                sx={{ 
+                  mb: 2,
+                  backgroundColor: 'white',
+                  borderRadius: 1,
+                  '& .MuiOutlinedInput-notchedOutline': { border: 'none' }
+                }}
+              />
+            )}
+          />
+
+          {/* Checkbox đồng ý - Giữ nguyên font như cũ, form rộng hơn để text trên 1 dòng */}
+          <Controller
+            name="acceptTerms"
+            control={control}
+            rules={{ required: 'Bạn phải đồng ý với điều khoản' }}
+            render={({ field }) => (
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    {...field}
+                    checked={field.value}
+                    sx={{ 
+                      color: 'white',
+                      '&.Mui-checked': {
+                        color: 'white',
+                      },
+                    }}
+                  />
+                }
+                label="Tôi đồng ý với các điều khoản và chính sách bảo mật"
+                sx={{ color: 'white', mb: 2 }}
+              />
+            )}
+          />
+          {errors.acceptTerms && (
+            <Typography color="error" variant="caption" sx={{ display: 'block', mb: 2, mt: -1 }}>
+              {errors.acceptTerms.message}
+            </Typography>
           )}
 
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3, mb: 2 }}>
-            <Button
-              disabled={activeStep === 0}
-              onClick={handleBack}
-              variant="outlined"
-              sx={{ 
-                color: 'white',
-                borderColor: 'white',
-                '&:hover': {
-                  borderColor: 'white',
-                  backgroundColor: 'rgba(255,255,255,0.1)',
-                }
-              }}
-            >
-              Quay lại
-            </Button>
-            <Button
-              type="submit"
-              variant="contained"
-              sx={{ 
-                backgroundColor: '#75c043',
-                '&:hover': {
-                  backgroundColor: '#65b033',
-                }
-              }}
-            >
-              {activeStep === steps.length - 1 ? 'Đăng ký' : 'Tiếp theo'}
-            </Button>
+          {/* Nút đăng ký */}
+          <Button
+            type="submit"
+            fullWidth
+            variant="contained"
+            disabled={loading}
+            sx={{ 
+              mt: 1,
+              mb: 2,
+              py: 1.5,
+              backgroundColor: '#75c043',
+              '&:hover': {
+                backgroundColor: '#65b033',
+              },
+              '&:disabled': {
+                backgroundColor: '#cccccc',
+              }
+            }}
+          >
+            {loading ? 'Đang đăng ký...' : 'Đăng ký'}
+          </Button>
+
+          {/* Link đăng nhập - ở giữa */}
+          <Box sx={{ textAlign: 'center' }}>
+            <Typography variant="body2" color="white">
+              Đã có tài khoản? <Link component={RouterLink} to="/login" sx={{ color: 'yellow', textDecoration: 'none' }}>Đăng nhập</Link>
+            </Typography>
           </Box>
-          
-          {activeStep === 0 && (
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <Box>
-                <Link component={RouterLink} to="/login" variant="body2" sx={{ color: 'yellow' }}>
-                  Đã có tài khoản? Đăng nhập
-                </Link>
-              </Box>
-            </Box>
-          )}
         </Box>
       </Paper>
     </Box>
