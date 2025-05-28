@@ -159,7 +159,7 @@ const MainLayout = () => {
   );
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', bgcolor: 'background.default' }}>
       <CssBaseline />
       <AppBar
         position="fixed"
@@ -301,7 +301,7 @@ const MainLayout = () => {
               width: drawerWidth, 
               boxSizing: 'border-box',
               border: 'none',
-              bgcolor: '#f0f0f0',
+              bgcolor: 'background.paper',
               boxShadow: '0px 2px 4px rgba(0,0,0,0.1)',
               top: 'auto',
               height: '100%',
@@ -346,7 +346,7 @@ const MainLayout = () => {
           sx={{ 
             flexGrow: 1, 
             p: 2,
-            bgcolor: '#f8f8f8',
+            bgcolor: 'background.default',
             overflow: 'auto'
           }}
         >
