@@ -51,56 +51,16 @@ interface MenuItem {
 }
 
 const menuItems: MenuItem[] = [
-  { text: "Trang chủ", path: "/", icon: <HomeIcon /> },
-  {
-    text: "Sức khỏe của tôi",
-    path: "/my-health",
-    icon: <MedicalServicesIcon />,
-    role: ["student"],
-  },
-  {
-    text: "Sức Khỏe học sinh",
-    path: "/health-check",
-    icon: <MedicalServicesIcon />,
-    role: ["nurse"],
-  },
-  {
-    text: "Sức khỏe con em",
-    path: "/health-records",
-    icon: <MedicalServicesIcon />,
-    role: ["parent"],
-  },
-  {
-    text: "Quản lý thuốc",
-    path: "/medication",
-    icon: <MedicationIcon />,
-    role: ["nurse", "admin"],
-  },
-  {
-    text: "Gửi thuốc đến trường",
-    path: "/medication",
-    icon: <MedicationIcon />,
-    role: ["parent"],
-  },
-  {
-    text: "Trang thiết bị",
-    path: "/equipment",
-    icon: <MedicalServicesIcon />,
-    role: ["nurse", "admin"],
-  },
-  {
-    text: "Quản lý người dùng",
-    path: "/user-management",
-    icon: <SettingsIcon />,
-    role: ["admin"],
-  },
-  {
-    text: "Cài đặt hệ thống",
-    path: "/settings",
-    icon: <SettingsIcon />,
-    role: ["admin"],
-  },
-  { text: "Thông báo", path: "/notifications", icon: <NotificationsIcon /> },
+  { text: 'Trang chủ', path: '/', icon: <HomeIcon /> },
+  { text: 'Sức khỏe của tôi', path: '/my-health', icon: <MedicalServicesIcon />, role: ['student'] },
+  { text: 'Sức Khỏe học sinh', path: '/health-check', icon: <MedicalServicesIcon />, role: ['nurse'] },
+  { text: 'Sức khỏe con em', path: '/health-records', icon: <MedicalServicesIcon />, role: ['parent'] },
+  { text: 'Quản lý thuốc', path: '/medication', icon: <MedicationIcon />, role: ['nurse', 'admin'] },
+  { text: 'Gửi thuốc đến trường', path: '/medication', icon: <MedicationIcon />, role: ['parent'] },
+  { text: 'Trang thiết bị', path: '/equipment', icon: <MedicalServicesIcon />, role: ['nurse', 'admin'] },
+  { text: 'Quản lý người dùng', path: '/user-management', icon: <SettingsIcon />, role: ['admin'] },
+  { text: 'Cài đặt hệ thống', path: '/settings', icon: <SettingsIcon />, role: ['admin'] },
+  { text: 'Thông báo', path: '/notifications', icon: <NotificationsIcon /> },
 ];
 
 const MainLayout = () => {
@@ -246,42 +206,6 @@ const MainLayout = () => {
               sx={{ height: 35, mr: 1 }}
             />
           </Box>
-
-          {/* Center section with search box */}
-          {/* <Box 
-            sx={{ 
-              position: 'absolute',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              backgroundColor: 'white',
-              borderRadius: 1,
-              width: { xs: '40%', sm: '30%', md: '25%' },
-              display: { xs: 'none', sm: 'block' },
-            }}
-          >
-            <InputBase
-              placeholder="Tìm kiếm..."
-              sx={{ 
-                pl: 1,
-                pr: 5,
-                py: 0.5,
-                width: '100%',
-                fontSize: '14px'
-              }}
-            />
-            <IconButton 
-              sx={{ 
-                position: 'absolute', 
-                right: 0, 
-                top: '50%', 
-                transform: 'translateY(-50%)',
-                color: 'gray'
-              }}
-            >
-              <SearchIcon />
-            </IconButton>
-          </Box> */}
-
           {/* Right section with user info */}
           <Box sx={{ display: "flex", alignItems: "center" }}>
             {user?.isAuthenticated ? (

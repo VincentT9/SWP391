@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import {
   Button,
@@ -30,8 +30,9 @@ const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
   const navigate = useNavigate();
-   const { login } = useAuth();
-  const { control, handleSubmit, formState: { errors } } = useForm<FormData>({
+  const { login, loading } = useAuth();
+  
+  const { control, handleSubmit, formState: { errors }, setValue, watch } = useForm<FormData>({
     defaultValues: {
       username: '',
       password: '',
@@ -39,17 +40,50 @@ const LoginPage = () => {
     }
   });
 
+  // Watch remember checkbox value
+  const rememberValue = watch('remember');
+
+  // Load saved credentials on component mount
+  useEffect(() => {
+    const savedCredentials = localStorage.getItem('savedLoginCredentials');
+    if (savedCredentials) {
+      try {
+        const { username, password, remember } = JSON.parse(savedCredentials);
+        setValue('username', username || '');
+        setValue('password', password || '');
+        setValue('remember', remember || false);
+      } catch (error) {
+        console.error('Error loading saved credentials:', error);
+        // Clear corrupted data
+        localStorage.removeItem('savedLoginCredentials');
+      }
+    }
+  }, [setValue]);
+
   const onSubmit = async (data: FormData) => {
     try {
       setLoginError(null); // Clear previous errors
       
-      console.log('Login form submitted:', data);
+      // Save or remove credentials based on remember checkbox
+      if (data.remember) {
+        // Save credentials to localStorage
+        const credentialsToSave = {
+          username: data.username,
+          password: data.password,
+          remember: true
+        };
+        localStorage.setItem('savedLoginCredentials', JSON.stringify(credentialsToSave));
+        console.log('Credentials saved to localStorage');
+      } else {
+        // Remove saved credentials
+        localStorage.removeItem('savedLoginCredentials');
+        console.log('Saved credentials removed from localStorage');
+      }
       
       // Use the login function from AuthContext
       const success = await login(data.username, data.password);
       
       if (success) {
-        console.log('Login successful');
         navigate('/'); // Navigate to dashboard on successful login
       } else {
         setLoginError('Tên truy cập hoặc mật khẩu không đúng. Vui lòng thử lại.');
@@ -62,6 +96,15 @@ const LoginPage = () => {
 
   const handleClickShowPassword = () => {
     setShowPassword(!showPassword);
+  };
+
+  // Clear saved credentials function
+  const handleClearSavedCredentials = () => {
+    localStorage.removeItem('savedLoginCredentials');
+    setValue('username', '');
+    setValue('password', '');
+    setValue('remember', false);
+    console.log('Credentials cleared');
   };
 
   return (
@@ -99,6 +142,8 @@ const LoginPage = () => {
               {loginError}
             </Alert>
           )}
+
+          
           
           <Typography sx={{ mb: 1 }}>Tên truy cập:</Typography>
           <Controller
@@ -174,7 +219,8 @@ const LoginPage = () => {
                 <FormControlLabel
                   control={
                     <Checkbox 
-                      {...field} 
+                      {...field}
+                      checked={field.value}
                       sx={{ 
                         color: 'white',
                         '&.Mui-checked': {
@@ -192,11 +238,32 @@ const LoginPage = () => {
               Quên mật khẩu
             </RouterLink>
           </Box>
+
+          {/* Clear credentials button - only show if credentials are saved */}
+          {rememberValue && (
+            <Box sx={{ textAlign: 'center', mb: 2 }}>
+              <Button
+                variant="text"
+                size="small"
+                onClick={handleClearSavedCredentials}
+                sx={{ 
+                  color: 'yellow',
+                  textTransform: 'none',
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                  }
+                }}
+              >
+                Xóa thông tin đã lưu
+              </Button>
+            </Box>
+          )}
           
           <Button
             type="submit"
             fullWidth
             variant="contained"
+            disabled={loading}
             sx={{ 
               mt: 1, 
               mb: 2, 
@@ -204,10 +271,13 @@ const LoginPage = () => {
               backgroundColor: '#75c043',
               '&:hover': {
                 backgroundColor: '#65b033',
+              },
+              '&:disabled': {
+                backgroundColor: '#cccccc',
               }
             }}
           >
-            Đăng nhập
+            {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
           </Button>
           
           <Box sx={{ textAlign: 'center' }}>
@@ -215,10 +285,11 @@ const LoginPage = () => {
               Không có tài khoản? <RouterLink to="/register" style={{ color: 'yellow', textDecoration: 'none' }}>Đăng ký</RouterLink>
             </Typography>
           </Box>
+
         </Box>
       </Paper>
     </Box>
   );
 };
 
-export default LoginPage; 
+export default LoginPage;
