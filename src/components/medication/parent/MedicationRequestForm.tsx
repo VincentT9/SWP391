@@ -55,15 +55,19 @@ const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Validate các trường bắt buộc dựa trên loại thông tin
+    if (!studentId || !startDate || !daysRequired) {
+      return;
+    }
+
+    // Validate based on medication info type
+    if (medicationInfoType === "receipt" && !receiptImage) {
+      return;
+    }
+
     if (
-      !studentId ||
-      !medicationName ||
-      !dosage ||
-      !instructions ||
-      !daysRequired ||
-      !startDate ||
-      (medicationInfoType === "receipt" && !receiptImage) ||
-      (medicationInfoType === "manual" && !components)
+      medicationInfoType === "manual" &&
+      (!medicationName || !dosage || !instructions || !components)
     ) {
       return;
     }
@@ -74,9 +78,13 @@ const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
       studentId,
       studentName: studentOptions.find((s) => s.id === studentId)?.name || "",
       parentId,
-      medicationName,
-      dosage,
-      instructions,
+      medicationName:
+        medicationInfoType === "manual"
+          ? medicationName
+          : "(Xem trong hóa đơn)",
+      dosage: medicationInfoType === "manual" ? dosage : "(Xem trong hóa đơn)",
+      instructions:
+        medicationInfoType === "manual" ? instructions : "(Xem trong hóa đơn)",
       daysRequired,
       startDate: startDate as Date,
       endDate: addDays(startDate as Date, daysRequired),
@@ -126,8 +134,8 @@ const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
       </Typography>
 
       <Alert severity="info" sx={{ mb: 2 }}>
-        Vui lòng chụp hóa đơn thuốc hoặc nhập thành phần thuốc để nhà trường có thể
-        kiểm tra.
+        Vui lòng chụp hóa đơn thuốc hoặc nhập thành phần thuốc để nhà trường có
+        thể kiểm tra.
       </Alert>
 
       <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
@@ -150,82 +158,11 @@ const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
           </FormControl>
         </Box>
 
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: { xs: "column", sm: "row" },
-            gap: 2,
-            mb: 2,
-          }}
-        >
-          <TextField
-            required
-            fullWidth
-            id="medication-name"
-            label="Tên thuốc"
-            value={medicationName}
-            onChange={(e) => setMedicationName(e.target.value)}
-          />
-
-          <TextField
-            required
-            fullWidth
-            id="dosage"
-            label="Liều lượng"
-            value={dosage}
-            onChange={(e) => setDosage(e.target.value)}
-            placeholder="Ví dụ: 500mg, 1 viên"
-          />
-        </Box>
-
-        <Box sx={{ mb: 2 }}>
-          <TextField
-            required
-            fullWidth
-            id="instructions"
-            label="Hướng dẫn sử dụng"
-            value={instructions}
-            onChange={(e) => setInstructions(e.target.value)}
-            placeholder="Ví dụ: Uống sau bữa ăn trưa"
-          />
-        </Box>
-
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: { xs: "column", sm: "row" },
-            gap: 2,
-            mb: 2,
-          }}
-        >
-          <TextField
-            required
-            fullWidth
-            id="days-required"
-            label="Số ngày cần uống"
-            type="number"
-            InputProps={{ inputProps: { min: 1, max: 30 } }}
-            value={daysRequired}
-            onChange={(e) => setDaysRequired(parseInt(e.target.value))}
-          />
-
-          <LocalizationProvider dateAdapter={AdapterDateFns}>
-            <DatePicker
-              label="Ngày bắt đầu"
-              value={startDate}
-              onChange={(newValue) => setStartDate(newValue)}
-              slotProps={{ textField: { fullWidth: true, required: true } }}
-            />
-          </LocalizationProvider>
-        </Box>
-
-        {/* Phần thông tin thuốc */}
-        <Box sx={{ mb: 3, mt: 3 }}>
-          <Typography
-            variant="subtitle1"
-            gutterBottom
-            fontWeight="medium"
-          ></Typography>
+        {/* Phần chọn loại thông tin thuốc */}
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="subtitle1" gutterBottom fontWeight="medium">
+            Thông tin thuốc
+          </Typography>
           <Divider sx={{ mb: 2 }} />
 
           <FormControl component="fieldset">
@@ -234,9 +171,7 @@ const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
               name="medication-info-type"
               value={medicationInfoType}
               onChange={(e) =>
-                setMedicationInfoType(
-                  e.target.value as "receipt" | "manual"
-                )
+                setMedicationInfoType(e.target.value as "receipt" | "manual")
               }
             >
               <FormControlLabel
@@ -253,6 +188,7 @@ const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
           </FormControl>
 
           {medicationInfoType === "receipt" ? (
+            // Phần chụp hóa đơn
             <Box
               sx={{
                 mt: 2,
@@ -298,13 +234,57 @@ const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
 
               {!receiptImage && (
                 <Typography variant="body2" color="textSecondary">
-                  Vui lòng chụp rõ thông tin về tên thuốc, thành phần và hướng dẫn
-                  sử dụng
+                  Vui lòng chụp rõ thông tin về tên thuốc, thành phần và hướng
+                  dẫn sử dụng
                 </Typography>
               )}
             </Box>
           ) : (
+            // Phần nhập thành phần thuốc - bao gồm các trường được yêu cầu
             <Box sx={{ mt: 2, mb: 2 }}>
+              {/* Tên thuốc và liều lượng */}
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: { xs: "column", sm: "row" },
+                  gap: 2,
+                  mb: 2,
+                }}
+              >
+                <TextField
+                  required
+                  fullWidth
+                  id="medication-name"
+                  label="Tên thuốc"
+                  value={medicationName}
+                  onChange={(e) => setMedicationName(e.target.value)}
+                />
+
+                <TextField
+                  required
+                  fullWidth
+                  id="dosage"
+                  label="Liều lượng"
+                  value={dosage}
+                  onChange={(e) => setDosage(e.target.value)}
+                  placeholder="Ví dụ: 500mg, 1 viên"
+                />
+              </Box>
+
+              {/* Hướng dẫn sử dụng */}
+              <Box sx={{ mb: 2 }}>
+                <TextField
+                  required
+                  fullWidth
+                  id="instructions"
+                  label="Hướng dẫn sử dụng"
+                  value={instructions}
+                  onChange={(e) => setInstructions(e.target.value)}
+                  placeholder="Ví dụ: Uống sau bữa ăn trưa"
+                />
+              </Box>
+
+              {/* Thành phần thuốc */}
               <TextField
                 required
                 fullWidth
@@ -318,6 +298,36 @@ const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
               />
             </Box>
           )}
+        </Box>
+
+        {/* Thông tin thời gian */}
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: { xs: "column", sm: "row" },
+            gap: 2,
+            mb: 2,
+          }}
+        >
+          <TextField
+            required
+            fullWidth
+            id="days-required"
+            label="Số ngày cần uống"
+            type="number"
+            InputProps={{ inputProps: { min: 1, max: 30 } }}
+            value={daysRequired}
+            onChange={(e) => setDaysRequired(parseInt(e.target.value))}
+          />
+
+          <LocalizationProvider dateAdapter={AdapterDateFns}>
+            <DatePicker
+              label="Ngày bắt đầu"
+              value={startDate}
+              onChange={(newValue) => setStartDate(newValue)}
+              slotProps={{ textField: { fullWidth: true, required: true } }}
+            />
+          </LocalizationProvider>
         </Box>
 
         <Box sx={{ mb: 2 }}>
