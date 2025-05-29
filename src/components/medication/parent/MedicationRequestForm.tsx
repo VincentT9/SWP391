@@ -11,11 +11,16 @@ import {
   MenuItem,
   Snackbar,
   Alert,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
+  Divider,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { addDays } from "date-fns";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 
 // For demo purposes - would be replaced with actual API calls
 import { medicationRequests } from "../../../utils/mockData";
@@ -40,6 +45,13 @@ const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
   const [notes, setNotes] = useState("");
   const [openSnackbar, setOpenSnackbar] = useState(false);
 
+  // Thêm state cho phần mới
+  const [medicationInfoType, setMedicationInfoType] = useState<
+    "receipt" | "manual"
+  >("receipt");
+  const [receiptImage, setReceiptImage] = useState<File | null>(null);
+  const [components, setComponents] = useState("");
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -49,7 +61,9 @@ const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
       !dosage ||
       !instructions ||
       !daysRequired ||
-      !startDate
+      !startDate ||
+      (medicationInfoType === "receipt" && !receiptImage) ||
+      (medicationInfoType === "manual" && !components)
     ) {
       return;
     }
@@ -68,6 +82,8 @@ const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
       endDate: addDays(startDate as Date, daysRequired),
       status: "requested" as const,
       notes,
+      hasReceipt: medicationInfoType === "receipt",
+      components: medicationInfoType === "manual" ? components : "",
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -86,6 +102,8 @@ const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
     setDaysRequired(1);
     setStartDate(new Date());
     setNotes("");
+    setReceiptImage(null);
+    setComponents("");
 
     // Notify parent component
     onRequestSubmitted();
@@ -95,11 +113,22 @@ const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
     setOpenSnackbar(false);
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setReceiptImage(e.target.files[0]);
+    }
+  };
+
   return (
     <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
       <Typography variant="h6" gutterBottom>
         Gửi thuốc đến trường
       </Typography>
+
+      <Alert severity="info" sx={{ mb: 2 }}>
+        Vui lòng chụp hóa đơn thuốc hoặc nhập thành phần thuốc để nhà trường có thể
+        kiểm tra.
+      </Alert>
 
       <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
         <Box sx={{ mb: 2 }}>
@@ -188,6 +217,107 @@ const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
               slotProps={{ textField: { fullWidth: true, required: true } }}
             />
           </LocalizationProvider>
+        </Box>
+
+        {/* Phần thông tin thuốc */}
+        <Box sx={{ mb: 3, mt: 3 }}>
+          <Typography
+            variant="subtitle1"
+            gutterBottom
+            fontWeight="medium"
+          ></Typography>
+          <Divider sx={{ mb: 2 }} />
+
+          <FormControl component="fieldset">
+            <RadioGroup
+              row
+              name="medication-info-type"
+              value={medicationInfoType}
+              onChange={(e) =>
+                setMedicationInfoType(
+                  e.target.value as "receipt" | "manual"
+                )
+              }
+            >
+              <FormControlLabel
+                value="receipt"
+                control={<Radio />}
+                label="Chụp hóa đơn thuốc"
+              />
+              <FormControlLabel
+                value="manual"
+                control={<Radio />}
+                label="Nhập thành phần thuốc"
+              />
+            </RadioGroup>
+          </FormControl>
+
+          {medicationInfoType === "receipt" ? (
+            <Box
+              sx={{
+                mt: 2,
+                mb: 2,
+                border: "1px dashed #ccc",
+                p: 3,
+                borderRadius: 1,
+                textAlign: "center",
+              }}
+            >
+              <input
+                accept="image/*"
+                style={{ display: "none" }}
+                id="receipt-upload-button"
+                type="file"
+                onChange={handleFileChange}
+              />
+              <label htmlFor="receipt-upload-button">
+                <Button
+                  component="span"
+                  variant="outlined"
+                  startIcon={<CloudUploadIcon />}
+                  sx={{ mb: 2 }}
+                >
+                  Tải lên hóa đơn thuốc
+                </Button>
+              </label>
+
+              {receiptImage && (
+                <Box sx={{ mt: 2 }}>
+                  <Typography variant="body2" color="textSecondary">
+                    Đã chọn: {receiptImage.name}
+                  </Typography>
+                  <Box sx={{ mt: 1 }}>
+                    <img
+                      src={URL.createObjectURL(receiptImage)}
+                      alt="Hóa đơn thuốc"
+                      style={{ maxWidth: "100%", maxHeight: "200px" }}
+                    />
+                  </Box>
+                </Box>
+              )}
+
+              {!receiptImage && (
+                <Typography variant="body2" color="textSecondary">
+                  Vui lòng chụp rõ thông tin về tên thuốc, thành phần và hướng dẫn
+                  sử dụng
+                </Typography>
+              )}
+            </Box>
+          ) : (
+            <Box sx={{ mt: 2, mb: 2 }}>
+              <TextField
+                required
+                fullWidth
+                id="medication-components"
+                label="Thành phần thuốc"
+                multiline
+                rows={4}
+                value={components}
+                onChange={(e) => setComponents(e.target.value)}
+                placeholder="Vui lòng nhập đầy đủ thành phần của thuốc. Ví dụ: Paracetamol 500mg, Lactose 50mg..."
+              />
+            </Box>
+          )}
         </Box>
 
         <Box sx={{ mb: 2 }}>
