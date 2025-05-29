@@ -192,40 +192,7 @@ const MainLayout = () => {
             />
           </Box>
           
-          {/* Center section with search box */}
-          <Box 
-            sx={{ 
-              position: 'absolute',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              backgroundColor: 'white',
-              borderRadius: 1,
-              width: { xs: '40%', sm: '30%', md: '25%' },
-              display: { xs: 'none', sm: 'block' },
-            }}
-          >
-            <InputBase
-              placeholder="Tìm kiếm..."
-              sx={{ 
-                pl: 1,
-                pr: 5,
-                py: 0.5,
-                width: '100%',
-                fontSize: '14px'
-              }}
-            />
-            <IconButton 
-              sx={{ 
-                position: 'absolute', 
-                right: 0, 
-                top: '50%', 
-                transform: 'translateY(-50%)',
-                color: 'gray'
-              }}
-            >
-              <SearchIcon />
-            </IconButton>
-          </Box>
+          
           
           {/* Right section with user info */}
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
