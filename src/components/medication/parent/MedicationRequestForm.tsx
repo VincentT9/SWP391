@@ -240,38 +240,42 @@ const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
               )}
             </Box>
           ) : (
-            // Phần nhập thành phần thuốc - bao gồm các trường được yêu cầu
+            // Phần nhập thành phần thuốc - đã điều chỉnh thứ tự
             <Box sx={{ mt: 2, mb: 2 }}>
-              {/* Tên thuốc và liều lượng */}
-              <Box
-                sx={{
-                  display: "flex",
-                  flexDirection: { xs: "column", sm: "row" },
-                  gap: 2,
-                  mb: 2,
-                }}
-              >
+              {/* Thành phần thuốc - đã chuyển lên đầu tiên */}
+              <Box sx={{ mb: 2 }}>
                 <TextField
                   required
                   fullWidth
-                  id="medication-name"
-                  label="Tên thuốc"
-                  value={medicationName}
-                  onChange={(e) => setMedicationName(e.target.value)}
+                  id="medication-components"
+                  label="Tên thuốc và thành phần"
+                  multiline
+                  rows={4}
+                  value={components}
+                  onChange={(e) => setComponents(e.target.value)}
+                  placeholder={`Ví dụ:
+1. Panadol Extra: Paracetamol 500mg, Caffeine 65mg
+2. Vitamin C DHG: Acid ascorbic 500mg
+3. Thuốc ho Bảo Thanh: Cao khô lá thuốc, Bạc hà 10mg`}
+                  helperText={`Liệt kê tất cả các loại thuốc và thành phần chính. Mỗi thuốc ghi rõ tên và thành phần trên một dòng riêng.`}
                 />
+              </Box>
 
+              {/* Liều lượng với ví dụ rõ hơn - giữ ở giữa */}
+              <Box sx={{ mb: 2 }}>
                 <TextField
                   required
                   fullWidth
                   id="dosage"
-                  label="Liều lượng"
+                  label="Liều lượng và cách dùng"
                   value={dosage}
                   onChange={(e) => setDosage(e.target.value)}
-                  placeholder="Ví dụ: 500mg, 1 viên"
+                  placeholder="Ví dụ: 1 viên sáng, 1 viên chiều; 5ml x 3 lần/ngày"
+                  helperText="Ghi rõ số lượng và tần suất sử dụng thuốc"
                 />
               </Box>
 
-              {/* Hướng dẫn sử dụng */}
+              {/* Hướng dẫn sử dụng - đã chuyển xuống cuối */}
               <Box sx={{ mb: 2 }}>
                 <TextField
                   required
@@ -280,22 +284,10 @@ const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
                   label="Hướng dẫn sử dụng"
                   value={instructions}
                   onChange={(e) => setInstructions(e.target.value)}
-                  placeholder="Ví dụ: Uống sau bữa ăn trưa"
+                  placeholder="Ví dụ: Uống sau bữa ăn, không nhai viên thuốc, pha với nước ấm"
+                  helperText="Các lưu ý đặc biệt khi dùng thuốc cho con bạn"
                 />
               </Box>
-
-              {/* Thành phần thuốc */}
-              <TextField
-                required
-                fullWidth
-                id="medication-components"
-                label="Thành phần thuốc"
-                multiline
-                rows={4}
-                value={components}
-                onChange={(e) => setComponents(e.target.value)}
-                placeholder="Vui lòng nhập đầy đủ thành phần của thuốc. Ví dụ: Paracetamol 500mg, Lactose 50mg..."
-              />
             </Box>
           )}
         </Box>
