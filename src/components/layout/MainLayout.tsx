@@ -59,8 +59,8 @@ const menuItems: MenuItem[] = [
     role: ["student"],
   },
   {
-    text: "Hồ sơ học sinh",
-    path: "/student-records",
+    text: "Sức Khỏe học sinh",
+    path: "/health-check",
     icon: <MedicalServicesIcon />,
     role: ["nurse"],
   },
@@ -100,6 +100,7 @@ const menuItems: MenuItem[] = [
     icon: <SettingsIcon />,
     role: ["admin"],
   },
+  { text: "Thông báo", path: "/notifications", icon: <NotificationsIcon /> },
 ];
 
 const MainLayout = () => {
