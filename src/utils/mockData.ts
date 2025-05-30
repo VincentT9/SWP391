@@ -709,6 +709,9 @@ export const medicationRequests: MedicationRequest[] = [
     notes: "Học sinh bị sốt nhẹ",
     createdAt: new Date("2023-05-31T20:00:00"),
     updatedAt: new Date("2023-06-01T08:30:00"),
+    components: "Thuốc và thành phần mẫu",
+    dosesPerDay: 2,
+    hasReceipt: false,
   },
   {
     id: "2",
@@ -725,6 +728,9 @@ export const medicationRequests: MedicationRequest[] = [
     notes: "Bổ sung vitamin hàng ngày",
     createdAt: new Date("2023-06-01T19:45:00"),
     updatedAt: new Date("2023-06-01T19:45:00"),
+    components: "Thuốc và thành phần mẫu",
+    dosesPerDay: 2,
+    hasReceipt: false,
   },
   {
     id: "3",
@@ -743,6 +749,9 @@ export const medicationRequests: MedicationRequest[] = [
     notes: "Điều trị nhiễm trùng tai",
     createdAt: new Date("2023-05-31T21:30:00"),
     updatedAt: new Date("2023-06-05T16:00:00"),
+    components: "Thuốc và thành phần mẫu",
+    dosesPerDay: 2,
+    hasReceipt: false,
   },
 ];
 

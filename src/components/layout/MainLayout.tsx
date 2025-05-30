@@ -65,7 +65,7 @@ const menuItems: MenuItem[] = [
     role: ["nurse"],
   },
   {
-    text: "Sức khỏe con em",
+    text: "Hồ sơ sức khỏe học sinh",
     path: "/health-records",
     icon: <MedicalServicesIcon />,
     role: ["parent"],
