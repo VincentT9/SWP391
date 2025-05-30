@@ -35,14 +35,11 @@ const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
 }) => {
   const [studentId, setStudentId] = useState("");
   const [medicationName, setMedicationName] = useState("");
-  const [dosage, setDosage] = useState("");
-  const [instructions, setInstructions] = useState("");
+  const [dosesPerDay, setDosesPerDay] = useState<number>(1);
   const [daysRequired, setDaysRequired] = useState<number>(1);
   const [startDate, setStartDate] = useState<Date | null>(new Date());
   const [notes, setNotes] = useState("");
   const [openSnackbar, setOpenSnackbar] = useState(false);
-
-  // Loại bỏ state medicationInfoType và giữ lại các state khác
   const [receiptImage, setReceiptImage] = useState<File | null>(null);
   const [components, setComponents] = useState("");
 
@@ -55,9 +52,9 @@ const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
       !startDate ||
       !daysRequired ||
       !components ||
-      !dosage ||
-      !instructions
+      !dosesPerDay
     ) {
+      alert("Vui lòng điền đầy đủ các thông tin bắt buộc");
       return;
     }
 
@@ -68,8 +65,10 @@ const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
       studentName: studentOptions.find((s) => s.id === studentId)?.name || "",
       parentId,
       medicationName,
-      dosage,
-      instructions,
+      dosesPerDay,
+      // Thêm thuộc tính dosage để khớp với interface MedicationRequest
+      dosage: `${dosesPerDay} lần/ngày`,
+      instructions: notes, // Gộp instructions vào notes
       daysRequired,
       startDate: startDate as Date,
       endDate: addDays(startDate as Date, daysRequired),
@@ -90,8 +89,7 @@ const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
     // Reset form
     setStudentId("");
     setMedicationName("");
-    setDosage("");
-    setInstructions("");
+    setDosesPerDay(1);
     setDaysRequired(1);
     setStartDate(new Date());
     setNotes("");
@@ -142,7 +140,7 @@ const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
           </FormControl>
         </Box>
 
-        {/* Phần thông tin thuốc - bỏ RadioGroup, giữ lại phần nhập thông tin thuốc */}
+        {/* Phần thông tin thuốc */}
         <Box sx={{ mb: 3 }}>
           <Typography variant="subtitle1" gutterBottom fontWeight="medium">
             Thông tin thuốc
@@ -170,31 +168,18 @@ const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
               />
             </Box>
 
-            {/* Liều lượng */}
+            {/* Số lần uống trong ngày - Giữ nguyên */}
             <Box sx={{ mb: 2 }}>
               <TextField
                 required
                 fullWidth
-                id="dosage"
-                label="Liều lượng và cách dùng"
-                value={dosage}
-                onChange={(e) => setDosage(e.target.value)}
-                placeholder="Ví dụ: 1 viên sáng, 1 viên chiều; 5ml x 3 lần/ngày"
-                helperText="Ghi rõ số lượng và tần suất sử dụng thuốc"
-              />
-            </Box>
-
-            {/* Hướng dẫn sử dụng */}
-            <Box sx={{ mb: 2 }}>
-              <TextField
-                required
-                fullWidth
-                id="instructions"
-                label="Hướng dẫn sử dụng"
-                value={instructions}
-                onChange={(e) => setInstructions(e.target.value)}
-                placeholder="Ví dụ: Uống sau bữa ăn, không nhai viên thuốc, pha với nước ấm"
-                helperText="Các lưu ý đặc biệt khi dùng thuốc cho con bạn"
+                id="doses-per-day"
+                label="Số lần uống trong ngày"
+                type="number"
+                InputProps={{ inputProps: { min: 1, max: 10 } }}
+                value={dosesPerDay}
+                onChange={(e) => setDosesPerDay(parseInt(e.target.value))}
+                helperText="Nhập số lần uống thuốc trong ngày (1-10 lần)"
               />
             </Box>
           </Box>
@@ -287,15 +272,18 @@ const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
           </LocalizationProvider>
         </Box>
 
+        {/* Đổi Ghi chú thành Hướng dẫn sử dụng và ghi chú */}
         <Box sx={{ mb: 2 }}>
           <TextField
             fullWidth
             id="notes"
-            label="Ghi chú"
+            label="Hướng dẫn sử dụng và ghi chú"
             multiline
             rows={3}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
+            placeholder="Ví dụ: Uống sau bữa ăn, không nhai viên thuốc, pha với nước ấm, uống trong bữa sáng..."
+            helperText="Nhập các lưu ý đặc biệt khi dùng thuốc và các thông tin bổ sung khác"
           />
         </Box>
 
