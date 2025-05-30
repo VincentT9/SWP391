@@ -51,16 +51,56 @@ interface MenuItem {
 }
 
 const menuItems: MenuItem[] = [
-  { text: 'Trang chủ', path: '/', icon: <HomeIcon /> },
-  { text: 'Sức khỏe của tôi', path: '/my-health', icon: <MedicalServicesIcon />, role: ['student'] },
-  { text: 'Sức Khỏe học sinh', path: '/health-check', icon: <MedicalServicesIcon />, role: ['nurse'] },
-  { text: 'Sức khỏe con em', path: '/health-records', icon: <MedicalServicesIcon />, role: ['parent'] },
-  { text: 'Quản lý thuốc', path: '/medication', icon: <MedicationIcon />, role: ['nurse', 'admin'] },
-  { text: 'Gửi thuốc đến trường', path: '/medication', icon: <MedicationIcon />, role: ['parent'] },
-  { text: 'Trang thiết bị', path: '/equipment', icon: <MedicalServicesIcon />, role: ['nurse', 'admin'] },
-  { text: 'Quản lý người dùng', path: '/user-management', icon: <SettingsIcon />, role: ['admin'] },
-  { text: 'Cài đặt hệ thống', path: '/settings', icon: <SettingsIcon />, role: ['admin'] },
-  { text: 'Thông báo', path: '/notifications', icon: <NotificationsIcon /> },
+  { text: "Trang chủ", path: "/", icon: <HomeIcon /> },
+  {
+    text: "Sức khỏe của tôi",
+    path: "/my-health",
+    icon: <MedicalServicesIcon />,
+    role: ["student"],
+  },
+  {
+    text: "Sức Khỏe học sinh",
+    path: "/health-check",
+    icon: <MedicalServicesIcon />,
+    role: ["nurse"],
+  },
+  {
+    text: "Sức khỏe con em",
+    path: "/health-records",
+    icon: <MedicalServicesIcon />,
+    role: ["parent"],
+  },
+  {
+    text: "Quản lý thuốc",
+    path: "/medication",
+    icon: <MedicationIcon />,
+    role: ["nurse", "admin"],
+  },
+  {
+    text: "Gửi thuốc đến trường",
+    path: "/medication",
+    icon: <MedicationIcon />,
+    role: ["parent"],
+  },
+  {
+    text: "Trang thiết bị",
+    path: "/equipment",
+    icon: <MedicalServicesIcon />,
+    role: ["nurse", "admin"],
+  },
+  {
+    text: "Quản lý người dùng",
+    path: "/user-management",
+    icon: <SettingsIcon />,
+    role: ["admin"],
+  },
+  {
+    text: "Cài đặt hệ thống",
+    path: "/settings",
+    icon: <SettingsIcon />,
+    role: ["admin"],
+  },
+  { text: "Thông báo", path: "/notifications", icon: <NotificationsIcon /> },
 ];
 
 const MainLayout = () => {
