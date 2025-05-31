@@ -246,7 +246,7 @@ export interface MedicationRequest {
   notes: string;
   createdAt: Date;
   updatedAt: Date;
-  
+
   // Các thuộc tính mới cần thêm
   components: string;
   dosesPerDay: number;
