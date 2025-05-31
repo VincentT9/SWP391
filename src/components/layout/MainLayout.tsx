@@ -64,6 +64,12 @@ const menuItems: MenuItem[] = [
     icon: <MedicalServicesIcon />,
     role: ["nurse"],
   },
+    {
+    text: "Sự kiện y tế",
+    path: "/medical-events",
+    icon: <MedicalServicesIcon />,
+    role: ["nurse", "admin", "parent"],
+  },
   {
     text: "Hồ sơ sức khỏe học sinh",
     path: "/health-records",
@@ -83,20 +89,14 @@ const menuItems: MenuItem[] = [
     role: ["parent"],
   },
   {
-    text: "Trang thiết bị",
-    path: "/equipment",
+    text: "Vật tư y tế",
+    path: "/medical-supplier",
     icon: <MedicalServicesIcon />,
     role: ["nurse", "admin"],
   },
   {
     text: "Quản lý người dùng",
     path: "/user-management",
-    icon: <SettingsIcon />,
-    role: ["admin"],
-  },
-  {
-    text: "Cài đặt hệ thống",
-    path: "/settings",
     icon: <SettingsIcon />,
     role: ["admin"],
   },
