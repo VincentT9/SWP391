@@ -179,7 +179,11 @@ const HealthRecordsPage = () => {
   };
 
   // Cập nhật thông tin một bệnh mãn tính
-  const handleChronicConditionChange = (index: number, field: string, value: any) => {
+  const handleChronicConditionChange = (
+    index: number,
+    field: string,
+    value: any
+  ) => {
     const newConditions = [...updatedRecord.chronicConditions];
     newConditions[index] = { ...newConditions[index], [field]: value };
     setUpdatedRecord({ ...updatedRecord, chronicConditions: newConditions });
@@ -754,9 +758,15 @@ const HealthRecordsPage = () => {
                       label="Ngày chẩn đoán"
                       value={condition.diagnosisDate}
                       onChange={(date) =>
-                        handleChronicConditionChange(index, "diagnosisDate", date)
+                        handleChronicConditionChange(
+                          index,
+                          "diagnosisDate",
+                          date
+                        )
                       }
-                      slotProps={{ textField: { fullWidth: true, size: "small" } }}
+                      slotProps={{
+                        textField: { fullWidth: true, size: "small" },
+                      }}
                     />
                   </LocalizationProvider>
 
@@ -764,7 +774,11 @@ const HealthRecordsPage = () => {
                     label="Ghi chú"
                     value={condition.notes}
                     onChange={(e) =>
-                      handleChronicConditionChange(index, "notes", e.target.value)
+                      handleChronicConditionChange(
+                        index,
+                        "notes",
+                        e.target.value
+                      )
                     }
                     fullWidth
                     size="small"
