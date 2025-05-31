@@ -11,6 +11,18 @@ import {
   Button,
   Divider,
   Avatar,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  MenuItem,
+  IconButton,
+  FormControl,
+  InputLabel,
+  Select,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import {
   Person as PersonIcon,
@@ -19,35 +31,162 @@ import {
   Bloodtype as BloodtypeIcon,
   Warning as WarningIcon,
   LocalHospital as HospitalIcon,
+  Add as AddIcon,
+  Close as CloseIcon,
+  Delete as DeleteIcon,
 } from "@mui/icons-material";
 import { mockHealthRecords, mockStudents } from "../../utils/mockData";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+
+// ===== KHAI BÁO KIỂU DỮ LIỆU =====
+// Định nghĩa kiểu BloodType cho nhóm máu
+type BloodType = "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-" | "";
 
 const HealthRecordsPage = () => {
+  // ===== QUẢN LÝ STATE =====
+  // State cho việc chọn học sinh trên tab
   const [selectedTab, setSelectedTab] = useState(0);
+  // State cho dialog cập nhật hồ sơ
+  const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
+  // State cho thông báo snackbar
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setSelectedTab(newValue);
-  };
-
-  // Get the student and health record for the selected tab
+  // ===== LẤY DỮ LIỆU HỒ SƠ =====
+  // Lấy thông tin học sinh được chọn
   const student = mockStudents[selectedTab];
+  // Tìm hồ sơ sức khỏe tương ứng với học sinh
   const healthRecord = mockHealthRecords.find(
     (record) => record.studentId === student.id
   );
 
-  const getSeverityColor = (severity: string) => {
-    switch (severity) {
-      case "mild":
-        return "success";
-      case "moderate":
-        return "warning";
-      case "severe":
-        return "error";
-      default:
-        return "default";
-    }
+  // ===== QUẢN LÝ FORM CẬP NHẬT =====
+  // State lưu trữ dữ liệu đang chỉnh sửa
+  const [updatedRecord, setUpdatedRecord] = useState({
+    height: 0,
+    weight: 0,
+    bloodType: "" as BloodType,
+    allergies: [] as any[],
+    chronicConditions: [] as any[],
+  });
+
+  // ===== XỬ LÝ CHUYỂN TAB HỌC SINH =====
+  // Xử lý khi người dùng chuyển tab học sinh
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setSelectedTab(newValue);
   };
 
+  // ===== XỬ LÝ DIALOG CẬP NHẬT =====
+  // Khởi tạo form khi mở dialog cập nhật
+  const handleOpenUpdateDialog = () => {
+    if (healthRecord) {
+      setUpdatedRecord({
+        height: healthRecord.height,
+        weight: healthRecord.weight,
+        bloodType: (healthRecord.bloodType || "") as BloodType,
+        allergies: [...healthRecord.allergies],
+        chronicConditions: [...healthRecord.chronicConditions],
+      });
+    }
+    setUpdateDialogOpen(true);
+  };
+
+  // Đóng dialog cập nhật
+  const handleCloseUpdateDialog = () => {
+    setUpdateDialogOpen(false);
+  };
+
+  // ===== XỬ LÝ CẬP NHẬT HỒ SƠ =====
+  // Lưu dữ liệu khi người dùng xác nhận cập nhật
+  const handleUpdateHealthRecord = () => {
+    if (healthRecord) {
+      const recordIndex = mockHealthRecords.findIndex(
+        (record) => record.id === healthRecord.id
+      );
+
+      if (recordIndex !== -1) {
+        // Cập nhật dữ liệu mới vào hồ sơ
+        mockHealthRecords[recordIndex] = {
+          ...mockHealthRecords[recordIndex],
+          height: updatedRecord.height,
+          weight: updatedRecord.weight,
+          bloodType:
+            updatedRecord.bloodType === ""
+              ? undefined
+              : updatedRecord.bloodType,
+          allergies: updatedRecord.allergies,
+          chronicConditions: updatedRecord.chronicConditions,
+          lastUpdated: new Date(), // Cập nhật thời gian chỉnh sửa
+        };
+
+        // Hiển thị thông báo thành công
+        setSnackbarMessage("Hồ sơ sức khỏe đã được cập nhật thành công!");
+        setSnackbarOpen(true);
+      }
+    }
+
+    // Đóng dialog sau khi hoàn thành
+    setUpdateDialogOpen(false);
+  };
+
+  // ===== QUẢN LÝ DỊ ỨNG =====
+  // Thêm một dị ứng mới
+  const handleAddAllergy = () => {
+    const newAllergies = [...updatedRecord.allergies];
+    newAllergies.push({
+      id: `new-allergy-${Date.now()}`,
+      name: "",
+      severity: "mild",
+      symptoms: "",
+    });
+    setUpdatedRecord({ ...updatedRecord, allergies: newAllergies });
+  };
+
+  // Xóa một dị ứng
+  const handleRemoveAllergy = (index: number) => {
+    const newAllergies = [...updatedRecord.allergies];
+    newAllergies.splice(index, 1);
+    setUpdatedRecord({ ...updatedRecord, allergies: newAllergies });
+  };
+
+  // Cập nhật thông tin một dị ứng
+  const handleAllergyChange = (index: number, field: string, value: any) => {
+    const newAllergies = [...updatedRecord.allergies];
+    newAllergies[index] = { ...newAllergies[index], [field]: value };
+    setUpdatedRecord({ ...updatedRecord, allergies: newAllergies });
+  };
+
+  // ===== QUẢN LÝ BỆNH MÃN TÍNH =====
+  // Thêm một bệnh mãn tính mới
+  const handleAddChronicCondition = () => {
+    const newConditions = [...updatedRecord.chronicConditions];
+    newConditions.push({
+      id: `new-condition-${Date.now()}`,
+      name: "",
+      diagnosisDate: new Date(),
+      notes: "",
+    });
+    setUpdatedRecord({ ...updatedRecord, chronicConditions: newConditions });
+  };
+
+  // Xóa một bệnh mãn tính
+  const handleRemoveChronicCondition = (index: number) => {
+    const newConditions = [...updatedRecord.chronicConditions];
+    newConditions.splice(index, 1);
+    setUpdatedRecord({ ...updatedRecord, chronicConditions: newConditions });
+  };
+
+  // Cập nhật thông tin một bệnh mãn tính
+  const handleChronicConditionChange = (index: number, field: string, value: any) => {
+    const newConditions = [...updatedRecord.chronicConditions];
+    newConditions[index] = { ...newConditions[index], [field]: value };
+    setUpdatedRecord({ ...updatedRecord, chronicConditions: newConditions });
+  };
+
+  // ===== HIỂN THỊ TEXT =====
+  // Chuyển đổi cấp độ nghiêm trọng thành text hiển thị
   const getSeverityText = (severity: string) => {
     switch (severity) {
       case "mild":
@@ -63,7 +202,7 @@ const HealthRecordsPage = () => {
 
   return (
     <Container maxWidth="lg">
-      {/* Header */}
+      {/* ===== HEADER TRANG ===== */}
       <Box sx={{ mb: 4 }}>
         <Typography
           variant="h4"
@@ -77,7 +216,7 @@ const HealthRecordsPage = () => {
         </Typography>
       </Box>
 
-      {/* Student Tabs */}
+      {/* ===== DANH SÁCH TAB HỌC SINH ===== */}
       <Paper sx={{ mb: 4, borderRadius: 2 }}>
         <Tabs
           value={selectedTab}
@@ -101,11 +240,12 @@ const HealthRecordsPage = () => {
         </Tabs>
       </Paper>
 
+      {/* ===== HIỂN THỊ HỒ SƠ SỨC KHỎE ===== */}
       {healthRecord ? (
-        // Thẻ duy nhất chứa tất cả thông tin học sinh
+        // Card chứa thông tin sức khỏe
         <Card sx={{ borderRadius: 2, boxShadow: 3 }}>
           <CardContent sx={{ p: 3 }}>
-            {/* Thông tin cơ bản học sinh */}
+            {/* ===== THÔNG TIN HỌC SINH ===== */}
             <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
               <Avatar sx={{ bgcolor: "#1976d2", width: 56, height: 56, mr: 2 }}>
                 <PersonIcon fontSize="large" />
@@ -121,7 +261,7 @@ const HealthRecordsPage = () => {
               </Box>
             </Box>
 
-            {/* Các chỉ số sức khỏe cơ bản */}
+            {/* ===== CHỈ SỐ SỨC KHỎE CƠ BẢN ===== */}
             <Box sx={{ mb: 3 }}>
               <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 2 }}>
                 Chỉ số sức khỏe
@@ -141,6 +281,7 @@ const HealthRecordsPage = () => {
                   },
                 }}
               >
+                {/* Hiển thị chiều cao */}
                 <Box
                   sx={{
                     display: "flex",
@@ -161,6 +302,7 @@ const HealthRecordsPage = () => {
                   </Box>
                 </Box>
 
+                {/* Hiển thị cân nặng */}
                 <Box
                   sx={{
                     display: "flex",
@@ -181,6 +323,7 @@ const HealthRecordsPage = () => {
                   </Box>
                 </Box>
 
+                {/* Hiển thị nhóm máu */}
                 <Box
                   sx={{
                     display: "flex",
@@ -201,6 +344,7 @@ const HealthRecordsPage = () => {
                   </Box>
                 </Box>
 
+                {/* Hiển thị BMI */}
                 <Box
                   sx={{
                     display: "flex",
@@ -228,7 +372,7 @@ const HealthRecordsPage = () => {
 
             <Divider sx={{ my: 3 }} />
 
-            {/* Dị ứng */}
+            {/* ===== THÔNG TIN DỊ ỨNG ===== */}
             <Box sx={{ mb: 3 }}>
               <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                 <WarningIcon sx={{ color: "#ff9800", mr: 1 }} />
@@ -237,6 +381,7 @@ const HealthRecordsPage = () => {
                 </Typography>
               </Box>
 
+              {/* Danh sách dị ứng hoặc thông báo không có */}
               {healthRecord.allergies.length > 0 ? (
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
                   {healthRecord.allergies.map((allergy) => (
@@ -265,7 +410,7 @@ const HealthRecordsPage = () => {
 
             <Divider sx={{ my: 3 }} />
 
-            {/* Bệnh mãn tính */}
+            {/* ===== THÔNG TIN BỆNH MÃN TÍNH ===== */}
             <Box sx={{ mb: 3 }}>
               <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                 <HospitalIcon sx={{ color: "#f44336", mr: 1 }} />
@@ -274,6 +419,7 @@ const HealthRecordsPage = () => {
                 </Typography>
               </Box>
 
+              {/* Danh sách bệnh mãn tính hoặc thông báo không có */}
               {healthRecord.chronicConditions.length > 0 ? (
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
                   {healthRecord.chronicConditions.map((condition) => (
@@ -302,6 +448,7 @@ const HealthRecordsPage = () => {
           </CardContent>
         </Card>
       ) : (
+        /* ===== HIỂN THỊ KHI KHÔNG CÓ HỒ SƠ ===== */
         <Card sx={{ textAlign: "center", py: 8 }}>
           <CardContent>
             <HospitalIcon sx={{ fontSize: 64, color: "#bdbdbd", mb: 2 }} />
@@ -322,7 +469,7 @@ const HealthRecordsPage = () => {
         </Card>
       )}
 
-      {/* Action Buttons */}
+      {/* ===== CÁC NÚT HÀNH ĐỘNG ===== */}
       {healthRecord && (
         <Box sx={{ display: "flex", justifyContent: "space-between", mt: 3 }}>
           <Button
@@ -332,11 +479,328 @@ const HealthRecordsPage = () => {
           >
             Khai báo sức khỏe mới
           </Button>
-          <Button variant="contained" color="primary">
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleOpenUpdateDialog}
+          >
             Cập nhật hồ sơ
           </Button>
         </Box>
       )}
+
+      {/* ===== DIALOG CẬP NHẬT HỒ SƠ ===== */}
+      <Dialog
+        open={updateDialogOpen}
+        onClose={handleCloseUpdateDialog}
+        maxWidth="md"
+        fullWidth
+      >
+        {/* Header dialog */}
+        <DialogTitle
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <Typography variant="h6">Cập nhật hồ sơ sức khỏe</Typography>
+          <IconButton onClick={handleCloseUpdateDialog} size="small">
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+
+        {/* Nội dung dialog */}
+        <DialogContent dividers>
+          {/* Thông tin học sinh */}
+          <Box sx={{ mb: 4 }}>
+            <Typography variant="subtitle1" gutterBottom fontWeight="bold">
+              Thông tin học sinh
+            </Typography>
+            <Typography>
+              {student?.lastName} {student?.firstName} - Lớp {student?.class}
+            </Typography>
+          </Box>
+
+          {/* Form cập nhật chỉ số sức khỏe cơ bản */}
+          <Box sx={{ mb: 4 }}>
+            <Typography variant="subtitle1" gutterBottom fontWeight="bold">
+              Chỉ số sức khỏe cơ bản
+            </Typography>
+
+            {/* Trường nhập chiều cao và cân nặng */}
+            <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
+              <TextField
+                label="Chiều cao (cm)"
+                type="number"
+                value={updatedRecord.height}
+                onChange={(e) =>
+                  setUpdatedRecord({
+                    ...updatedRecord,
+                    height: Number(e.target.value),
+                  })
+                }
+                InputProps={{ inputProps: { min: 0, max: 250 } }}
+                fullWidth
+              />
+
+              <TextField
+                label="Cân nặng (kg)"
+                type="number"
+                value={updatedRecord.weight}
+                onChange={(e) =>
+                  setUpdatedRecord({
+                    ...updatedRecord,
+                    weight: Number(e.target.value),
+                  })
+                }
+                InputProps={{ inputProps: { min: 0, max: 150 } }}
+                fullWidth
+              />
+            </Box>
+
+            {/* Dropdown chọn nhóm máu */}
+            <FormControl fullWidth>
+              <InputLabel id="blood-type-label">Nhóm máu</InputLabel>
+              <Select
+                labelId="blood-type-label"
+                value={updatedRecord.bloodType}
+                label="Nhóm máu"
+                onChange={(e) =>
+                  setUpdatedRecord({
+                    ...updatedRecord,
+                    bloodType: e.target.value as BloodType,
+                  })
+                }
+              >
+                <MenuItem value="">Chưa xác định</MenuItem>
+                <MenuItem value="A+">A+</MenuItem>
+                <MenuItem value="A-">A-</MenuItem>
+                <MenuItem value="B+">B+</MenuItem>
+                <MenuItem value="B-">B-</MenuItem>
+                <MenuItem value="AB+">AB+</MenuItem>
+                <MenuItem value="AB-">AB-</MenuItem>
+                <MenuItem value="O+">O+</MenuItem>
+                <MenuItem value="O-">O-</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+
+          <Divider sx={{ my: 3 }} />
+
+          {/* ===== PHẦN QUẢN LÝ DỊ ỨNG ===== */}
+          <Box sx={{ mb: 4 }}>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                mb: 2,
+              }}
+            >
+              <Typography variant="subtitle1" fontWeight="bold">
+                Dị ứng
+              </Typography>
+              <Button
+                startIcon={<AddIcon />}
+                onClick={handleAddAllergy}
+                variant="outlined"
+                size="small"
+              >
+                Thêm dị ứng
+              </Button>
+            </Box>
+
+            {/* Hiển thị khi không có dị ứng */}
+            {updatedRecord.allergies.length === 0 && (
+              <Typography color="text.secondary" align="center" sx={{ py: 2 }}>
+                Không có dị ứng nào được ghi nhận
+              </Typography>
+            )}
+
+            {/* Form nhập thông tin dị ứng */}
+            {updatedRecord.allergies.map((allergy, index) => (
+              <Box
+                key={allergy.id || index}
+                sx={{
+                  mb: 2,
+                  p: 2,
+                  bgcolor: "#f9f9f9",
+                  borderRadius: 1,
+                  position: "relative",
+                }}
+              >
+                {/* Nút xóa dị ứng */}
+                <IconButton
+                  size="small"
+                  sx={{ position: "absolute", top: 8, right: 8 }}
+                  onClick={() => handleRemoveAllergy(index)}
+                >
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+
+                {/* Nhập tên dị ứng */}
+                <TextField
+                  label="Tên dị ứng"
+                  value={allergy.name}
+                  onChange={(e) =>
+                    handleAllergyChange(index, "name", e.target.value)
+                  }
+                  fullWidth
+                  margin="normal"
+                  size="small"
+                />
+
+                {/* Nhập mức độ và triệu chứng */}
+                <Box sx={{ display: "flex", gap: 2, mt: 1 }}>
+                  <FormControl fullWidth size="small">
+                    <InputLabel>Mức độ</InputLabel>
+                    <Select
+                      value={allergy.severity}
+                      label="Mức độ"
+                      onChange={(e) =>
+                        handleAllergyChange(index, "severity", e.target.value)
+                      }
+                    >
+                      <MenuItem value="mild">Nhẹ</MenuItem>
+                      <MenuItem value="moderate">Trung bình</MenuItem>
+                      <MenuItem value="severe">Nặng</MenuItem>
+                    </Select>
+                  </FormControl>
+
+                  <TextField
+                    label="Triệu chứng"
+                    value={allergy.symptoms}
+                    onChange={(e) =>
+                      handleAllergyChange(index, "symptoms", e.target.value)
+                    }
+                    fullWidth
+                    size="small"
+                  />
+                </Box>
+              </Box>
+            ))}
+          </Box>
+
+          <Divider sx={{ my: 3 }} />
+
+          {/* ===== PHẦN QUẢN LÝ BỆNH MÃN TÍNH ===== */}
+          <Box sx={{ mb: 2 }}>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                mb: 2,
+              }}
+            >
+              <Typography variant="subtitle1" fontWeight="bold">
+                Bệnh mãn tính
+              </Typography>
+              <Button
+                startIcon={<AddIcon />}
+                onClick={handleAddChronicCondition}
+                variant="outlined"
+                size="small"
+              >
+                Thêm bệnh mãn tính
+              </Button>
+            </Box>
+
+            {/* Hiển thị khi không có bệnh mãn tính */}
+            {updatedRecord.chronicConditions.length === 0 && (
+              <Typography color="text.secondary" align="center" sx={{ py: 2 }}>
+                Không có bệnh mãn tính nào được ghi nhận
+              </Typography>
+            )}
+
+            {/* Form nhập thông tin bệnh mãn tính */}
+            {updatedRecord.chronicConditions.map((condition, index) => (
+              <Box
+                key={condition.id || index}
+                sx={{
+                  mb: 2,
+                  p: 2,
+                  bgcolor: "#f9f9f9",
+                  borderRadius: 1,
+                  position: "relative",
+                }}
+              >
+                {/* Nút xóa bệnh mãn tính */}
+                <IconButton
+                  size="small"
+                  sx={{ position: "absolute", top: 8, right: 8 }}
+                  onClick={() => handleRemoveChronicCondition(index)}
+                >
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+
+                {/* Nhập tên bệnh */}
+                <TextField
+                  label="Tên bệnh"
+                  value={condition.name}
+                  onChange={(e) =>
+                    handleChronicConditionChange(index, "name", e.target.value)
+                  }
+                  fullWidth
+                  margin="normal"
+                  size="small"
+                />
+
+                {/* Nhập ngày chẩn đoán và ghi chú */}
+                <Box sx={{ display: "flex", gap: 2, mt: 1 }}>
+                  <LocalizationProvider dateAdapter={AdapterDateFns}>
+                    <DatePicker
+                      label="Ngày chẩn đoán"
+                      value={condition.diagnosisDate}
+                      onChange={(date) =>
+                        handleChronicConditionChange(index, "diagnosisDate", date)
+                      }
+                      slotProps={{ textField: { fullWidth: true, size: "small" } }}
+                    />
+                  </LocalizationProvider>
+
+                  <TextField
+                    label="Ghi chú"
+                    value={condition.notes}
+                    onChange={(e) =>
+                      handleChronicConditionChange(index, "notes", e.target.value)
+                    }
+                    fullWidth
+                    size="small"
+                  />
+                </Box>
+              </Box>
+            ))}
+          </Box>
+        </DialogContent>
+
+        {/* ===== PHẦN NÚT HÀNH ĐỘNG DIALOG ===== */}
+        <DialogActions sx={{ px: 3, py: 2 }}>
+          <Button onClick={handleCloseUpdateDialog} color="inherit">
+            Hủy
+          </Button>
+          <Button
+            onClick={handleUpdateHealthRecord}
+            variant="contained"
+            color="primary"
+          >
+            Lưu thay đổi
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* ===== HIỂN THỊ THÔNG BÁO ===== */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={() => setSnackbarOpen(false)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert onClose={() => setSnackbarOpen(false)} severity="success">
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 };
