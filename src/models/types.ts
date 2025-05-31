@@ -243,11 +243,16 @@ export interface MedicationRequest {
   startDate: Date;
   endDate: Date;
   status: "requested" | "received" | "completed" | "cancelled";
-  receivedBy?: string;
-  receivedAt?: Date;
-  notes?: string;
+  notes: string;
   createdAt: Date;
   updatedAt: Date;
+
+  // Các thuộc tính mới cần thêm
+  components: string;
+  dosesPerDay: number;
+  hasReceipt: boolean;
+  receivedBy?: string;
+  receivedAt?: Date;
 }
 
 export interface MedicationLog {

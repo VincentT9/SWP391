@@ -11,9 +11,6 @@ import {
   MenuItem,
   Snackbar,
   Alert,
-  RadioGroup,
-  FormControlLabel,
-  Radio,
   Divider,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
@@ -38,37 +35,26 @@ const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
 }) => {
   const [studentId, setStudentId] = useState("");
   const [medicationName, setMedicationName] = useState("");
-  const [dosage, setDosage] = useState("");
-  const [instructions, setInstructions] = useState("");
+  const [dosesPerDay, setDosesPerDay] = useState<number>(1);
   const [daysRequired, setDaysRequired] = useState<number>(1);
   const [startDate, setStartDate] = useState<Date | null>(new Date());
   const [notes, setNotes] = useState("");
   const [openSnackbar, setOpenSnackbar] = useState(false);
-
-  // Thêm state cho phần mới
-  const [medicationInfoType, setMedicationInfoType] = useState<
-    "receipt" | "manual"
-  >("receipt");
   const [receiptImage, setReceiptImage] = useState<File | null>(null);
   const [components, setComponents] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate các trường bắt buộc dựa trên loại thông tin
-    if (!studentId || !startDate || !daysRequired) {
-      return;
-    }
-
-    // Validate based on medication info type
-    if (medicationInfoType === "receipt" && !receiptImage) {
-      return;
-    }
-
+    // Validate các trường bắt buộc
     if (
-      medicationInfoType === "manual" &&
-      (!medicationName || !dosage || !instructions || !components)
+      !studentId ||
+      !startDate ||
+      !daysRequired ||
+      !components ||
+      !dosesPerDay
     ) {
+      alert("Vui lòng điền đầy đủ các thông tin bắt buộc");
       return;
     }
 
@@ -78,20 +64,18 @@ const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
       studentId,
       studentName: studentOptions.find((s) => s.id === studentId)?.name || "",
       parentId,
-      medicationName:
-        medicationInfoType === "manual"
-          ? medicationName
-          : "(Xem trong hóa đơn)",
-      dosage: medicationInfoType === "manual" ? dosage : "(Xem trong hóa đơn)",
-      instructions:
-        medicationInfoType === "manual" ? instructions : "(Xem trong hóa đơn)",
+      medicationName,
+      dosesPerDay,
+      // Thêm thuộc tính dosage để khớp với interface MedicationRequest
+      dosage: `${dosesPerDay} lần/ngày`,
+      instructions: notes, // Gộp instructions vào notes
       daysRequired,
       startDate: startDate as Date,
       endDate: addDays(startDate as Date, daysRequired),
       status: "requested" as const,
       notes,
-      hasReceipt: medicationInfoType === "receipt",
-      components: medicationInfoType === "manual" ? components : "",
+      hasReceipt: receiptImage !== null,
+      components,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -105,8 +89,7 @@ const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
     // Reset form
     setStudentId("");
     setMedicationName("");
-    setDosage("");
-    setInstructions("");
+    setDosesPerDay(1);
     setDaysRequired(1);
     setStartDate(new Date());
     setNotes("");
@@ -134,8 +117,7 @@ const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
       </Typography>
 
       <Alert severity="info" sx={{ mb: 2 }}>
-        Vui lòng chụp hóa đơn thuốc hoặc nhập thành phần thuốc để nhà trường có
-        thể kiểm tra.
+        Vui lòng nhập thành phần thuốc để nhà trường có thể kiểm tra.
       </Alert>
 
       <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
@@ -158,40 +140,59 @@ const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
           </FormControl>
         </Box>
 
-        {/* Phần chọn loại thông tin thuốc */}
+        {/* Phần thông tin thuốc */}
         <Box sx={{ mb: 3 }}>
           <Typography variant="subtitle1" gutterBottom fontWeight="medium">
             Thông tin thuốc
           </Typography>
           <Divider sx={{ mb: 2 }} />
 
-          <FormControl component="fieldset">
-            <RadioGroup
-              row
-              name="medication-info-type"
-              value={medicationInfoType}
-              onChange={(e) =>
-                setMedicationInfoType(e.target.value as "receipt" | "manual")
-              }
-            >
-              <FormControlLabel
-                value="receipt"
-                control={<Radio />}
-                label="Chụp hóa đơn thuốc"
+          {/* Phần nhập thành phần thuốc */}
+          <Box sx={{ mt: 2, mb: 2 }}>
+            {/* Thành phần thuốc */}
+            <Box sx={{ mb: 2 }}>
+              <TextField
+                required
+                fullWidth
+                id="medication-components"
+                label="Tên thuốc và thành phần"
+                multiline
+                rows={4}
+                value={components}
+                onChange={(e) => setComponents(e.target.value)}
+                placeholder={`Ví dụ:
+1. Panadol Extra: Paracetamol 500mg, Caffeine 65mg
+2. Vitamin C DHG: Acid ascorbic 500mg
+3. Thuốc ho Bảo Thanh: Cao khô lá thuốc, Bạc hà 10mg`}
+                helperText={`Liệt kê tất cả các loại thuốc và thành phần chính. Mỗi thuốc ghi rõ tên và thành phần trên một dòng riêng.`}
               />
-              <FormControlLabel
-                value="manual"
-                control={<Radio />}
-                label="Nhập thành phần thuốc"
-              />
-            </RadioGroup>
-          </FormControl>
+            </Box>
 
-          {medicationInfoType === "receipt" ? (
-            // Phần chụp hóa đơn
+            {/* Số lần uống trong ngày - Giữ nguyên */}
+            <Box sx={{ mb: 2 }}>
+              <TextField
+                required
+                fullWidth
+                id="doses-per-day"
+                label="Số lần uống trong ngày"
+                type="number"
+                InputProps={{ inputProps: { min: 1, max: 10 } }}
+                value={dosesPerDay}
+                onChange={(e) => setDosesPerDay(parseInt(e.target.value))}
+                helperText="Nhập số lần uống thuốc trong ngày (1-10 lần)"
+              />
+            </Box>
+          </Box>
+
+          {/* Phần chụp hóa đơn thuốc (Optional) */}
+          <Box sx={{ mt: 3, mb: 2 }}>
+            <Typography variant="subtitle2" gutterBottom>
+              Chụp hóa đơn thuốc (Tùy chọn)
+            </Typography>
+
             <Box
               sx={{
-                mt: 2,
+                mt: 1,
                 mb: 2,
                 border: "1px dashed #ccc",
                 p: 3,
@@ -234,62 +235,11 @@ const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
 
               {!receiptImage && (
                 <Typography variant="body2" color="textSecondary">
-                  Vui lòng chụp rõ thông tin về tên thuốc, thành phần và hướng
-                  dẫn sử dụng
+                  Bạn có thể chụp thêm hóa đơn thuốc để nhà trường tham khảo
                 </Typography>
               )}
             </Box>
-          ) : (
-            // Phần nhập thành phần thuốc - đã điều chỉnh thứ tự
-            <Box sx={{ mt: 2, mb: 2 }}>
-              {/* Thành phần thuốc - đã chuyển lên đầu tiên */}
-              <Box sx={{ mb: 2 }}>
-                <TextField
-                  required
-                  fullWidth
-                  id="medication-components"
-                  label="Tên thuốc và thành phần"
-                  multiline
-                  rows={4}
-                  value={components}
-                  onChange={(e) => setComponents(e.target.value)}
-                  placeholder={`Ví dụ:
-1. Panadol Extra: Paracetamol 500mg, Caffeine 65mg
-2. Vitamin C DHG: Acid ascorbic 500mg
-3. Thuốc ho Bảo Thanh: Cao khô lá thuốc, Bạc hà 10mg`}
-                  helperText={`Liệt kê tất cả các loại thuốc và thành phần chính. Mỗi thuốc ghi rõ tên và thành phần trên một dòng riêng.`}
-                />
-              </Box>
-
-              {/* Liều lượng với ví dụ rõ hơn - giữ ở giữa */}
-              <Box sx={{ mb: 2 }}>
-                <TextField
-                  required
-                  fullWidth
-                  id="dosage"
-                  label="Liều lượng và cách dùng"
-                  value={dosage}
-                  onChange={(e) => setDosage(e.target.value)}
-                  placeholder="Ví dụ: 1 viên sáng, 1 viên chiều; 5ml x 3 lần/ngày"
-                  helperText="Ghi rõ số lượng và tần suất sử dụng thuốc"
-                />
-              </Box>
-
-              {/* Hướng dẫn sử dụng - đã chuyển xuống cuối */}
-              <Box sx={{ mb: 2 }}>
-                <TextField
-                  required
-                  fullWidth
-                  id="instructions"
-                  label="Hướng dẫn sử dụng"
-                  value={instructions}
-                  onChange={(e) => setInstructions(e.target.value)}
-                  placeholder="Ví dụ: Uống sau bữa ăn, không nhai viên thuốc, pha với nước ấm"
-                  helperText="Các lưu ý đặc biệt khi dùng thuốc cho con bạn"
-                />
-              </Box>
-            </Box>
-          )}
+          </Box>
         </Box>
 
         {/* Thông tin thời gian */}
@@ -322,15 +272,18 @@ const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
           </LocalizationProvider>
         </Box>
 
+        {/* Đổi Ghi chú thành Hướng dẫn sử dụng và ghi chú */}
         <Box sx={{ mb: 2 }}>
           <TextField
             fullWidth
             id="notes"
-            label="Ghi chú"
+            label="Hướng dẫn sử dụng và ghi chú"
             multiline
             rows={3}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
+            placeholder="Ví dụ: Uống sau bữa ăn, không nhai viên thuốc, pha với nước ấm, uống trong bữa sáng..."
+            helperText="Nhập các lưu ý đặc biệt khi dùng thuốc và các thông tin bổ sung khác"
           />
         </Box>
 

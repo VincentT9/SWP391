@@ -20,6 +20,8 @@ import AdminPage from './components/admin/AdminPage';
 import LoginPage from './components/user/LoginPage';
 import RegisterPage from './components/user/RegisterPage';
 import NotificationsPage from './components/notifications/NotificationsPage';
+import MedicalSupplier from './components/admin/MedicalSupplier';
+
 
 function App() {
   return (
@@ -41,7 +43,9 @@ function App() {
             <Route path="dashboard" element={<DashboardPage />} />
             <Route path="notifications" element={<NotificationsPage />} />
             <Route path="profile" element={<UserProfilePage />} />
-            <Route path="admin" element={<AdminPage />} />
+            <Route path="user-management" element={<AdminPage />} />
+            <Route path="medical-supplier" element={<MedicalSupplier />} />
+          
           </Route>
         </Routes>
       </Router>
