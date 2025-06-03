@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Container,
   Typography,
@@ -25,111 +26,187 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Avatar
+  Avatar,
+  CircularProgress
 } from '@mui/material';
 import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
-  Security as SecurityIcon
+  Security as SecurityIcon,
+  Refresh as RefreshIcon,
+  Lock as LockIcon
 } from '@mui/icons-material';
+import { useAuth } from '../auth/AuthContext';
 
-// Mock data theo User entity
-const mockUsers = [
-  { 
-    id: 1, 
-    username: 'admin1', 
-    fullName: 'Nguyễn Văn Admin',
-    email: 'admin1@school.com', 
-    phoneNumber: '0123456789',
-    address: '123 Đường ABC, Quận 1, TP.HCM',
-    userRole: 0, // Admin
-    image: null,
-    isDeleted: false
-  },
-  { 
-    id: 2, 
-    username: 'teacher1', 
-    fullName: 'Trần Thị Giáo Viên',
-    email: 'teacher1@school.com', 
-    phoneNumber: '0987654321',
-    address: '456 Đường XYZ, Quận 2, TP.HCM',
-    userRole: 1, // Teacher
-    image: null,
-    isDeleted: false
-  },
-  { 
-    id: 3, 
-    username: 'parent1', 
-    fullName: 'Lê Văn Phụ Huynh',
-    email: 'parent1@school.com', 
-    phoneNumber: '0555666777',
-    address: '789 Đường DEF, Quận 3, TP.HCM',
-    userRole: 2, // Parent
-    image: null,
-    isDeleted: true
-  },
-];
+// Interface cho User từ API
+interface User {
+  id: number;
+  username: string;
+  name: string;
+  phone?: string;
+  address?: string;
+  role: string;
+  avatar?: string;
+  isAuthenticated: boolean;
+  isActive?: boolean;
+}
 
 const AdminPage = () => {
-  const [currentUser, setCurrentUser] = useState({ userRole: 0 }); // Mock admin user
+  const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [formData, setFormData] = useState<any>({});
+  const [error, setError] = useState<string>('');
 
-  // Check admin permission
-  useEffect(() => {
-    if (currentUser.userRole !== 0) { // UserRole.Admin = 0
-      alert('Bạn không có quyền truy cập trang này!');
-      return;
+  // Helper function để hiển thị tên role
+  const getRoleDisplayName = (role: string) => {
+    switch (role?.toLowerCase()) {
+      case 'admin': return 'Quản trị viên';
+      case 'nurse': return 'Y tá';
+      case 'parent': return 'Phụ huynh';
+      case 'student': return 'Học sinh';
+      default: return 'Không xác định';
     }
-  }, [currentUser]);
+  };
 
-  // Don't render if not admin
-  if (currentUser.userRole !== 0) {
+  // Fetch users from API
+  const fetchUsers = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const response = await fetch('https://my.api.mockaroo.com/account.json?key=c12b5dc0&__method=POST', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('API Response:', data);
+      
+      // Xử lý data - có thể là array hoặc single object
+      const usersData = Array.isArray(data) ? data : [data];
+      setUsers(usersData);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      setError('Không thể tải dữ liệu người dùng. Vui lòng thử lại.');
+      // Fallback to mock data for demo
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // useEffect phải được gọi ở top level - TRƯỚC các early returns
+  useEffect(() => {
+    // Chỉ fetch khi user đã được authenticate và là admin
+    if (user && user.isAuthenticated && user.role?.toLowerCase() === 'admin') {
+      fetchUsers();
+    }
+  }, [user]);
+
+  // Loading state while checking authentication
+  if (authLoading) {
+    return (
+      <Container maxWidth="lg">
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
+          <CircularProgress size={60} />
+          <Typography variant="h6" sx={{ ml: 2 }}>
+            Đang kiểm tra quyền truy cập...
+          </Typography>
+        </Box>
+      </Container>
+    );
+  }
+
+  // Check if user is authenticated
+  if (!user || !user.isAuthenticated) {
     return (
       <Container maxWidth="lg">
         <Box sx={{ my: 4, textAlign: 'center' }}>
-          <Alert severity="error" sx={{ mb: 2 }}>
-            <Typography variant="h6">Truy cập bị từ chối</Typography>
-            <Typography>Bạn không có quyền truy cập trang quản trị này.</Typography>
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            <Typography variant="h6">Chưa đăng nhập</Typography>
+            <Typography>Vui lòng đăng nhập để truy cập trang này.</Typography>
           </Alert>
-          <Button variant="contained" onClick={() => window.history.back()}>
-            Quay lại
+          <Button 
+            variant="contained" 
+            onClick={() => navigate('/login')}
+            startIcon={<LockIcon />}
+          >
+            Đăng nhập
           </Button>
         </Box>
       </Container>
     );
   }
 
-  const getUserRoleText = (role: number) => {
-    switch (role) {
-      case 0: return 'Quản trị viên';
-      case 1: return 'Giáo viên';
-      case 2: return 'Phụ huynh';
+  // Check admin permission - REAL CHECK
+  if (user.role?.toLowerCase() !== 'admin') {
+    return (
+      <Container maxWidth="lg">
+        <Box sx={{ my: 4, textAlign: 'center' }}>
+          <Alert severity="error" sx={{ mb: 2 , display: 'flex', gap: 2, justifyContent: 'center'}}>
+            <Typography variant="h6">Truy cập bị từ chối</Typography>
+            <Typography>
+              Bạn không có quyền truy cập trang quản trị này. 
+              Chỉ quản trị viên mới có thể truy cập.
+            </Typography>
+          </Alert>
+          <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
+            <Button 
+              variant="outlined" 
+              onClick={() => navigate('/')}
+            >
+              Về trang chủ
+            </Button>
+            <Button 
+              variant="contained" 
+              onClick={() => window.history.back()}
+            >
+              Quay lại
+            </Button>
+          </Box>
+        </Box>
+      </Container>
+    );
+  }
+
+  const getUserRoleText = (role: string) => {
+    switch (role?.toLowerCase()) {
+      case 'admin': return 'Quản trị viên';
+      case 'nurse': return 'Y tá';
+      case 'parent': return 'Phụ huynh';
+      case 'student': return 'Học sinh';
       default: return 'Không xác định';
     }
   };
 
-  const getUserRoleColor = (role: number) => {
-    switch (role) {
-      case 0: return 'error';
-      case 1: return 'primary';
-      case 2: return 'default';
+  const getUserRoleColor = (role: string) => {
+    switch (role?.toLowerCase()) {
+      case 'admin': return 'error';
+      case 'nurse': return 'primary';
+      case 'parent': return 'default';
+      case 'student': return 'secondary';
       default: return 'default';
     }
   };
 
-  const handleOpenDialog = (user?: any) => {
-    setSelectedUser(user);
-    setFormData(user || {
+  const handleOpenDialog = (userData?: User) => {
+    setSelectedUser(userData || null);
+    setFormData(userData || {
       username: '',
-      fullName: '',
-      email: '',
-      phoneNumber: '',
+      name: '',
+      phone: '',
       address: '',
-      userRole: 2,
-      isDeleted: false
+      role: 'parent',
+      isActive: true
     });
     setOpenDialog(true);
   };
@@ -140,50 +217,127 @@ const AdminPage = () => {
     setFormData({});
   };
 
-  const handleSave = () => {
-    console.log('Saving user:', formData);
-    // Handle save logic here
-    handleCloseDialog();
-  };
-
-  const handleDelete = (id: number) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa người dùng này?')) {
-      console.log('Deleting user:', id);
-      // Handle delete logic here
+  const handleSave = async () => {
+    try {
+      console.log('Saving user:', formData);
+      // TODO: Call API to save/update user
+      alert(selectedUser ? 'Cập nhật người dùng thành công!' : 'Thêm người dùng thành công!');
+      handleCloseDialog();
+      fetchUsers();
+    } catch (error) {
+      console.error('Error saving user:', error);
+      alert('Có lỗi xảy ra khi lưu người dùng!');
     }
   };
 
-  const handleToggleStatus = (id: number) => {
-    console.log('Toggling user status:', id);
-    // Handle toggle active/inactive
+  const handleDelete = async (id: number) => {
+    if (window.confirm('Bạn có chắc chắn muốn xóa người dùng này?')) {
+      try {
+        console.log('Deleting user:', id);
+        alert('Xóa người dùng thành công!');
+        fetchUsers();
+      } catch (error) {
+        console.error('Error deleting user:', error);
+        alert('Có lỗi xảy ra khi xóa người dùng!');
+      }
+    }
+  };
+
+  const handleToggleStatus = async (id: number) => {
+    try {
+      console.log('Toggling user status:', id);
+      alert('Cập nhật trạng thái thành công!');
+      fetchUsers();
+    } catch (error) {
+      console.error('Error toggling user status:', error);
+      alert('Có lỗi xảy ra khi cập nhật trạng thái!');
+    }
+  };
+
+  // Check if user can edit role (admin cannot edit other admin's role)
+  const canEditRole = (userData: User): boolean => {
+    return userData.role?.toLowerCase() !== 'admin';
   };
 
   return (
     <Container maxWidth="lg">
       <Box sx={{ my: 4 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
-          <SecurityIcon sx={{ fontSize: 40, color: '#1976d2', mr: 2 }} />
-          <Box>
-            <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', color: '#1976d2' }}>
-              Quản lý người dùng
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              Quản lý tài khoản và phân quyền người dùng trong hệ thống
-            </Typography>
+        {/* Header with current user info */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 4 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <SecurityIcon sx={{ fontSize: 40, color: '#1976d2', mr: 2 }} />
+            <Box>
+              <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', color: '#1976d2' }}>
+                Quản lý người dùng
+              </Typography>
+              <Typography variant="body1" color="text.secondary">
+                Quản lý tài khoản và phân quyền người dùng trong hệ thống
+              </Typography>
+            </Box>
           </Box>
+          
+          {/* Current user info */}
+          <Card sx={{ minWidth: 250 }}>
+            <CardContent sx={{ p: 2 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Avatar 
+                  src={user.avatar} 
+                  sx={{ width: 40, height: 40, bgcolor: '#1976d2' }}
+                >
+                  {user.name?.charAt(0) || user.username?.charAt(0) || '?'}
+                </Avatar>
+                <Box>
+                  <Typography variant="caption" color="text.secondary">
+                    Đăng nhập với tư cách
+                  </Typography>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                    {user.name}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    @{user.username}
+                  </Typography>
+                </Box>
+              </Box>
+              <Chip 
+                label={getRoleDisplayName(user.role)}
+                color="error" 
+                size="small" 
+                sx={{ mt: 1, width: '100%' }}
+              />
+            </CardContent>
+          </Card>
         </Box>
+
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+          <Button
+            variant="outlined"
+            startIcon={<RefreshIcon />}
+            onClick={fetchUsers}
+            disabled={loading}
+          >
+            Làm mới
+          </Button>
+        </Box>
+
+        {error && (
+          <Alert severity="error" sx={{ mb: 3 }}>
+            {error}
+          </Alert>
+        )}
 
         <Card sx={{ borderRadius: 2, boxShadow: 3 }}>
           <CardContent sx={{ p: 0 }}>
             <Box sx={{ p: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                Danh sách người dùng ({mockUsers.length})
+                Danh sách người dùng ({users.length})
+                {loading && <CircularProgress size={20} sx={{ ml: 2 }} />}
               </Typography>
               <Button
                 variant="contained"
                 startIcon={<AddIcon />}
                 onClick={() => handleOpenDialog()}
                 sx={{ bgcolor: '#4caf50', '&:hover': { bgcolor: '#45a049' } }}
+                disabled={loading}
               >
                 Thêm người dùng
               </Button>
@@ -196,7 +350,6 @@ const AdminPage = () => {
                     <TableCell sx={{ fontWeight: 'bold' }}>Avatar</TableCell>
                     <TableCell sx={{ fontWeight: 'bold' }}>Tên đăng nhập</TableCell>
                     <TableCell sx={{ fontWeight: 'bold' }}>Họ tên</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold' }}>Email</TableCell>
                     <TableCell sx={{ fontWeight: 'bold' }}>Số điện thoại</TableCell>
                     <TableCell sx={{ fontWeight: 'bold' }}>Vai trò</TableCell>
                     <TableCell sx={{ fontWeight: 'bold' }}>Trạng thái</TableCell>
@@ -204,58 +357,74 @@ const AdminPage = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {mockUsers.map((user) => (
-                    <TableRow key={user.id} hover>
-                      <TableCell>
-                        <Avatar sx={{ bgcolor: '#1976d2' }}>
-                          {user.fullName.charAt(0)}
-                        </Avatar>
-                      </TableCell>
-                      <TableCell sx={{ fontWeight: 'bold' }}>{user.username}</TableCell>
-                      <TableCell>{user.fullName}</TableCell>
-                      <TableCell>{user.email}</TableCell>
-                      <TableCell>{user.phoneNumber}</TableCell>
-                      <TableCell>
-                        <Chip
-                          label={getUserRoleText(user.userRole)}
-                          color={getUserRoleColor(user.userRole) as any}
-                          size="small"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          label={user.isDeleted ? 'Vô hiệu' : 'Hoạt động'}
-                          color={user.isDeleted ? 'default' : 'success'}
-                          size="small"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <IconButton
-                          onClick={() => handleOpenDialog(user)}
-                          color="primary"
-                          size="small"
-                          sx={{ mr: 1 }}
-                        >
-                          <EditIcon />
-                        </IconButton>
-                        <IconButton
-                          onClick={() => handleToggleStatus(user.id)}
-                          color={user.isDeleted ? 'success' : 'warning'}
-                          size="small"
-                          sx={{ mr: 1 }}
-                        >
-                          {user.isDeleted ? '✓' : '⏸'}
-                        </IconButton>
-                        <IconButton
-                          onClick={() => handleDelete(user.id)}
-                          color="error"
-                          size="small"
-                        >
-                          <DeleteIcon />
-                        </IconButton>
+                  {loading ? (
+                    <TableRow>
+                      <TableCell colSpan={7} sx={{ textAlign: 'center', py: 4 }}>
+                        <CircularProgress size={40} />
+                        <Typography variant="body2" sx={{ mt: 2 }}>
+                          Đang tải dữ liệu...
+                        </Typography>
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ) : users.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} sx={{ textAlign: 'center', py: 4 }}>
+                        <Typography variant="body2" color="text.secondary">
+                          Không có dữ liệu người dùng
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    users.map((userData) => (
+                      <TableRow key={userData.id} hover>
+                        <TableCell>
+                          <Avatar 
+                            src={userData.avatar} 
+                            sx={{ bgcolor: '#1976d2' }}
+                          >
+                            {userData.name?.charAt(0) || userData.username?.charAt(0) || '?'}
+                          </Avatar>
+                        </TableCell>
+                        <TableCell sx={{ fontWeight: 'bold' }}>{userData.username}</TableCell>
+                        <TableCell>{userData.name}</TableCell>
+                        <TableCell>{userData.phone || 'Chưa có'}</TableCell>
+                        <TableCell>
+                          <Chip
+                            label={getUserRoleText(userData.role)}
+                            color={getUserRoleColor(userData.role) as any}
+                            size="small"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={userData.isActive !== false ? 'Hoạt động' : 'Vô hiệu'}
+                            color={userData.isActive !== false ? 'success' : 'default'}
+                            size="small"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <IconButton
+                            onClick={() => handleOpenDialog(userData)}
+                            color="primary"
+                            size="small"
+                            sx={{ mr: 1 }}
+                            title="Chỉnh sửa"
+                          >
+                            <EditIcon />
+                          </IconButton>
+                          <IconButton
+                            onClick={() => handleDelete(userData.id)}
+                            color="error"
+                            size="small"
+                            title="Xóa"
+                            disabled={userData.role?.toLowerCase() === 'admin'}
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </TableContainer>
@@ -275,26 +444,19 @@ const AdminPage = () => {
                 onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                 fullWidth
                 required
+                disabled={selectedUser?.role?.toLowerCase() === 'admin'}
               />
               <TextField
                 label="Họ và tên"
-                value={formData.fullName || ''}
-                onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                fullWidth
-                required
-              />
-              <TextField
-                label="Email"
-                type="email"
-                value={formData.email || ''}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                value={formData.name || ''}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 fullWidth
                 required
               />
               <TextField
                 label="Số điện thoại"
-                value={formData.phoneNumber || ''}
-                onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                value={formData.phone || ''}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 fullWidth
               />
               <TextField
@@ -305,18 +467,28 @@ const AdminPage = () => {
                 rows={2}
                 fullWidth
               />
-              <FormControl fullWidth required>
+              <FormControl 
+                fullWidth 
+                required
+                disabled={selectedUser ? !canEditRole(selectedUser) : false}
+              >
                 <InputLabel>Vai trò</InputLabel>
                 <Select
-                  value={formData.userRole || 2}
-                  onChange={(e) => setFormData({ ...formData, userRole: e.target.value })}
+                  value={formData.role || 'parent'}
+                  onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                   label="Vai trò"
                 >
-                  <MenuItem value={0}>Quản trị viên</MenuItem>
-                  <MenuItem value={1}>Giáo viên</MenuItem>
-                  <MenuItem value={2}>Phụ huynh</MenuItem>
+                  <MenuItem value="admin">Quản trị viên</MenuItem>
+                  <MenuItem value="nurse">Y tá</MenuItem>
+                  <MenuItem value="parent">Phụ huynh</MenuItem>
+                  <MenuItem value="student">Học sinh</MenuItem>
                 </Select>
               </FormControl>
+              {selectedUser && !canEditRole(selectedUser) && (
+                <Alert severity="info" sx={{ mt: 1 }}>
+                  Không thể thay đổi vai trò của quản trị viên khác.
+                </Alert>
+              )}
             </Box>
           </DialogContent>
           <DialogActions>
