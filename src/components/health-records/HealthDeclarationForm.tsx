@@ -226,11 +226,15 @@ const HealthDeclarationForm = () => {
                     required: "Chiều cao là bắt buộc",
                     min: { value: 50, message: "Chiều cao phải > 50cm" },
                     max: { value: 250, message: "Chiều cao phải ≤ 250cm" },
+                    validate: {
+                      notZero: (value) => value > 0 || "Chiều cao phải lớn hơn 0",
+                    },
                   }}
                   render={({ field }) => (
                     <TextField
                       {...field}
                       fullWidth
+                      required
                       label="Chiều cao (cm)"
                       type="text"
                       error={!!errors.height}
@@ -240,6 +244,11 @@ const HealthDeclarationForm = () => {
                         let value = e.target.value
                           .replace(/[e+\-]/g, "")
                           .replace(/[^0-9]/g, "");
+
+                        // Không cho phép giá trị rỗng hoặc 0 đứng đầu
+                        if (value === "0") {
+                          value = "";
+                        }
 
                         // Giới hạn độ dài
                         if (value.length > 3) {
@@ -272,11 +281,15 @@ const HealthDeclarationForm = () => {
                     required: "Cân nặng là bắt buộc",
                     min: { value: 10, message: "Cân nặng phải > 10kg" },
                     max: { value: 150, message: "Cân nặng phải ≤ 150kg" },
+                    validate: {
+                      notZero: (value) => value > 0 || "Cân nặng phải lớn hơn 0",
+                    },
                   }}
                   render={({ field }) => (
                     <TextField
                       {...field}
                       fullWidth
+                      required // Thêm required để hiển thị dấu *
                       label="Cân nặng (kg)"
                       type="text"
                       error={!!errors.weight}
@@ -286,6 +299,11 @@ const HealthDeclarationForm = () => {
                         let value = e.target.value
                           .replace(/[e+\-]/g, "")
                           .replace(/[^0-9]/g, "");
+
+                        // Không cho phép giá trị rỗng hoặc 0 đứng đầu
+                        if (value === "0") {
+                          value = "";
+                        }
 
                         // Giới hạn độ dài
                         if (value.length > 3) {
@@ -634,9 +652,7 @@ const HealthDeclarationForm = () => {
                                   if (!value) return true;
                                   const selected = new Date(value);
                                   const minDate = new Date();
-                                  minDate.setFullYear(
-                                    minDate.getFullYear() - 100
-                                  ); // Tối đa 100 năm trước
+                                  minDate.setFullYear(minDate.getFullYear() - 100);
                                   return (
                                     selected >= minDate ||
                                     "Ngày chẩn đoán quá xa trong quá khứ"
@@ -670,6 +686,25 @@ const HealthDeclarationForm = () => {
                                       ?.diagnosisDate?.message
                                   }
                                   InputLabelProps={{ shrink: true }}
+                                  onChange={(e) => {
+                                    // Xử lý và kiểm tra ngày ngay khi người dùng chọn
+                                    const selectedDate = e.target.value;
+                                    field.onChange(selectedDate); // Cập nhật giá trị
+
+                                    // Kiểm tra ngày và hiển thị thông báo
+                                    if (selectedDate) {
+                                      const selected = new Date(selectedDate);
+                                      const today = new Date();
+                                      const minDate = new Date();
+                                      minDate.setFullYear(minDate.getFullYear() - 100);
+
+                                      if (selected > today) {
+                                        toast.error("Ngày chẩn đoán không thể trong tương lai!");
+                                      } else if (selected < minDate) {
+                                        toast.error("Ngày chẩn đoán quá xa trong quá khứ!");
+                                      }
+                                    }
+                                  }}
                                   InputProps={{
                                     inputProps: {
                                       max: today, // Không cho phép chọn ngày trong tương lai
