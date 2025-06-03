@@ -175,10 +175,15 @@ const HealthDeclarationForm = () => {
                     <FormControl fullWidth>
                       <InputLabel>Nhóm máu</InputLabel>
                       <Select {...field} label="Nhóm máu">
-                        <MenuItem value="A">A</MenuItem>
-                        <MenuItem value="B">B</MenuItem>
-                        <MenuItem value="AB">AB</MenuItem>
-                        <MenuItem value="O">O</MenuItem>
+                        <MenuItem value="">Chưa xác định</MenuItem>
+                        <MenuItem value="A+">A+</MenuItem>
+                        <MenuItem value="A-">A-</MenuItem>
+                        <MenuItem value="B+">B+</MenuItem>
+                        <MenuItem value="B-">B-</MenuItem>
+                        <MenuItem value="AB+">AB+</MenuItem>
+                        <MenuItem value="AB-">AB-</MenuItem>
+                        <MenuItem value="O+">O+</MenuItem>
+                        <MenuItem value="O-">O-</MenuItem>
                       </Select>
                     </FormControl>
                   )}
@@ -200,16 +205,27 @@ const HealthDeclarationForm = () => {
                   rules={{
                     required: "Chiều cao là bắt buộc",
                     min: { value: 50, message: "Chiều cao phải > 50cm" },
-                    max: { value: 200, message: "Chiều cao phải < 200cm" },
+                    max: { value: 250, message: "Chiều cao phải ≤ 250cm" },
                   }}
                   render={({ field }) => (
                     <TextField
                       {...field}
                       fullWidth
                       label="Chiều cao (cm)"
-                      type="number"
+                      type="text" // Thay đổi từ "number" thành "text"
                       error={!!errors.height}
                       helperText={errors.height?.message}
+                      onChange={(e) => {
+                        // Loại bỏ các ký tự không phải số
+                        const value = e.target.value.replace(/[e+\-]/g, '').replace(/[^0-9]/g, '');
+                        field.onChange(value ? Number(value) : '');
+                      }}
+                      InputProps={{
+                        inputProps: { 
+                          inputMode: "numeric", // Hiển thị bàn phím số trên mobile
+                          pattern: "[0-9]*",    // Pattern HTML5
+                        }
+                      }}
                     />
                   )}
                 />
@@ -221,16 +237,27 @@ const HealthDeclarationForm = () => {
                   rules={{
                     required: "Cân nặng là bắt buộc",
                     min: { value: 10, message: "Cân nặng phải > 10kg" },
-                    max: { value: 150, message: "Cân nặng phải < 150kg" },
+                    max: { value: 150, message: "Cân nặng phải ≤ 150kg" },
                   }}
                   render={({ field }) => (
                     <TextField
                       {...field}
                       fullWidth
                       label="Cân nặng (kg)"
-                      type="number"
+                      type="text" // Thay đổi từ "number" thành "text"
                       error={!!errors.weight}
                       helperText={errors.weight?.message}
+                      onChange={(e) => {
+                        // Loại bỏ các ký tự không phải số
+                        const value = e.target.value.replace(/[e+\-]/g, '').replace(/[^0-9]/g, '');
+                        field.onChange(value ? Number(value) : '');
+                      }}
+                      InputProps={{
+                        inputProps: { 
+                          inputMode: "numeric", // Hiển thị bàn phím số trên mobile
+                          pattern: "[0-9]*",    // Pattern HTML5
+                        }
+                      }}
                     />
                   )}
                 />
@@ -535,7 +562,14 @@ const HealthDeclarationForm = () => {
                 <Controller
                   name="emergencyContact.name"
                   control={control}
-                  rules={{ required: "Tên người liên hệ là bắt buộc" }}
+                  rules={{ 
+                    required: "Tên người liên hệ là bắt buộc",
+                    pattern: {
+                      // Pattern chấp nhận chữ cái, khoảng trắng và chữ cái có dấu tiếng Việt
+                      value: /^[a-zA-ZÀ-ỹ\s]+$/,
+                      message: "Tên người liên hệ chỉ được chứa chữ cái"
+                    }
+                  }}
                   render={({ field }) => (
                     <TextField
                       {...field}
@@ -543,6 +577,11 @@ const HealthDeclarationForm = () => {
                       label="Tên người liên hệ"
                       error={!!errors.emergencyContact?.name}
                       helperText={errors.emergencyContact?.name?.message}
+                      onChange={(e) => {
+                        // Loại bỏ các ký tự không phải chữ cái hoặc khoảng trắng
+                        const value = e.target.value.replace(/[^a-zA-ZÀ-ỹ\s]/g, '');
+                        field.onChange(value);
+                      }}
                     />
                   )}
                 />
@@ -589,7 +628,7 @@ const HealthDeclarationForm = () => {
                     required: "Số điện thoại là bắt buộc",
                     pattern: {
                       value: /^[0-9]{10,11}$/,
-                      message: "Số điện thoại không hợp lệ",
+                      message: "Số điện thoại không hợp lệ (phải có 10-11 chữ số)",
                     },
                   }}
                   render={({ field }) => (
@@ -599,6 +638,17 @@ const HealthDeclarationForm = () => {
                       label="Số điện thoại"
                       error={!!errors.emergencyContact?.phone}
                       helperText={errors.emergencyContact?.phone?.message}
+                      onChange={(e) => {
+                        // Loại bỏ chữ 'e' và dấu '+' và các ký tự không phải số
+                        const value = e.target.value
+                          .replace(/[e+]/g, "")
+                          .replace(/[^0-9]/g, "");
+                        field.onChange(value);
+                      }}
+                      inputProps={{
+                        inputMode: "numeric", // Hiển thị bàn phím số trên mobile
+                        pattern: "[0-9]*", // Thêm pattern HTML5
+                      }}
                     />
                   )}
                 />
