@@ -105,7 +105,26 @@ const HealthDeclarationForm = () => {
 
   const onSubmit = async (data: FormData) => {
     setLoading(true);
+
     try {
+      // Kiểm tra thêm
+      const hasInvalidAllergy = data.allergies?.some(
+        (allergy) =>
+          !/^[a-zA-ZÀ-ỹ\s,]+$/.test(allergy.name) ||
+          !/^[a-zA-ZÀ-ỹ0-9\s,.]+$/.test(allergy.symptoms) ||
+          !/^[a-zA-ZÀ-ỹ0-9\s,.]+$/.test(allergy.treatment)
+      );
+
+      const hasInvalidCondition = data.chronicConditions?.some(
+        (condition) => !/^[a-zA-ZÀ-ỹ\s,.]+$/.test(condition.name)
+      );
+
+      if (hasInvalidAllergy || hasInvalidCondition) {
+        toast.error("Vui lòng kiểm tra lại thông tin dị ứng và bệnh mãn tính!");
+        setLoading(false);
+        return;
+      }
+
       console.log("Health declaration submitted:", data);
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -113,6 +132,7 @@ const HealthDeclarationForm = () => {
       navigate("/health-records");
     } catch (error) {
       console.error("Submit error:", error);
+      toast.error("Đã xảy ra lỗi khi gửi thông tin!");
     } finally {
       setLoading(false);
     }
@@ -212,20 +232,32 @@ const HealthDeclarationForm = () => {
                       {...field}
                       fullWidth
                       label="Chiều cao (cm)"
-                      type="text" // Thay đổi từ "number" thành "text"
+                      type="text"
                       error={!!errors.height}
                       helperText={errors.height?.message}
                       onChange={(e) => {
-                        // Loại bỏ các ký tự không phải số
-                        const value = e.target.value
+                        // Loại bỏ ký tự không phải số
+                        let value = e.target.value
                           .replace(/[e+\-]/g, "")
                           .replace(/[^0-9]/g, "");
+
+                        // Giới hạn độ dài
+                        if (value.length > 3) {
+                          value = value.slice(0, 3);
+                        }
+
+                        // Kiểm tra giá trị nằm trong khoảng cho phép
+                        const numValue = parseInt(value);
+                        if (numValue > 250) {
+                          value = "250";
+                        }
+
                         field.onChange(value ? Number(value) : "");
                       }}
                       InputProps={{
                         inputProps: {
-                          inputMode: "numeric", // Hiển thị bàn phím số trên mobile
-                          pattern: "[0-9]*", // Pattern HTML5
+                          maxLength: 3,
+                          inputMode: "numeric",
                         },
                       }}
                     />
@@ -246,20 +278,32 @@ const HealthDeclarationForm = () => {
                       {...field}
                       fullWidth
                       label="Cân nặng (kg)"
-                      type="text" // Thay đổi từ "number" thành "text"
+                      type="text"
                       error={!!errors.weight}
                       helperText={errors.weight?.message}
                       onChange={(e) => {
-                        // Loại bỏ các ký tự không phải số
-                        const value = e.target.value
+                        // Loại bỏ ký tự không phải số
+                        let value = e.target.value
                           .replace(/[e+\-]/g, "")
                           .replace(/[^0-9]/g, "");
+
+                        // Giới hạn độ dài
+                        if (value.length > 3) {
+                          value = value.slice(0, 3);
+                        }
+
+                        // Kiểm tra giá trị nằm trong khoảng cho phép
+                        const numValue = parseInt(value);
+                        if (numValue > 150) {
+                          value = "150";
+                        }
+
                         field.onChange(value ? Number(value) : "");
                       }}
                       InputProps={{
                         inputProps: {
-                          inputMode: "numeric", // Hiển thị bàn phím số trên mobile
-                          pattern: "[0-9]*", // Pattern HTML5
+                          maxLength: 3,
+                          inputMode: "numeric",
                         },
                       }}
                     />
@@ -302,6 +346,11 @@ const HealthDeclarationForm = () => {
                 Thêm dị ứng
               </Button>
             </Box>
+
+            <Typography variant="body2" sx={{ color: "#666", mb: 1 }}>
+              Vui lòng nhập thông tin dị ứng bằng chữ cái. Tên dị ứng chỉ nhập
+              chữ, triệu chứng và cách điều trị có thể kèm số.
+            </Typography>
 
             {allergyFields.length === 0 ? (
               <Alert severity="info">
@@ -346,7 +395,13 @@ const HealthDeclarationForm = () => {
                           <Controller
                             name={`allergies.${index}.name`}
                             control={control}
-                            rules={{ required: "Tên dị ứng là bắt buộc" }}
+                            rules={{
+                              required: "Tên dị ứng là bắt buộc",
+                              pattern: {
+                                value: /^[a-zA-ZÀ-ỹ\s,]+$/,
+                                message: "Tên dị ứng chỉ được nhập chữ cái",
+                              },
+                            }}
                             render={({ field }) => (
                               <TextField
                                 {...field}
@@ -356,6 +411,15 @@ const HealthDeclarationForm = () => {
                                 helperText={
                                   errors.allergies?.[index]?.name?.message
                                 }
+                                onChange={(e) => {
+                                  // Chỉ chấp nhận chữ cái, khoảng trắng và dấu phẩy
+                                  const value = e.target.value.replace(
+                                    /[^a-zA-ZÀ-ỹ\s,]/g,
+                                    ""
+                                  );
+                                  field.onChange(value);
+                                }}
+                                placeholder="Nhập tên dị ứng (ví dụ: Dị ứng hải sản, phấn hoa...)"
                               />
                             )}
                           />
@@ -384,6 +448,13 @@ const HealthDeclarationForm = () => {
                       <Controller
                         name={`allergies.${index}.symptoms`}
                         control={control}
+                        rules={{
+                          required: "Triệu chứng là bắt buộc",
+                          pattern: {
+                            value: /^[a-zA-ZÀ-ỹ0-9\s,.]+$/,
+                            message: "Triệu chứng chỉ được nhập chữ cái và số",
+                          },
+                        }}
                         render={({ field }) => (
                           <TextField
                             {...field}
@@ -391,6 +462,11 @@ const HealthDeclarationForm = () => {
                             label="Triệu chứng"
                             multiline
                             rows={2}
+                            error={!!errors.allergies?.[index]?.symptoms}
+                            helperText={
+                              errors.allergies?.[index]?.symptoms?.message
+                            }
+                            placeholder="Mô tả các triệu chứng khi bị dị ứng"
                           />
                         )}
                       />
@@ -398,6 +474,14 @@ const HealthDeclarationForm = () => {
                       <Controller
                         name={`allergies.${index}.treatment`}
                         control={control}
+                        rules={{
+                          required: "Cách điều trị là bắt buộc",
+                          pattern: {
+                            value: /^[a-zA-ZÀ-ỹ0-9\s,.]+$/,
+                            message:
+                              "Cách điều trị chỉ được nhập chữ cái và số",
+                          },
+                        }}
                         render={({ field }) => (
                           <TextField
                             {...field}
@@ -405,6 +489,11 @@ const HealthDeclarationForm = () => {
                             label="Cách điều trị"
                             multiline
                             rows={2}
+                            error={!!errors.allergies?.[index]?.treatment}
+                            helperText={
+                              errors.allergies?.[index]?.treatment?.message
+                            }
+                            placeholder="Nhập cách xử lý khi có dị ứng"
                           />
                         )}
                       />
@@ -443,6 +532,11 @@ const HealthDeclarationForm = () => {
                 Thêm bệnh mãn tính
               </Button>
             </Box>
+
+            <Typography variant="body2" sx={{ color: "#666", mb: 1 }}>
+              Vui lòng nhập tên bệnh mãn tính bằng chữ cái, không sử dụng số
+              hoặc ký tự đặc biệt.
+            </Typography>
 
             {conditionFields.length === 0 ? (
               <Alert severity="info">
@@ -488,7 +582,13 @@ const HealthDeclarationForm = () => {
                           <Controller
                             name={`chronicConditions.${index}.name`}
                             control={control}
-                            rules={{ required: "Tên bệnh là bắt buộc" }}
+                            rules={{
+                              required: "Tên bệnh là bắt buộc",
+                              pattern: {
+                                value: /^[a-zA-ZÀ-ỹ\s,.]+$/,
+                                message: "Tên bệnh chỉ được nhập chữ cái",
+                              },
+                            }}
                             render={({ field }) => (
                               <TextField
                                 {...field}
@@ -501,6 +601,15 @@ const HealthDeclarationForm = () => {
                                   errors.chronicConditions?.[index]?.name
                                     ?.message
                                 }
+                                onChange={(e) => {
+                                  // Chỉ chấp nhận chữ cái, khoảng trắng, dấu phẩy và dấu chấm
+                                  const value = e.target.value.replace(
+                                    /[^a-zA-ZÀ-ỹ\s,.]/g,
+                                    ""
+                                  );
+                                  field.onChange(value);
+                                }}
+                                placeholder="Nhập tên bệnh mãn tính"
                               />
                             )}
                           />
@@ -510,15 +619,66 @@ const HealthDeclarationForm = () => {
                           <Controller
                             name={`chronicConditions.${index}.diagnosisDate`}
                             control={control}
-                            render={({ field }) => (
-                              <TextField
-                                {...field}
-                                fullWidth
-                                label="Ngày chẩn đoán"
-                                type="date"
-                                InputLabelProps={{ shrink: true }}
-                              />
-                            )}
+                            rules={{
+                              validate: {
+                                notInFuture: (value) => {
+                                  if (!value) return true;
+                                  const selected = new Date(value);
+                                  const today = new Date();
+                                  return (
+                                    selected <= today ||
+                                    "Ngày chẩn đoán không thể trong tương lai"
+                                  );
+                                },
+                                notTooOld: (value) => {
+                                  if (!value) return true;
+                                  const selected = new Date(value);
+                                  const minDate = new Date();
+                                  minDate.setFullYear(
+                                    minDate.getFullYear() - 100
+                                  ); // Tối đa 100 năm trước
+                                  return (
+                                    selected >= minDate ||
+                                    "Ngày chẩn đoán quá xa trong quá khứ"
+                                  );
+                                },
+                              },
+                            }}
+                            render={({ field }) => {
+                              // Tính toán giá trị max và min
+                              const today = new Date()
+                                .toISOString()
+                                .split("T")[0]; // YYYY-MM-DD hiện tại
+                              const minDate = new Date();
+                              minDate.setFullYear(minDate.getFullYear() - 100);
+                              const minDateStr = minDate
+                                .toISOString()
+                                .split("T")[0]; // YYYY-MM-DD 100 năm trước
+
+                              return (
+                                <TextField
+                                  {...field}
+                                  fullWidth
+                                  label="Ngày chẩn đoán"
+                                  type="date"
+                                  error={
+                                    !!errors.chronicConditions?.[index]
+                                      ?.diagnosisDate
+                                  }
+                                  helperText={
+                                    errors.chronicConditions?.[index]
+                                      ?.diagnosisDate?.message
+                                  }
+                                  InputLabelProps={{ shrink: true }}
+                                  InputProps={{
+                                    inputProps: {
+                                      max: today, // Không cho phép chọn ngày trong tương lai
+                                      min: minDateStr, // Không cho phép chọn ngày quá xa trong quá khứ
+                                    },
+                                  }}
+                                />
+                              );
+                            }}
                           />
                         </Box>
                       </Box>
@@ -526,6 +686,12 @@ const HealthDeclarationForm = () => {
                       <Controller
                         name={`chronicConditions.${index}.notes`}
                         control={control}
+                        rules={{
+                          pattern: {
+                            value: /^[a-zA-ZÀ-ỹ0-9\s,.]+$/,
+                            message: "Ghi chú chỉ được nhập chữ cái và số",
+                          },
+                        }}
                         render={({ field }) => (
                           <TextField
                             {...field}
@@ -533,6 +699,11 @@ const HealthDeclarationForm = () => {
                             label="Ghi chú"
                             multiline
                             rows={3}
+                            error={!!errors.chronicConditions?.[index]?.notes}
+                            helperText={
+                              errors.chronicConditions?.[index]?.notes?.message
+                            }
+                            placeholder="Thông tin bổ sung về bệnh mãn tính"
                           />
                         )}
                       />
