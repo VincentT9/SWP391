@@ -21,8 +21,6 @@ import {
   FormControl,
   InputLabel,
   Select,
-  Snackbar,
-  Alert,
 } from "@mui/material";
 import {
   Person as PersonIcon,
@@ -39,6 +37,7 @@ import { mockHealthRecords, mockStudents } from "../../utils/mockData";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { toast } from "react-toastify";
 
 // ===== KHAI BÁO KIỂU DỮ LIỆU =====
 // Định nghĩa kiểu BloodType cho nhóm máu
@@ -50,9 +49,6 @@ const HealthRecordsPage = () => {
   const [selectedTab, setSelectedTab] = useState(0);
   // State cho dialog cập nhật hồ sơ
   const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
-  // State cho thông báo snackbar
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState("");
 
   // ===== LẤY DỮ LIỆU HỒ SƠ =====
   // Lấy thông tin học sinh được chọn
@@ -122,8 +118,7 @@ const HealthRecordsPage = () => {
         };
 
         // Hiển thị thông báo thành công
-        setSnackbarMessage("Hồ sơ sức khỏe đã được cập nhật thành công!");
-        setSnackbarOpen(true);
+        toast.success("Hồ sơ sức khỏe đã được cập nhật thành công!");
       }
     }
 
@@ -803,18 +798,6 @@ const HealthRecordsPage = () => {
           </Button>
         </DialogActions>
       </Dialog>
-
-      {/* ===== HIỂN THỊ THÔNG BÁO ===== */}
-      <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={6000}
-        onClose={() => setSnackbarOpen(false)}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <Alert onClose={() => setSnackbarOpen(false)} severity="success">
-          {snackbarMessage}
-        </Alert>
-      </Snackbar>
     </Container>
   );
 };
