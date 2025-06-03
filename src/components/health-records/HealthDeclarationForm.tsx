@@ -217,14 +217,16 @@ const HealthDeclarationForm = () => {
                       helperText={errors.height?.message}
                       onChange={(e) => {
                         // Loại bỏ các ký tự không phải số
-                        const value = e.target.value.replace(/[e+\-]/g, '').replace(/[^0-9]/g, '');
-                        field.onChange(value ? Number(value) : '');
+                        const value = e.target.value
+                          .replace(/[e+\-]/g, "")
+                          .replace(/[^0-9]/g, "");
+                        field.onChange(value ? Number(value) : "");
                       }}
                       InputProps={{
-                        inputProps: { 
+                        inputProps: {
                           inputMode: "numeric", // Hiển thị bàn phím số trên mobile
-                          pattern: "[0-9]*",    // Pattern HTML5
-                        }
+                          pattern: "[0-9]*", // Pattern HTML5
+                        },
                       }}
                     />
                   )}
@@ -249,14 +251,16 @@ const HealthDeclarationForm = () => {
                       helperText={errors.weight?.message}
                       onChange={(e) => {
                         // Loại bỏ các ký tự không phải số
-                        const value = e.target.value.replace(/[e+\-]/g, '').replace(/[^0-9]/g, '');
-                        field.onChange(value ? Number(value) : '');
+                        const value = e.target.value
+                          .replace(/[e+\-]/g, "")
+                          .replace(/[^0-9]/g, "");
+                        field.onChange(value ? Number(value) : "");
                       }}
                       InputProps={{
-                        inputProps: { 
+                        inputProps: {
                           inputMode: "numeric", // Hiển thị bàn phím số trên mobile
-                          pattern: "[0-9]*",    // Pattern HTML5
-                        }
+                          pattern: "[0-9]*", // Pattern HTML5
+                        },
                       }}
                     />
                   )}
@@ -562,13 +566,13 @@ const HealthDeclarationForm = () => {
                 <Controller
                   name="emergencyContact.name"
                   control={control}
-                  rules={{ 
+                  rules={{
                     required: "Tên người liên hệ là bắt buộc",
                     pattern: {
                       // Pattern chấp nhận chữ cái, khoảng trắng và chữ cái có dấu tiếng Việt
                       value: /^[a-zA-ZÀ-ỹ\s]+$/,
-                      message: "Tên người liên hệ chỉ được chứa chữ cái"
-                    }
+                      message: "Tên người liên hệ chỉ được chứa chữ cái",
+                    },
                   }}
                   render={({ field }) => (
                     <TextField
@@ -579,7 +583,10 @@ const HealthDeclarationForm = () => {
                       helperText={errors.emergencyContact?.name?.message}
                       onChange={(e) => {
                         // Loại bỏ các ký tự không phải chữ cái hoặc khoảng trắng
-                        const value = e.target.value.replace(/[^a-zA-ZÀ-ỹ\s]/g, '');
+                        const value = e.target.value.replace(
+                          /[^a-zA-ZÀ-ỹ\s]/g,
+                          ""
+                        );
                         field.onChange(value);
                       }}
                     />
@@ -628,7 +635,8 @@ const HealthDeclarationForm = () => {
                     required: "Số điện thoại là bắt buộc",
                     pattern: {
                       value: /^[0-9]{10,11}$/,
-                      message: "Số điện thoại không hợp lệ (phải có 10-11 chữ số)",
+                      message:
+                        "Số điện thoại không hợp lệ (phải có 10-11 chữ số)",
                     },
                   }}
                   render={({ field }) => (
