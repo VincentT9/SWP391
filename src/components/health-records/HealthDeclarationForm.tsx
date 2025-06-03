@@ -227,7 +227,8 @@ const HealthDeclarationForm = () => {
                     min: { value: 50, message: "Chiều cao phải > 50cm" },
                     max: { value: 250, message: "Chiều cao phải ≤ 250cm" },
                     validate: {
-                      notZero: (value) => value > 0 || "Chiều cao phải lớn hơn 0",
+                      notZero: (value) =>
+                        value > 0 || "Chiều cao phải lớn hơn 0",
                     },
                   }}
                   render={({ field }) => (
@@ -282,7 +283,8 @@ const HealthDeclarationForm = () => {
                     min: { value: 10, message: "Cân nặng phải > 10kg" },
                     max: { value: 150, message: "Cân nặng phải ≤ 150kg" },
                     validate: {
-                      notZero: (value) => value > 0 || "Cân nặng phải lớn hơn 0",
+                      notZero: (value) =>
+                        value > 0 || "Cân nặng phải lớn hơn 0",
                     },
                   }}
                   render={({ field }) => (
@@ -652,7 +654,9 @@ const HealthDeclarationForm = () => {
                                   if (!value) return true;
                                   const selected = new Date(value);
                                   const minDate = new Date();
-                                  minDate.setFullYear(minDate.getFullYear() - 100);
+                                  minDate.setFullYear(
+                                    minDate.getFullYear() - 100
+                                  );
                                   return (
                                     selected >= minDate ||
                                     "Ngày chẩn đoán quá xa trong quá khứ"
@@ -696,12 +700,18 @@ const HealthDeclarationForm = () => {
                                       const selected = new Date(selectedDate);
                                       const today = new Date();
                                       const minDate = new Date();
-                                      minDate.setFullYear(minDate.getFullYear() - 100);
+                                      minDate.setFullYear(
+                                        minDate.getFullYear() - 100
+                                      );
 
                                       if (selected > today) {
-                                        toast.error("Ngày chẩn đoán không thể trong tương lai!");
+                                        toast.error(
+                                          "Ngày chẩn đoán không thể trong tương lai!"
+                                        );
                                       } else if (selected < minDate) {
-                                        toast.error("Ngày chẩn đoán quá xa trong quá khứ!");
+                                        toast.error(
+                                          "Ngày chẩn đoán quá xa trong quá khứ!"
+                                        );
                                       }
                                     }
                                   }}
