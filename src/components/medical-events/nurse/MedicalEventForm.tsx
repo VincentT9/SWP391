@@ -22,6 +22,7 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import { MedicalEvent, MedicationGiven, Student } from "../../../models/types";
 import { mockMedicalSupplies } from "../../../utils/mockData";
+import { toast } from "react-toastify";
 
 // Mock data for students - in a real app, this would come from API
 const mockStudents: Student[] = [
@@ -235,6 +236,7 @@ const MedicalEventForm: React.FC<MedicalEventFormProps> = ({
     };
 
     onSave(eventData);
+    toast.success("Đã tạo sự kiện y tế mới!");
   };
 
   return (

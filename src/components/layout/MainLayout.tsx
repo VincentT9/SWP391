@@ -4,53 +4,40 @@ import {
   AppBar,
   Box,
   CssBaseline,
-  Divider,
   Drawer,
   IconButton,
   List,
   ListItem,
   ListItemButton,
-  ListItemIcon,
-  ListItemText,
   Toolbar,
   Typography,
   Button,
   Menu,
   MenuItem,
   Avatar,
-  InputBase,
-  Badge,
-  Paper,
 } from "@mui/material";
 import {
   Menu as MenuIcon,
   Home as HomeIcon,
   MedicalServices as MedicalServicesIcon,
   Medication as MedicationIcon,
-  Event as EventIcon,
-  VaccinesOutlined as VaccineIcon,
-  HealthAndSafety as HealthCheckIcon,
-  Dashboard as DashboardIcon,
-  Person as PersonIcon,
   Settings as SettingsIcon,
   AccountCircle,
-  Search as SearchIcon,
   Notifications as NotificationsIcon,
 } from "@mui/icons-material";
 import { useAuth } from "../auth/AuthContext"; // Import useAuth
-import { NurseMedicalEventsDashboard } from "../medical-events/nurse";
 
 // Increased drawer width from 150 to 180 pixels
 const drawerWidth = 250; // Increased from 150 to 180
 
-interface MenuItem {
+interface MenuItemType {
   text: string;
   path: string;
   icon: React.ReactNode;
   role?: string[];
 }
 
-const menuItems: MenuItem[] = [
+const menuItems: MenuItemType[] = [
   { text: "Trang chủ", path: "/", icon: <HomeIcon /> },
   {
     text: "Sức khỏe của tôi",
@@ -64,7 +51,7 @@ const menuItems: MenuItem[] = [
     icon: <MedicalServicesIcon />,
     role: ["nurse"],
   },
-    {
+  {
     text: "Sự kiện y tế",
     path: "/medical-events",
     icon: <MedicalServicesIcon />,
