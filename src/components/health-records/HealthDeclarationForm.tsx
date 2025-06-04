@@ -66,7 +66,6 @@ const HealthDeclarationForm = () => {
   const {
     control,
     handleSubmit,
-    watch,
     formState: { errors },
   } = useForm<FormData>({
     defaultValues: {
@@ -243,7 +242,7 @@ const HealthDeclarationForm = () => {
                       onChange={(e) => {
                         // Loại bỏ ký tự không phải số
                         let value = e.target.value
-                          .replace(/[e+\-]/g, "")
+                          .replace(/[e+-]/g, "")
                           .replace(/[^0-9]/g, "");
 
                         // Không cho phép giá trị rỗng hoặc 0 đứng đầu
@@ -299,7 +298,7 @@ const HealthDeclarationForm = () => {
                       onChange={(e) => {
                         // Loại bỏ ký tự không phải số
                         let value = e.target.value
-                          .replace(/[e+\-]/g, "")
+                          .replace(/[e+-]/g, "")
                           .replace(/[^0-9]/g, "");
 
                         // Không cho phép giá trị rỗng hoặc 0 đứng đầu

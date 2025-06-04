@@ -30,14 +30,14 @@ import { useAuth } from "../auth/AuthContext"; // Import useAuth
 // Increased drawer width from 150 to 180 pixels
 const drawerWidth = 250; // Increased from 150 to 180
 
-interface MenuItem {
+interface MenuItemType {
   text: string;
   path: string;
   icon: React.ReactNode;
   role?: string[];
 }
 
-const menuItems: MenuItem[] = [
+const menuItems: MenuItemType[] = [
   { text: "Trang chủ", path: "/", icon: <HomeIcon /> },
   {
     text: "Sức khỏe của tôi",
