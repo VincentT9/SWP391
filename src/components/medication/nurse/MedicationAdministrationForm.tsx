@@ -4,19 +4,20 @@ import {
   Button,
   TextField,
   Typography,
-  Paper,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
+  // Paper,
+  // FormControl,
+  // InputLabel,
+  // Select,
+  // MenuItem,
   Snackbar,
   Alert,
   Card,
   CardContent,
   Divider,
 } from "@mui/material";
-import { format } from "date-fns";
+// import { format } from "date-fns";
 import { MedicationRequest, MedicationLog } from "../../../models/types";
+import { toast } from "react-toastify";
 
 // Mock data import - would be replaced with API calls
 import { medicationLogs } from "../../../utils/mockData";
@@ -57,6 +58,7 @@ const MedicationAdministrationForm: React.FC<
 
     // Show success message
     setOpenSnackbar(true);
+    toast.success("Đã cập nhật thông tin dùng thuốc!");
 
     // Reset form
     setConditionBefore("");
