@@ -51,9 +51,8 @@ const LoginPage = () => {
     const savedCredentials = localStorage.getItem("savedLoginCredentials");
     if (savedCredentials) {
       try {
-        const { username, password, remember } = JSON.parse(savedCredentials);
+        const { username, remember } = JSON.parse(savedCredentials);
         setValue("username", username || "");
-        setValue("password", password || "");
         setValue("remember", remember || false);
       } catch (error) {
         console.error("Error loading saved credentials:", error);
@@ -65,44 +64,38 @@ const LoginPage = () => {
 
   const onSubmit = async (data: FormData) => {
     try {
-      setLoginError(null); // Clear previous errors
+      setLoginError(null);
 
-      // Save or remove credentials based on remember checkbox
+      // Lưu credentials nếu cần
       if (data.remember) {
-        // Save credentials to localStorage
         const credentialsToSave = {
           username: data.username,
-          password: data.password,
           remember: true,
         };
         localStorage.setItem(
           "savedLoginCredentials",
           JSON.stringify(credentialsToSave)
         );
-        console.log("Credentials saved to localStorage");
       } else {
-        // Remove saved credentials
         localStorage.removeItem("savedLoginCredentials");
-        console.log("Saved credentials removed from localStorage");
       }
 
-      // Use the login function from AuthContext
-      const success = await login(data.username, data.password);
-
-      if (success) {
+      // AuthContext sẽ tự gọi API và cập nhật isAuthenticated = true
+      if (await login(data.username, data.password)) {
         toast.success("Đăng nhập thành công!");
-        navigate("/"); // Navigate to dashboard on successful login
+        navigate("/");
       } else {
-        toast.error(
-          "Đăng nhập thất bại. Vui lòng kiểm tra tên đăng nhập và mật khẩu."
-        );
-        setLoginError(
-          "Tên truy cập hoặc mật khẩu không đúng. Vui lòng thử lại."
-        );
+        setLoginError("Đăng nhập thất bại. Vui lòng kiểm tra tên đăng nhập và mật khẩu.");
+        toast.error("Đăng nhập thất bại. Vui lòng kiểm tra tên đăng nhập và mật khẩu.");
       }
     } catch (error) {
       console.error("Login error:", error);
-      setLoginError("Đã xảy ra lỗi khi đăng nhập. Vui lòng thử lại.");
+      setLoginError(
+        "Đăng nhập thất bại. Vui lòng kiểm tra tên đăng nhập và mật khẩu."
+      );
+      toast.error(
+        "Đăng nhập thất bại. Vui lòng kiểm tra tên đăng nhập và mật khẩu."
+      );
     }
   };
 

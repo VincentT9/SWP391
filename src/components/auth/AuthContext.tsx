@@ -4,7 +4,7 @@ export interface User {
   id: string;
   name: string;
   username: string;
-  role: 'admin' | 'nurse' | 'parent' | 'student';
+  role: 'Admin' | 'Parent' | 'MedicalStaff';
   avatar?: string;
   isAuthenticated: boolean;
 }
@@ -17,12 +17,8 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-// API Configuration - Keep the __method=POST
-const API_BASE_URL = 'https://my.api.mockaroo.com/account.json?key=c12b5dc0&__method=POST';
-
-// Default password for all users (temporary solution)
-const DEFAULT_PASSWORD = 'password123';
+// API Configuration from .env
+const API_LOGIN_URL = process.env.REACT_APP_LOGIN_API || 'http://localhost:5112/api/Auth/login';
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(() => {
@@ -38,107 +34,56 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   
   const [loading, setLoading] = useState(false);
 
-  // API login function - Fixed to work with Mockaroo API
+  // API login function using real backend
   const login = async (username: string, password: string): Promise<boolean> => {
     setLoading(true);
     
     try {
-      console.log('Attempting login with Mockaroo API:', { username });
+      console.log('Attempting login with backend API:', { username });
       
-      // Step 1: Check if password is correct
-      if (password !== DEFAULT_PASSWORD) {
-        console.log('Login failed: Incorrect password');
-        return false;
-      }
-
-      // Step 2: Fetch all users from Mockaroo API (not adding /users!)
-      console.log('Fetching from Mockaroo API:', API_BASE_URL);
-      
-      const response = await fetch(API_BASE_URL, {
-        method: 'GET', // Use GET even though URL has __method=POST
+      const response = await fetch(API_LOGIN_URL, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          username,
+          password,
+        }),
       });
 
       console.log('Response status:', response.status);
 
       if (!response.ok) {
-        console.log('Failed to fetch users from Mockaroo API:', response.status);
+        console.log('Login failed:', response.status);
         return false;
       }
 
-      const usersData = await response.json();
-      console.log('Mockaroo API Response:', usersData);
+      const loginResponse = await response.json();
+      console.log('Login API Response:', loginResponse);
 
-      // Step 3: Handle response format
-      let users = [];
-      if (Array.isArray(usersData)) {
-        users = usersData;
-      } else {
-        console.log('Expected array from Mockaroo, got:', typeof usersData);
-        return false;
-      }
-
-      if (users.length === 0) {
-        console.log('No users found in API');
-        return false;
-      }
-
-      // Log first user for debugging
-      console.log('First user structure:', users[0]);
-      console.log('Available fields:', Object.keys(users[0]));
-
-      // Step 4: Find user by username (flexible matching)
-      const foundUser = users.find((user: any) => {
-        // Try different username fields that might exist in your Mockaroo data
-        const userFields = [
-          user.username,
-          user.email,
-          user.login,
-          user.user_name,
-          user.userName,
-          user.account,
-          user.id,
-        ];
-        
-        return userFields.some(field => 
-          field && field.toString().toLowerCase() === username.toLowerCase()
-        );
-      });
-
-      if (!foundUser) {
-        console.log('User not found:', username);
-        console.log('Available users:', users.slice(0, 5).map((u: any) => 
-          u.username || u.email || u.login || u.user_name || u.id || 'no-identifier'
-        ));
-        return false;
-      }
-
-      console.log('Found user:', foundUser);
-
-      // Step 5: Create authenticated user object
+      // Assuming the API returns user data and token
+      // Adjust these field names based on your actual API response
       const authenticatedUser: User = {
-        id: String(foundUser.id || Math.random()),
-        name: foundUser.name || 
-              foundUser.full_name || 
-              foundUser.fullName ||
-              foundUser.first_name + ' ' + foundUser.last_name ||
-              foundUser.username ||
-              username,
-        username: foundUser.username || foundUser.email || foundUser.login || username,
-        role: mapUserRole(foundUser.role || foundUser.user_type || 'student'),
-        avatar: foundUser.avatar || foundUser.profile_picture,
+        id: String(loginResponse.user?.id || loginResponse.id || Math.random()),
+        name: loginResponse.user?.name || loginResponse.name || loginResponse.fullName || username,
+        username: loginResponse.user?.username || loginResponse.username || username,
+        role: mapUserRole(loginResponse.user?.userRole || loginResponse.userRole || 'Parent'),
+        avatar: loginResponse.user?.avatar || loginResponse.avatar,
         isAuthenticated: true,
       };
 
-      // Step 6: Generate simple token
-      const simpleToken = btoa(`${username}:${Date.now()}`);
+      const token = loginResponse.token || loginResponse.accessToken;
       
+      if (!token) {
+        console.log('No token received from API');
+        return false;
+      }
+
       // Save user and token
       setUser(authenticatedUser);
       localStorage.setItem('authUser', JSON.stringify(authenticatedUser));
-      localStorage.setItem('authToken', simpleToken);
+      localStorage.setItem('authToken', token);
       
       console.log('Login successful:', authenticatedUser);
       return true;
@@ -151,25 +96,43 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  // Helper function to map role values
-  const mapUserRole = (roleValue: string): 'admin' | 'nurse' | 'parent' | 'student' => {
-    if (!roleValue) return 'student';
+  // Helper function to map role values to match backend enum
+  const mapUserRole = (roleValue: string | number): 'Admin' | 'Parent' | 'MedicalStaff' => {
+    if (!roleValue) return 'Parent';
     
-    const role = roleValue.toLowerCase();
+    // Handle both string and numeric enum values
+    if (typeof roleValue === 'number') {
+      switch (roleValue) {
+        case 0: return 'Admin';
+        case 1: return 'Parent';
+        case 2: return 'MedicalStaff';
+        default: return 'Parent';
+      }
+    }
     
-    if (role.includes('admin')) return 'admin';
-    if (role.includes('nurse') || role.includes('medical')) return 'nurse';
-    if (role.includes('parent') || role.includes('guardian')) return 'parent';
+    // Handle string values
+    const role = roleValue.toString().toLowerCase();
     
-    return 'student';
+    if (role.includes('admin')) return 'Admin';
+    if (role.includes('medical') || role.includes('staff') || role.includes('nurse') || role.includes('doctor')) return 'MedicalStaff';
+    if (role.includes('parent') || role.includes('guardian')) return 'Parent';
+    
+    // Handle exact enum string matches
+    if (role === 'admin') return 'Admin';
+    if (role === 'medicalstaff') return 'MedicalStaff';
+    if (role === 'parent') return 'Parent';
+    
+    return 'Parent'; // Default fallback
   };
 
-  // API logout function
+  // Logout function
   const logout = async () => {
     setLoading(true);
     
     try {
       console.log('Logging out user');
+      // Optional: Call logout API endpoint if exists
+      // await fetch(API_LOGOUT_URL, { method: 'POST', headers: getAuthHeaders() });
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
@@ -199,69 +162,6 @@ export const useAuth = () => {
   return context;
 };
 
-// Helper function to test API and show available users
-export const testMockarooAPI = async () => {
-  try {
-    console.log('🔍 Testing Mockaroo API...');
-    console.log('URL:', API_BASE_URL);
-    
-    const response = await fetch(API_BASE_URL, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    console.log('Response status:', response.status);
-    console.log('Response ok:', response.ok);
-
-    if (response.ok) {
-      const data = await response.json();
-      console.log('✅ API Success!');
-      console.log('Data type:', Array.isArray(data) ? `Array with ${data.length} items` : typeof data);
-      
-      if (Array.isArray(data) && data.length > 0) {
-        console.log('📋 First user fields:', Object.keys(data[0]));
-        console.log('👤 Sample data:', data[0]);
-        
-        // Show available login identifiers
-        const identifiers = data.slice(0, 10).map((user: any) => 
-          user.username || user.email || user.login || user.user_name || user.id || 'no-id'
-        );
-        console.log('🆔 Available usernames/identifiers:', identifiers);
-        
-        return data;
-      }
-    } else {
-      console.error('❌ API Error:', response.status, response.statusText);
-    }
-    
-    return null;
-  } catch (error) {
-    console.error('❌ Network Error:', error);
-    return null;
-  }
-};
-
-// Helper function to get all available usernames for testing
-export const getTestUsernames = async (): Promise<string[]> => {
-  try {
-    const response = await fetch(API_BASE_URL);
-    if (response.ok) {
-      const users = await response.json();
-      if (Array.isArray(users)) {
-        return users.map((user: any) => 
-          user.username || user.email || user.login || user.user_name || String(user.id)
-        ).filter(Boolean);
-      }
-    }
-    return [];
-  } catch (error) {
-    console.error('Error fetching test usernames:', error);
-    return [];
-  }
-};
-
 // API Helper functions
 export const getAuthHeaders = () => {
   const token = localStorage.getItem('authToken');
@@ -283,8 +183,7 @@ export const apiRequest = async (endpoint: string, options: RequestInit = {}) =>
     },
   };
 
-  // Don't add endpoint to API_BASE_URL since it's already a complete URL
-  const response = await fetch(API_BASE_URL, config);
+  const response = await fetch(endpoint, config);
   
   if (response.status === 401) {
     console.log('Token expired or invalid');

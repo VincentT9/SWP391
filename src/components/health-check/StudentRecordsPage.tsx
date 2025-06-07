@@ -179,7 +179,7 @@ const StudentRecordsPage: React.FC = () => {
   const [selectedRecord, setSelectedRecord] = useState<HealthRecord | null>(null);
 
   // Check if user is nurse or admin
-  if (!user?.isAuthenticated || (user.role !== 'nurse' && user.role !== 'admin')) {
+  if (!user?.isAuthenticated || (user.role !== 'MedicalStaff' && user.role !== 'Admin')) {
     return (
       <Container maxWidth="lg">
         <Box sx={{ my: 4 }}>

@@ -17,27 +17,21 @@ const MedicalEventsPage: React.FC = () => {
     }
 
     switch (user.role) {
-      case "nurse":
+      case "MedicalStaff":
         return (
           <NurseMedicalEventsDashboard
             nurseId={user.id}
             nurseName={user.name}
           />
         );
-      case "parent":
+      case "Parent":
         return <ParentMedicalEventsDashboard parentId={user.id} />;
-      case "admin":
+      case "Admin":
         return (
           <NurseMedicalEventsDashboard
             nurseId={user.id}
             nurseName={user.name}
           />
-        );
-      case "student":
-        return (
-          <Alert severity="info">
-            Học sinh có thể xem lịch khám sức khỏe trong mục "Hồ sơ sức khỏe".
-          </Alert>
         );
       default:
         return (
