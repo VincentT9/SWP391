@@ -48,7 +48,7 @@ interface User {
   name: string;
   phone?: string;
   address?: string;
-  role: string;
+  role: any;
   avatar?: string;
   isAuthenticated: boolean;
   isActive?: boolean;
@@ -71,39 +71,34 @@ const AdminPage = () => {
   });
 
   // Helper function để hiển thị tên role
-  const getRoleDisplayName = (role: string) => {
-    switch (role?.toLowerCase()) {
-      case "admin":
+  const getRoleDisplayName = (role: any) => {
+    switch (role) {
+      case 0:
         return "Quản trị viên";
-      case "nurse":
+      case 2:
         return "Y tá";
-      case "parent":
+      case 1:
         return "Phụ huynh";
-      case "student":
-        return "Học sinh";
       default:
         return "Không xác định";
     }
   };
 
+  const BASE_API = process.env.REACT_APP_BASE_URL;
   // Fetch users from API
   const fetchUsers = async () => {
     setLoading(true);
     setError("");
     try {
       const response = await fetch(
-        "https://my.api.mockaroo.com/account.json?key=c12b5dc0&__method=POST",
+        `${BASE_API}/api/User/get-all-users`, // Sử dụng BASE_API từ .env
         {
-          method: "POST",
+          method: "GET",
           headers: {
             "Content-Type": "application/json",
           },
         }
       );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
 
       const data = await response.json();
       console.log("API Response:", data);
@@ -198,16 +193,14 @@ const AdminPage = () => {
     );
   }
 
-  const getUserRoleText = (role: string) => {
-    switch (role?.toLowerCase()) {
-      case "admin":
+  const getUserRoleText = (role: any) => {
+    switch (role) {
+      case 0:
         return "Quản trị viên";
-      case "nurse":
+      case 2:
         return "Y tá";
-      case "parent":
+      case 1:
         return "Phụ huynh";
-      case "student":
-        return "Học sinh";
       default:
         return "Không xác định";
     }
@@ -221,8 +214,6 @@ const AdminPage = () => {
         return "primary";
       case "parent":
         return "default";
-      case "student":
-        return "secondary";
       default:
         return "default";
     }
