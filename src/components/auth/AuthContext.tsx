@@ -87,7 +87,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         username:
           loginResponse.user?.username || loginResponse.username || username,
         role: mapUserRole(
-          loginResponse.user?.userRole || loginResponse.userRole || "Parent"
+          loginResponse.user?.userRole || loginResponse.userRole
         ),
         avatar: loginResponse.user?.avatar || loginResponse.avatar,
         isAuthenticated: true,
