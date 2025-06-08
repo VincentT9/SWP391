@@ -18,8 +18,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // API Configuration from .env
-const API_LOGIN_URL =
-  process.env.REACT_APP_LOGIN_API || "http://localhost:5112/api/Auth/login";
+const API_LOGIN_URL = process.env.REACT_APP_LOGIN_API;
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   children,
@@ -43,6 +42,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     password: string
   ): Promise<boolean> => {
     setLoading(true);
+
+    // Kiểm tra URL tồn tại
+    if (!API_LOGIN_URL) {
+      console.error("API login URL is not configured");
+      alert("Hệ thống đang gặp sự cố. Vui lòng liên hệ quản trị viên.");
+      setLoading(false);
+      return false;
+    }
 
     try {
       console.log("Attempting login with backend API:", { username });
@@ -80,7 +87,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         username:
           loginResponse.user?.username || loginResponse.username || username,
         role: mapUserRole(
-          loginResponse.user?.userRole || loginResponse.userRole || "Parent"
+          loginResponse.user?.userRole || loginResponse.userRole
         ),
         avatar: loginResponse.user?.avatar || loginResponse.avatar,
         isAuthenticated: true,
