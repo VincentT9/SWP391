@@ -17,27 +17,21 @@ const MedicationPage: React.FC = () => {
     }
 
     switch (user.role) {
-      case "parent":
+      case "Parent":
         return <ParentMedicationDashboard parentId={user.id} />;
-      case "nurse":
+      case "MedicalStaff":
         return (
           <NurseMedicationDashboard
             nurseId={user.id}
             nurseName={user.name}
           />
         );
-      case "admin":
+      case "Admin":
         return (
           <NurseMedicationDashboard
             nurseId={user.id}
             nurseName={user.name}
           />
-        );
-      case "student":
-        return (
-          <Alert severity="info">
-            Học sinh không có quyền quản lý thuốc. Vui lòng liên hệ y tá hoặc phụ huynh.
-          </Alert>
         );
       default:
         return (

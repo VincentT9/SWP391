@@ -157,7 +157,7 @@ const MedicalSupplierPage = () => {
   }
 
   // Check admin permission (role === 'admin')
-  if (user.role == 'parent') {
+  if (user.role == 'Parent') {
     return (
       <Container maxWidth="lg">
         <Box sx={{ my: 4, textAlign: 'center' }}>
