@@ -1,10 +1,10 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode } from "react";
 
 export interface User {
   id: string;
   name: string;
   username: string;
-  role: 'Admin' | 'Parent' | 'MedicalStaff';
+  role: "Admin" | "Parent" | "MedicalStaff";
   avatar?: string;
   isAuthenticated: boolean;
 }
@@ -18,33 +18,39 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // API Configuration from .env
-const API_LOGIN_URL = process.env.REACT_APP_LOGIN_API || 'http://localhost:5112/api/Auth/login';
+const API_LOGIN_URL =
+  process.env.REACT_APP_LOGIN_API || "http://localhost:5112/api/Auth/login";
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({
+  children,
+}) => {
   const [user, setUser] = useState<User | null>(() => {
     // Check localStorage for saved user
-    const savedUser = localStorage.getItem('authUser');
-    const savedToken = localStorage.getItem('authToken');
-    
+    const savedUser = localStorage.getItem("authUser");
+    const savedToken = localStorage.getItem("authToken");
+
     if (savedUser && savedToken) {
       return JSON.parse(savedUser);
     }
     return null;
   });
-  
+
   const [loading, setLoading] = useState(false);
 
   // API login function using real backend
-  const login = async (username: string, password: string): Promise<boolean> => {
+  const login = async (
+    username: string,
+    password: string
+  ): Promise<boolean> => {
     setLoading(true);
-    
+
     try {
-      console.log('Attempting login with backend API:', { username });
-      
+      console.log("Attempting login with backend API:", { username });
+
       const response = await fetch(API_LOGIN_URL, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           username,
@@ -52,44 +58,50 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }),
       });
 
-      console.log('Response status:', response.status);
+      console.log("Response status:", response.status);
 
       if (!response.ok) {
-        console.log('Login failed:', response.status);
+        console.log("Login failed:", response.status);
         return false;
       }
 
       const loginResponse = await response.json();
-      console.log('Login API Response:', loginResponse);
+      console.log("Login API Response:", loginResponse);
 
       // Assuming the API returns user data and token
       // Adjust these field names based on your actual API response
       const authenticatedUser: User = {
         id: String(loginResponse.user?.id || loginResponse.id || Math.random()),
-        name: loginResponse.user?.name || loginResponse.name || loginResponse.fullName || username,
-        username: loginResponse.user?.username || loginResponse.username || username,
-        role: mapUserRole(loginResponse.user?.userRole || loginResponse.userRole || 'Parent'),
+        name:
+          loginResponse.user?.name ||
+          loginResponse.name ||
+          loginResponse.fullName ||
+          username,
+        username:
+          loginResponse.user?.username || loginResponse.username || username,
+        role: mapUserRole(
+          loginResponse.user?.userRole || loginResponse.userRole || "Parent"
+        ),
         avatar: loginResponse.user?.avatar || loginResponse.avatar,
         isAuthenticated: true,
       };
 
       const token = loginResponse.token || loginResponse.accessToken;
-      
+
       if (!token) {
-        console.log('No token received from API');
+        console.log("No token received from API");
         return false;
       }
 
       // Save user and token
       setUser(authenticatedUser);
-      localStorage.setItem('authUser', JSON.stringify(authenticatedUser));
-      localStorage.setItem('authToken', token);
-      
-      console.log('Login successful:', authenticatedUser);
-      return true;
+      localStorage.setItem("authUser", JSON.stringify(authenticatedUser));
+      localStorage.setItem("authToken", token);
 
+      console.log("Login successful:", authenticatedUser);
+      return true;
     } catch (error) {
-      console.error('Login error:', error);
+      console.error("Login error:", error);
       return false;
     } finally {
       setLoading(false);
@@ -97,50 +109,62 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   // Helper function to map role values to match backend enum
-  const mapUserRole = (roleValue: string | number): 'Admin' | 'Parent' | 'MedicalStaff' => {
-    if (!roleValue) return 'Parent';
-    
+  const mapUserRole = (
+    roleValue: string | number
+  ): "Admin" | "Parent" | "MedicalStaff" => {
+    if (!roleValue) return "Parent";
+
     // Handle both string and numeric enum values
-    if (typeof roleValue === 'number') {
+    if (typeof roleValue === "number") {
       switch (roleValue) {
-        case 0: return 'Admin';
-        case 1: return 'Parent';
-        case 2: return 'MedicalStaff';
-        default: return 'Parent';
+        case 0:
+          return "Admin";
+        case 1:
+          return "Parent";
+        case 2:
+          return "MedicalStaff";
+        default:
+          return "Parent";
       }
     }
-    
+
     // Handle string values
     const role = roleValue.toString().toLowerCase();
-    
-    if (role.includes('admin')) return 'Admin';
-    if (role.includes('medical') || role.includes('staff') || role.includes('nurse') || role.includes('doctor')) return 'MedicalStaff';
-    if (role.includes('parent') || role.includes('guardian')) return 'Parent';
-    
+
+    if (role.includes("admin")) return "Admin";
+    if (
+      role.includes("medical") ||
+      role.includes("staff") ||
+      role.includes("nurse") ||
+      role.includes("doctor")
+    )
+      return "MedicalStaff";
+    if (role.includes("parent") || role.includes("guardian")) return "Parent";
+
     // Handle exact enum string matches
-    if (role === 'admin') return 'Admin';
-    if (role === 'medicalstaff') return 'MedicalStaff';
-    if (role === 'parent') return 'Parent';
-    
-    return 'Parent'; // Default fallback
+    if (role === "admin") return "Admin";
+    if (role === "medicalstaff") return "MedicalStaff";
+    if (role === "parent") return "Parent";
+
+    return "Parent"; // Default fallback
   };
 
   // Logout function
   const logout = async () => {
     setLoading(true);
-    
+
     try {
-      console.log('Logging out user');
+      console.log("Logging out user");
       // Optional: Call logout API endpoint if exists
       // await fetch(API_LOGOUT_URL, { method: 'POST', headers: getAuthHeaders() });
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error("Logout error:", error);
     } finally {
       setUser(null);
-      localStorage.removeItem('authUser');
-      localStorage.removeItem('authToken');
+      localStorage.removeItem("authUser");
+      localStorage.removeItem("authToken");
       setLoading(false);
-      console.log('User logged out');
+      console.log("User logged out");
     }
   };
 
@@ -157,40 +181,43 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };
 
 // API Helper functions
 export const getAuthHeaders = () => {
-  const token = localStorage.getItem('authToken');
+  const token = localStorage.getItem("authToken");
   return {
-    'Authorization': `Bearer ${token}`,
-    'Content-Type': 'application/json',
+    Authorization: `Bearer ${token}`,
+    "Content-Type": "application/json",
   };
 };
 
-export const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
-  const token = localStorage.getItem('authToken');
-  
+export const apiRequest = async (
+  endpoint: string,
+  options: RequestInit = {}
+) => {
+  const token = localStorage.getItem("authToken");
+
   const config: RequestInit = {
     ...options,
     headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
       ...options.headers,
     },
   };
 
   const response = await fetch(endpoint, config);
-  
+
   if (response.status === 401) {
-    console.log('Token expired or invalid');
-    localStorage.removeItem('authUser');
-    localStorage.removeItem('authToken');
-    window.location.href = '/login';
+    console.log("Token expired or invalid");
+    localStorage.removeItem("authUser");
+    localStorage.removeItem("authToken");
+    window.location.href = "/login";
   }
-  
+
   return response;
 };
