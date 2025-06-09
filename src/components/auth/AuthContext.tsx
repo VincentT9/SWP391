@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
+import { jwtDecode } from "jwt-decode";
+
 
 export interface User {
   id: string;
@@ -75,38 +77,61 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       const loginResponse = await response.json();
       console.log("Login API Response:", loginResponse);
 
-      // Assuming the API returns user data and token
-      // Adjust these field names based on your actual API response
-      const authenticatedUser: User = {
-        id: String(loginResponse.user?.id || loginResponse.id || Math.random()),
-        name:
-          loginResponse.user?.name ||
-          loginResponse.name ||
-          loginResponse.fullName ||
-          username,
-        username:
-          loginResponse.user?.username || loginResponse.username || username,
-        role: mapUserRole(
-          loginResponse.user?.userRole || loginResponse.userRole
-        ),
-        avatar: loginResponse.user?.avatar || loginResponse.avatar,
-        isAuthenticated: true,
-      };
 
-      const token = loginResponse.token || loginResponse.accessToken;
+      // Lấy token từ response
+      const token =
+        loginResponse.Token || loginResponse.token || loginResponse.accessToken;
+      const refreshToken = loginResponse.refreshToken;
+
 
       if (!token) {
         console.log("No token received from API");
         return false;
       }
 
-      // Save user and token
-      setUser(authenticatedUser);
-      localStorage.setItem("authUser", JSON.stringify(authenticatedUser));
-      localStorage.setItem("authToken", token);
+      try {
+        // Decode token để lấy thông tin user
+        const decodedToken: any = jwtDecode(token);
+        console.log("Decoded token:", decodedToken);
 
-      console.log("Login successful:", authenticatedUser);
-      return true;
+        const authenticatedUser: User = {
+          id: String(
+            decodedToken.sub ||
+              decodedToken.id ||
+              decodedToken.userId ||
+              Math.random()
+          ),
+          name:
+            decodedToken.name ||
+            decodedToken.fullName ||
+            decodedToken.given_name ||
+            username,
+          username:
+            decodedToken.username ||
+            decodedToken.preferred_username ||
+            username,
+          role: mapUserRole(decodedToken.role || decodedToken.userRole),
+          avatar: decodedToken.avatar || decodedToken.picture,
+          isAuthenticated: true,
+        };
+
+        // Save user and tokens
+        setUser(authenticatedUser);
+        localStorage.setItem("authUser", JSON.stringify(authenticatedUser));
+        localStorage.setItem("authToken", token);
+
+        // Lưu refresh token nếu có
+        if (refreshToken) {
+          localStorage.setItem("refreshToken", refreshToken);
+        }
+
+        console.log("Login successful:", authenticatedUser);
+        return true;
+      } catch (decodeError) {
+        console.error("Token decode error:", decodeError);
+        return false;
+      }
+
     } catch (error) {
       console.error("Login error:", error);
       return false;
