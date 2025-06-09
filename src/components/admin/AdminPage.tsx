@@ -44,12 +44,13 @@ import { useAuth } from "../auth/AuthContext";
 interface User {
   id: string; // Đổi từ number sang string
   username: string;
-  name: string;
-  phone?: string;
-  address?: string;
-  role: string;
-  avatar?: string;
-  isAuthenticated: boolean;
+  fullName: string | null; // Đổi từ name sang fullName
+  phoneNumber: string | null; // Đổi từ phone sang phoneNumber
+  address: string | null;
+  email: string;
+  userRole: number; // Đổi từ role sang userRole
+  image: string | null; // Đổi từ avatar sang image
+  isAuthenticated?: boolean;
   isActive?: boolean;
 }
 
@@ -69,21 +70,21 @@ const AdminPage = () => {
     userId: null as string | null, // Đổi từ number sang string
   });
 
-  // Helper function để hiển thị tên role
-  const getRoleDisplayName = (role: string) => {
-    switch (role?.toLowerCase()) {
-      case "admin":
+  // Helper function để hiển thị tên role - cập nhật theo userRole number
+  const getRoleDisplayName = (userRole: number) => {
+    switch (userRole) {
+      case 0:
         return "Quản trị viên";
-      case "nurse":
-        return "Y tá";
-      case "parent":
+      case 1:
         return "Phụ huynh";
-      case "student":
-        return "Học sinh";
+      case 2:
+        return "Y tá";
       default:
         return "Không xác định";
     }
   };
+
+  const BASE_API = process.env.REACT_APP_BASE_URL;
 
   // Fetch users from API
   const fetchUsers = async () => {
@@ -91,16 +92,17 @@ const AdminPage = () => {
     setError("");
     try {
       const token = localStorage.getItem("authToken");
-      const response = await fetch(
-        "https://my.api.mockaroo.com/account.json?key=c12b5dc0&__method=POST",
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`, // Thêm token vào header
-          },
-        }
-      );
+      const response = await fetch(`${BASE_API}/api/User/get-all-users`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // Thêm token vào header
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
       const data = await response.json();
       console.log("API Response:", data);
@@ -193,31 +195,27 @@ const AdminPage = () => {
     );
   }
 
-  const getUserRoleText = (role: string) => {
-    switch (role?.toLowerCase()) {
-      case "admin":
+  const getUserRoleText = (userRole: number) => {
+    switch (userRole) {
+      case 0:
         return "Quản trị viên";
-      case "nurse":
-        return "Y tá";
-      case "parent":
+      case 1:
         return "Phụ huynh";
-      case "student":
-        return "Học sinh";
+      case 2:
+        return "Y tá";
       default:
         return "Không xác định";
     }
   };
 
-  const getUserRoleColor = (role: string) => {
-    switch (role?.toLowerCase()) {
-      case "admin":
-        return "error";
-      case "nurse":
-        return "primary";
-      case "parent":
-        return "default";
-      case "student":
-        return "secondary";
+  const getUserRoleColor = (userRole: number) => {
+    switch (userRole) {
+      case 0:
+        return "error"; // Admin
+      case 2:
+        return "primary"; // Y tá
+      case 1:
+        return "default"; // Phụ huynh
       default:
         return "default";
     }

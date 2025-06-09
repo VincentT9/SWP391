@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
+import { jwtDecode } from "jwt-decode";
 
 export interface User {
   id: string;
@@ -64,6 +65,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
           password,
         }),
       });
+
       console.log("Response status:", response.status);
 
       if (!response.ok) {
@@ -74,25 +76,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       const loginResponse = await response.json();
       console.log("Login API Response:", loginResponse);
 
-      // Assuming the API returns user data and token
-      // Adjust these field names based on your actual API response
-      const authenticatedUser: User = {
-        id: String(loginResponse.user?.id || loginResponse.id || Math.random()),
-        name:
-          loginResponse.user?.name ||
-          loginResponse.name ||
-          loginResponse.fullName ||
-          username,
-        username:
-          loginResponse.user?.username || loginResponse.username || username,
-        role: mapUserRole(
-          loginResponse.user?.userRole || loginResponse.userRole
-        ),
-        avatar: loginResponse.user?.avatar || loginResponse.avatar,
-        isAuthenticated: true,
-      };
-
-      const token = loginResponse.token || loginResponse.accessToken;
+      // Lấy token từ response
+      const token =
+        loginResponse.Token || loginResponse.token || loginResponse.accessToken;
+      const refreshToken = loginResponse.refreshToken;
 
       if (!token) {
         console.log("No token received from API");
@@ -135,8 +122,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
           localStorage.setItem("refreshToken", refreshToken);
         }
 
-      console.log("Login successful:", authenticatedUser);
-      return true;
+        console.log("Login successful:", authenticatedUser);
+        return true;
+      } catch (decodeError) {
+        console.error("Token decode error:", decodeError);
+        return false;
+      }
     } catch (error) {
       console.error("Login error:", error);
       return false;
