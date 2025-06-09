@@ -20,7 +20,6 @@ import {
   DialogContent,
   DialogActions,
   TextField,
-  // Paper,
   IconButton,
   Chip,
   Alert,
@@ -41,16 +40,17 @@ import {
 } from "@mui/icons-material";
 import { useAuth } from "../auth/AuthContext";
 
-// Interface cho User từ API
+// Interface cho User từ API - cập nhật theo response thực tế
 interface User {
-  id: number;
+  id: string; // Đổi từ number sang string
   username: string;
-  name: string;
-  phone?: string;
-  address?: string;
-  role: string;
-  avatar?: string;
-  isAuthenticated: boolean;
+  fullName: string | null; // Đổi từ name sang fullName
+  phoneNumber: string | null; // Đổi từ phone sang phoneNumber
+  address: string | null;
+  email: string;
+  userRole: number; // Đổi từ role sang userRole
+  image: string | null; // Đổi từ avatar sang image
+  isAuthenticated?: boolean;
   isActive?: boolean;
 }
 
@@ -67,36 +67,38 @@ const AdminPage = () => {
   // Thêm state để quản lý dialog xác nhận
   const [confirmDialog, setConfirmDialog] = useState({
     open: false,
-    userId: null as number | null,
+    userId: null as string | null, // Đổi từ number sang string
   });
 
-  // Helper function để hiển thị tên role
-  const getRoleDisplayName = (role: string) => {
-    switch (role?.toLowerCase()) {
-      case "admin":
+  // Helper function để hiển thị tên role - cập nhật theo userRole number
+  const getRoleDisplayName = (userRole: number) => {
+    switch (userRole) {
+      case 0:
         return "Quản trị viên";
-      case "nurse":
-        return "Y tá";
-      case "parent":
+      case 1:
         return "Phụ huynh";
-      case "student":
-        return "Học sinh";
+      case 2:
+        return "Y tá";
       default:
         return "Không xác định";
     }
   };
 
+  const BASE_API = process.env.REACT_APP_BASE_URL;
+  
   // Fetch users from API
   const fetchUsers = async () => {
     setLoading(true);
     setError("");
     try {
+      const token = localStorage.getItem("authToken");
       const response = await fetch(
-        "https://my.api.mockaroo.com/account.json?key=c12b5dc0&__method=POST",
+        `${BASE_API}/api/User/get-all-users`,
         {
-          method: "POST",
+          method: "GET",
           headers: {
             "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}` // Thêm token vào header
           },
         }
       );
@@ -114,13 +116,11 @@ const AdminPage = () => {
     } catch (error) {
       console.error("Error fetching users:", error);
       setError("Không thể tải dữ liệu người dùng. Vui lòng thử lại.");
-      // Fallback to mock data for demo
     } finally {
       setLoading(false);
     }
   };
 
-  // useEffect phải được gọi ở top level - TRƯỚC các early returns
   useEffect(() => {
     // Chỉ fetch khi user đã được authenticate và là admin
     if (user && user.isAuthenticated && user.role?.toLowerCase() === "admin") {
@@ -198,31 +198,27 @@ const AdminPage = () => {
     );
   }
 
-  const getUserRoleText = (role: string) => {
-    switch (role?.toLowerCase()) {
-      case "admin":
+  const getUserRoleText = (userRole: number) => {
+    switch (userRole) {
+      case 0:
         return "Quản trị viên";
-      case "nurse":
-        return "Y tá";
-      case "parent":
+      case 1:
         return "Phụ huynh";
-      case "student":
-        return "Học sinh";
+      case 2:
+        return "Y tá";
       default:
         return "Không xác định";
     }
   };
 
-  const getUserRoleColor = (role: string) => {
-    switch (role?.toLowerCase()) {
-      case "admin":
-        return "error";
-      case "nurse":
-        return "primary";
-      case "parent":
-        return "default";
-      case "student":
-        return "secondary";
+  const getUserRoleColor = (userRole: number) => {
+    switch (userRole) {
+      case 0:
+        return "error"; // Admin
+      case 2:
+        return "primary"; // Y tá
+      case 1:
+        return "default"; // Phụ huynh
       default:
         return "default";
     }
@@ -233,10 +229,11 @@ const AdminPage = () => {
     setFormData(
       userData || {
         username: "",
-        name: "",
-        phone: "",
+        fullName: "",
+        phoneNumber: "",
         address: "",
-        role: "parent",
+        email: "",
+        userRole: 1, // Default là phụ huynh
         isActive: true,
       }
     );
@@ -252,7 +249,35 @@ const AdminPage = () => {
   const handleSave = async () => {
     try {
       console.log("Saving user:", formData);
-      // TODO: Call API to save/update user
+      const token = localStorage.getItem("authToken");
+      
+      const url = selectedUser 
+        ? `${BASE_API}/api/User/update-user/${selectedUser.id}`
+        : `${BASE_API}/api/User/create-user`;
+      
+      const method = selectedUser ? "PUT" : "POST";
+      
+      const response = await fetch(url, {
+        method: method,
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          username: formData.username,
+          fullName: formData.fullName,
+          phoneNumber: formData.phoneNumber,
+          address: formData.address,
+          email: formData.email,
+          userRole: parseInt(formData.userRole),
+          ...(selectedUser && { id: selectedUser.id })
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       toast.success(
         selectedUser
           ? "Cập nhật người dùng thành công!"
@@ -266,7 +291,7 @@ const AdminPage = () => {
     }
   };
 
-  const handleDeleteClick = (id: number) => {
+  const handleDeleteClick = (id: string) => {
     setConfirmDialog({
       open: true,
       userId: id,
@@ -276,8 +301,22 @@ const AdminPage = () => {
   const handleConfirmDelete = async () => {
     if (confirmDialog.userId) {
       try {
-        console.log("Deleting user:", confirmDialog.userId);
-        // Gọi API xóa ở đây
+        const token = localStorage.getItem("authToken");
+        const response = await fetch(
+          `${BASE_API}/api/User/delete-user/${confirmDialog.userId}`,
+          {
+            method: "DELETE",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}`
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
         toast.success("Xóa người dùng thành công!");
         fetchUsers();
       } catch (error) {
@@ -295,7 +334,21 @@ const AdminPage = () => {
 
   // Check if user can edit role (admin cannot edit other admin's role)
   const canEditRole = (userData: User): boolean => {
-    return userData.role?.toLowerCase() !== "admin";
+    return userData.userRole !== 0; // userRole 0 là admin
+  };
+
+  // Fix lỗi 1: user.role là string, cần convert sang number hoặc tạo function mapping
+  const mapUserRoleToNumber = (role: string): number => {
+    switch (role?.toLowerCase()) {
+      case "admin":
+        return 0;
+      case "parent":
+        return 1;
+      case "medicalstaff":
+        return 2;
+      default:
+        return 1; // Default là parent
+    }
   };
 
   return (
@@ -325,37 +378,6 @@ const AdminPage = () => {
               </Typography>
             </Box>
           </Box>
-
-          {/* Current user info */}
-          <Card sx={{ minWidth: 250 }}>
-            <CardContent sx={{ p: 2 }}>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                <Avatar
-                  src={user.avatar}
-                  sx={{ width: 40, height: 40, bgcolor: "#1976d2" }}
-                >
-                  {user.name?.charAt(0) || user.username?.charAt(0) || "?"}
-                </Avatar>
-                <Box>
-                  <Typography variant="caption" color="text.secondary">
-                    Đăng nhập với tư cách
-                  </Typography>
-                  <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
-                    {user.name}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    @{user.username}
-                  </Typography>
-                </Box>
-              </Box>
-              <Chip
-                label={getRoleDisplayName(user.role)}
-                color="error"
-                size="small"
-                sx={{ mt: 1, width: "100%" }}
-              />
-            </CardContent>
-          </Card>
         </Box>
 
         <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
@@ -409,6 +431,7 @@ const AdminPage = () => {
                       Tên đăng nhập
                     </TableCell>
                     <TableCell sx={{ fontWeight: "bold" }}>Họ tên</TableCell>
+                    <TableCell sx={{ fontWeight: "bold" }}>Email</TableCell>
                     <TableCell sx={{ fontWeight: "bold" }}>
                       Số điện thoại
                     </TableCell>
@@ -423,7 +446,7 @@ const AdminPage = () => {
                   {loading ? (
                     <TableRow>
                       <TableCell
-                        colSpan={7}
+                        colSpan={8}
                         sx={{ textAlign: "center", py: 4 }}
                       >
                         <CircularProgress size={40} />
@@ -435,7 +458,7 @@ const AdminPage = () => {
                   ) : users.length === 0 ? (
                     <TableRow>
                       <TableCell
-                        colSpan={7}
+                        colSpan={8}
                         sx={{ textAlign: "center", py: 4 }}
                       >
                         <Typography variant="body2" color="text.secondary">
@@ -448,10 +471,10 @@ const AdminPage = () => {
                       <TableRow key={userData.id} hover>
                         <TableCell>
                           <Avatar
-                            src={userData.avatar}
+                            src={userData.image || undefined}
                             sx={{ bgcolor: "#1976d2" }}
                           >
-                            {userData.name?.charAt(0) ||
+                            {userData.fullName?.charAt(0) ||
                               userData.username?.charAt(0) ||
                               "?"}
                           </Avatar>
@@ -459,12 +482,13 @@ const AdminPage = () => {
                         <TableCell sx={{ fontWeight: "bold" }}>
                           {userData.username}
                         </TableCell>
-                        <TableCell>{userData.name}</TableCell>
-                        <TableCell>{userData.phone || "Chưa có"}</TableCell>
+                        <TableCell>{userData.fullName || "Chưa có"}</TableCell>
+                        <TableCell>{userData.email || "Chưa có"}</TableCell>
+                        <TableCell>{userData.phoneNumber || "Chưa có"}</TableCell>
                         <TableCell>
                           <Chip
-                            label={getUserRoleText(userData.role)}
-                            color={getUserRoleColor(userData.role) as any}
+                            label={getUserRoleText(userData.userRole)}
+                            color={getUserRoleColor(userData.userRole) as any}
                             size="small"
                           />
                         </TableCell>
@@ -498,7 +522,7 @@ const AdminPage = () => {
                             color="error"
                             size="small"
                             title="Xóa"
-                            disabled={userData.role?.toLowerCase() === "admin"}
+                            disabled={userData.userRole === 0} // Không cho xóa admin
                           >
                             <DeleteIcon />
                           </IconButton>
@@ -534,22 +558,32 @@ const AdminPage = () => {
                 }
                 fullWidth
                 required
-                disabled={selectedUser?.role?.toLowerCase() === "admin"}
+                disabled={selectedUser?.userRole === 0} // Không cho sửa username admin
               />
               <TextField
                 label="Họ và tên"
-                value={formData.name || ""}
+                value={formData.fullName || ""}
                 onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
+                  setFormData({ ...formData, fullName: e.target.value })
+                }
+                fullWidth
+                required
+              />
+              <TextField
+                label="Email"
+                type="email"
+                value={formData.email || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
                 }
                 fullWidth
                 required
               />
               <TextField
                 label="Số điện thoại"
-                value={formData.phone || ""}
+                value={formData.phoneNumber || ""}
                 onChange={(e) =>
-                  setFormData({ ...formData, phone: e.target.value })
+                  setFormData({ ...formData, phoneNumber: e.target.value })
                 }
                 fullWidth
               />
@@ -570,16 +604,15 @@ const AdminPage = () => {
               >
                 <InputLabel>Vai trò</InputLabel>
                 <Select
-                  value={formData.role || "parent"}
+                  value={formData.userRole || 1}
                   onChange={(e) =>
-                    setFormData({ ...formData, role: e.target.value })
+                    setFormData({ ...formData, userRole: e.target.value })
                   }
                   label="Vai trò"
                 >
-                  <MenuItem value="admin">Quản trị viên</MenuItem>
-                  <MenuItem value="nurse">Y tá</MenuItem>
-                  <MenuItem value="parent">Phụ huynh</MenuItem>
-                  <MenuItem value="student">Học sinh</MenuItem>
+                  <MenuItem value={0}>Quản trị viên</MenuItem>
+                  <MenuItem value={1}>Phụ huynh</MenuItem>
+                  <MenuItem value={2}>Y tá</MenuItem>
                 </Select>
               </FormControl>
               {selectedUser && !canEditRole(selectedUser) && (
