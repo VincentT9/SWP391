@@ -19,15 +19,33 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
+  InputAdornment,
+  CircularProgress,
+  Alert,
 } from "@mui/material";
 import {
   Save as SaveIcon,
   ArrowBack as ArrowBackIcon,
   Warning as WarningIcon,
+  Search as SearchIcon,
 } from "@mui/icons-material";
 import { useForm, Controller } from "react-hook-form";
 import { toast } from "react-toastify";
 import { HealthRecord } from "../../models/types";
+import axios from "axios";
+
+// Định nghĩa kiểu dữ liệu Student từ API
+interface Student {
+  id: string;
+  parentId: string;
+  studentCode: string;
+  fullName: string;
+  dateOfBirth: string;
+  gender: number;
+  class: string;
+  schoolYear: string;
+  image: string;
+}
 
 // Thay đổi kiểu FormData thành kiểu HealthRecord
 type FormData = HealthRecord;
@@ -35,12 +53,18 @@ type FormData = HealthRecord;
 const HealthDeclarationForm = () => {
   const [loading, setLoading] = useState(false);
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
+  const [studentCode, setStudentCode] = useState("");
+  const [searchingStudent, setSearchingStudent] = useState(false);
+  const [studentData, setStudentData] = useState<Student | null>(null);
+  const [searchError, setSearchError] = useState("");
   const navigate = useNavigate();
 
   const {
     control,
     handleSubmit,
+    setValue,
     formState: { errors },
+    reset,
   } = useForm<FormData>({
     defaultValues: {
       studentId: "",
@@ -58,6 +82,48 @@ const HealthDeclarationForm = () => {
       otherNotes: "",
     },
   });
+
+  const searchStudent = async () => {
+    if (!studentCode.trim()) {
+      setSearchError("Vui lòng nhập mã học sinh");
+      return;
+    }
+
+    setSearchingStudent(true);
+    setSearchError("");
+    setStudentData(null);
+
+    try {
+      const response = await axios.get(
+        `${process.env.REACT_APP_BASE_URL}/api/Student/code/${studentCode}`
+      );
+      setStudentData(response.data);
+
+      // Cập nhật studentId cho form
+      setValue("studentId", response.data.id);
+
+      // Hiển thị thông báo thành công
+      toast.success(`Đã tìm thấy học sinh: ${response.data.fullName}`);
+    } catch (error) {
+      console.error("Error searching for student:", error);
+      setSearchError("Không tìm thấy học sinh với mã này");
+      setValue("studentId", "");
+    } finally {
+      setSearchingStudent(false);
+    }
+  };
+
+  const handleStudentCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setStudentCode(e.target.value);
+    // Reset thông tin tìm kiếm khi người dùng thay đổi mã học sinh
+    if (studentData) {
+      setStudentData(null);
+      setValue("studentId", "");
+    }
+    if (searchError) {
+      setSearchError("");
+    }
+  };
 
   const onSubmit = async (data: FormData) => {
     setLoading(true);
@@ -131,6 +197,88 @@ const HealthDeclarationForm = () => {
                   Thông tin cơ bản về sức khỏe
                 </Typography>
 
+                {/* Tìm kiếm học sinh bằng studentCode */}
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: { xs: "column", sm: "row" },
+                    gap: 2,
+                    alignItems: { xs: "stretch", sm: "flex-start" },
+                  }}
+                >
+                  <TextField
+                    fullWidth
+                    label="Mã học sinh"
+                    value={studentCode}
+                    onChange={handleStudentCodeChange}
+                    sx={{ flex: 2 }}
+                    InputProps={{
+                      endAdornment: searchingStudent ? (
+                        <InputAdornment position="end">
+                          <CircularProgress size={20} />
+                        </InputAdornment>
+                      ) : null,
+                    }}
+                  />
+                  <Button
+                    variant="contained"
+                    onClick={searchStudent}
+                    disabled={searchingStudent || !studentCode.trim()}
+                    startIcon={<SearchIcon />}
+                    sx={{ height: { sm: 56 }, minWidth: 120 }}
+                  >
+                    Tìm kiếm
+                  </Button>
+                </Box>
+
+                {/* Hiển thị lỗi nếu không tìm thấy học sinh */}
+                {searchError && <Alert severity="error">{searchError}</Alert>}
+
+                {/* Hiển thị thông tin học sinh nếu tìm thấy */}
+                {studentData && (
+                  <Box
+                    sx={{
+                      p: 2,
+                      borderRadius: 1,
+                      bgcolor: "#e3f2fd",
+                      border: "1px solid #90caf9",
+                    }}
+                  >
+                    <Typography
+                      variant="subtitle1"
+                      sx={{ fontWeight: "bold", mb: 1 }}
+                    >
+                      Thông tin học sinh
+                    </Typography>
+                    <Typography variant="body1">
+                      <strong>Họ và tên:</strong> {studentData.fullName}
+                    </Typography>
+                    <Typography variant="body1">
+                      <strong>Mã học sinh:</strong> {studentData.studentCode}
+                    </Typography>
+                    <Typography variant="body1">
+                      <strong>Lớp:</strong> {studentData.class}
+                    </Typography>
+                    <Typography variant="body1">
+                      <strong>Năm học:</strong> {studentData.schoolYear}
+                    </Typography>
+                    <Typography variant="body1">
+                      <strong>Ngày sinh:</strong>{" "}
+                      {new Date(studentData.dateOfBirth).toLocaleDateString(
+                        "vi-VN"
+                      )}
+                    </Typography>
+                  </Box>
+                )}
+
+                {/* Trường studentId ẩn */}
+                <Controller
+                  name="studentId"
+                  control={control}
+                  rules={{ required: "Vui lòng chọn học sinh" }}
+                  render={({ field }) => <input type="hidden" {...field} />}
+                />
+
                 <Box
                   sx={{
                     display: "flex",
@@ -138,29 +286,6 @@ const HealthDeclarationForm = () => {
                     gap: 3,
                   }}
                 >
-                  <Box sx={{ flex: 2 }}>
-                    <Controller
-                      name="studentId"
-                      control={control}
-                      rules={{ required: "Vui lòng chọn học sinh" }}
-                      render={({ field }) => (
-                        <FormControl fullWidth error={!!errors.studentId}>
-                          <InputLabel>Chọn học sinh</InputLabel>
-                          <Select {...field} label="Chọn học sinh">
-                            <MenuItem value="76BF5EFF-0A02-4BE9-CA73-08DDA7FB1B75">
-                              Nguyễn Văn A - Lớp 1A
-                            </MenuItem>
-                            <MenuItem value="student2">
-                              Trần Thị B - Lớp 2B
-                            </MenuItem>
-                            <MenuItem value="student3">
-                              Lê Văn C - Lớp 3C
-                            </MenuItem>
-                          </Select>
-                        </FormControl>
-                      )}
-                    />
-                  </Box>
                   <Box sx={{ flex: 1 }}>
                     <Controller
                       name="bloodType"
@@ -185,6 +310,7 @@ const HealthDeclarationForm = () => {
                   </Box>
                 </Box>
 
+                {/* ... phần còn lại của form về height và weight ... */}
                 <Box
                   sx={{
                     display: "flex",
@@ -215,27 +341,14 @@ const HealthDeclarationForm = () => {
                           error={!!errors.height}
                           helperText={errors.height?.message}
                           onChange={(e) => {
-                            // Loại bỏ ký tự không phải số
+                            // Xử lý như trước
                             let value = e.target.value
                               .replace(/[e+-]/g, "")
                               .replace(/[^0-9]/g, "");
-
-                            // Không cho phép giá trị rỗng hoặc 0 đứng đầu
-                            if (value === "0") {
-                              value = "";
-                            }
-
-                            // Giới hạn độ dài
-                            if (value.length > 3) {
-                              value = value.slice(0, 3);
-                            }
-
-                            // Kiểm tra giá trị nằm trong khoảng cho phép
+                            if (value === "0") value = "";
+                            if (value.length > 3) value = value.slice(0, 3);
                             const numValue = parseInt(value);
-                            if (numValue > 250) {
-                              value = "250";
-                            }
-
+                            if (numValue > 250) value = "250";
                             field.onChange(value ? Number(value) : "");
                           }}
                           InputProps={{
@@ -271,27 +384,14 @@ const HealthDeclarationForm = () => {
                           error={!!errors.weight}
                           helperText={errors.weight?.message}
                           onChange={(e) => {
-                            // Loại bỏ ký tự không phải số
+                            // Xử lý như trước
                             let value = e.target.value
                               .replace(/[e+-]/g, "")
                               .replace(/[^0-9]/g, "");
-
-                            // Không cho phép giá trị rỗng hoặc 0 đứng đầu
-                            if (value === "0") {
-                              value = "";
-                            }
-
-                            // Giới hạn độ dài
-                            if (value.length > 3) {
-                              value = value.slice(0, 3);
-                            }
-
-                            // Kiểm tra giá trị nằm trong khoảng cho phép
+                            if (value === "0") value = "";
+                            if (value.length > 3) value = value.slice(0, 3);
                             const numValue = parseInt(value);
-                            if (numValue > 150) {
-                              value = "150";
-                            }
-
+                            if (numValue > 150) value = "150";
                             field.onChange(value ? Number(value) : "");
                           }}
                           InputProps={{
@@ -534,7 +634,7 @@ const HealthDeclarationForm = () => {
             <Button
               type="submit"
               variant="contained"
-              disabled={loading}
+              disabled={loading || !studentData}
               startIcon={<SaveIcon />}
               sx={{ bgcolor: "#4caf50", "&:hover": { bgcolor: "#45a049" } }}
             >
