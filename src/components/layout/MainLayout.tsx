@@ -73,7 +73,7 @@ const menuItems: MenuItemType[] = [
     text: "Gửi thuốc đến trường",
     path: "/medication",
     icon: <MedicationIcon />,
-    role: ["MedicalStaff", "Parent"],
+    role: ["Parent"],
   },
   {
     text: "Vật tư y tế",

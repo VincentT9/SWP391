@@ -13,8 +13,6 @@ import {
   Select,
   MenuItem,
   Paper,
-  IconButton,
-  Alert,
   Divider,
   Dialog,
   DialogActions,
@@ -23,38 +21,16 @@ import {
   DialogTitle,
 } from "@mui/material";
 import {
-  Add as AddIcon,
-  Delete as DeleteIcon,
   Save as SaveIcon,
   ArrowBack as ArrowBackIcon,
   Warning as WarningIcon,
 } from "@mui/icons-material";
-import { useForm, Controller, useFieldArray } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { toast } from "react-toastify";
+import { HealthRecord } from "../../models/types";
 
-type FormData = {
-  studentId: string;
-  height: number;
-  weight: number;
-  bloodType: string;
-  allergies: Array<{
-    name: string;
-    severity: "mild" | "moderate" | "severe";
-    symptoms: string;
-    treatment: string;
-  }>;
-  chronicConditions: Array<{
-    name: string;
-    diagnosisDate: string;
-    notes: string;
-  }>;
-  emergencyContact: {
-    name: string;
-    relationship: string;
-    phone: string;
-  };
-  notes: string;
-};
+// Thay đổi kiểu FormData thành kiểu HealthRecord
+type FormData = HealthRecord;
 
 const HealthDeclarationForm = () => {
   const [loading, setLoading] = useState(false);
@@ -71,60 +47,36 @@ const HealthDeclarationForm = () => {
       height: 0,
       weight: 0,
       bloodType: "",
-      allergies: [],
-      chronicConditions: [],
-      emergencyContact: {
-        name: "",
-        relationship: "",
-        phone: "",
-      },
-      notes: "",
+      allergies: "",
+      chronicDiseases: "",
+      pastMedicalHistory: "",
+      visionLeft: "",
+      visionRight: "",
+      hearingLeft: "",
+      hearingRight: "",
+      vaccinationHistory: "",
+      otherNotes: "",
     },
-  });
-
-  const {
-    fields: allergyFields,
-    append: appendAllergy,
-    remove: removeAllergy,
-  } = useFieldArray({
-    control,
-    name: "allergies",
-  });
-
-  const {
-    fields: conditionFields,
-    append: appendCondition,
-    remove: removeCondition,
-  } = useFieldArray({
-    control,
-    name: "chronicConditions",
   });
 
   const onSubmit = async (data: FormData) => {
     setLoading(true);
 
     try {
-      // Kiểm tra thêm
-      const hasInvalidAllergy = data.allergies?.some(
-        (allergy) =>
-          !/^[a-zA-ZÀ-ỹ\s,]+$/.test(allergy.name) ||
-          !/^[a-zA-ZÀ-ỹ0-9\s,.]+$/.test(allergy.symptoms) ||
-          !/^[a-zA-ZÀ-ỹ0-9\s,.]+$/.test(allergy.treatment)
-      );
-
-      const hasInvalidCondition = data.chronicConditions?.some(
-        (condition) => !/^[a-zA-ZÀ-ỹ\s,.]+$/.test(condition.name)
-      );
-
-      if (hasInvalidAllergy || hasInvalidCondition) {
-        toast.error("Vui lòng kiểm tra lại thông tin dị ứng và bệnh mãn tính!");
-        setLoading(false);
-        return;
-      }
-
+      // API call to save data
       console.log("Health declaration submitted:", data);
+
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      // Example API call (uncomment in real implementation)
+      // const response = await fetch('/api/health-records', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify(data),
+      // });
+      // if (!response.ok) throw new Error('Failed to save health record');
+
       toast.success("Khai báo sức khỏe thành công!");
       navigate("/health-records");
     } catch (error) {
@@ -195,7 +147,7 @@ const HealthDeclarationForm = () => {
                         <FormControl fullWidth error={!!errors.studentId}>
                           <InputLabel>Chọn học sinh</InputLabel>
                           <Select {...field} label="Chọn học sinh">
-                            <MenuItem value="student1">
+                            <MenuItem value="76BF5EFF-0A02-4BE9-CA73-08DDA7FB1B75">
                               Nguyễn Văn A - Lớp 1A
                             </MenuItem>
                             <MenuItem value="student2">
@@ -357,589 +309,215 @@ const HealthDeclarationForm = () => {
 
               <Divider sx={{ my: 4 }} />
 
-              {/* PHẦN 2: THÔNG TIN DỊ ỨNG */}
+              {/* PHẦN 2: THÔNG TIN DỊ ỨNG VÀ BỆNH MÃN TÍNH */}
               <Box sx={{ mb: 4 }}>
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    mb: 3,
-                  }}
+                <Typography
+                  variant="h6"
+                  gutterBottom
+                  sx={{ color: "#ff9800", fontWeight: "bold", mb: 3 }}
                 >
-                  <Typography
-                    variant="h6"
-                    sx={{ color: "#ff9800", fontWeight: "bold" }}
-                  >
-                    Thông tin dị ứng
-                  </Typography>
-                  <Button
-                    startIcon={<AddIcon />}
-                    onClick={() =>
-                      appendAllergy({
-                        name: "",
-                        severity: "mild",
-                        symptoms: "",
-                        treatment: "",
-                      })
-                    }
-                    variant="outlined"
-                  >
-                    Thêm dị ứng
-                  </Button>
-                </Box>
-
-                <Typography variant="body2" sx={{ color: "#666", mb: 1 }}>
-                  Vui lòng nhập thông tin dị ứng bằng chữ cái. Tên dị ứng chỉ
-                  nhập chữ, triệu chứng và cách điều trị có thể kèm số.
+                  Thông tin dị ứng và bệnh mãn tính
                 </Typography>
 
-                {allergyFields.length === 0 ? (
-                  <Alert severity="info">
-                    Chưa có thông tin dị ứng nào. Nhấn "Thêm dị ứng" để bổ sung.
-                  </Alert>
-                ) : (
-                  <Box
-                    sx={{ display: "flex", flexDirection: "column", gap: 3 }}
-                  >
-                    {allergyFields.map((field, index) => (
-                      <Paper key={field.id} sx={{ p: 3, bgcolor: "#fff3e0" }}>
-                        <Box
-                          sx={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            mb: 2,
-                          }}
-                        >
-                          <Typography
-                            variant="subtitle1"
-                            sx={{ fontWeight: "bold" }}
-                          >
-                            Dị ứng #{index + 1}
-                          </Typography>
-                          <IconButton
-                            onClick={() => removeAllergy(index)}
-                            color="error"
-                          >
-                            <DeleteIcon />
-                          </IconButton>
-                        </Box>
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                  <Controller
+                    name="allergies"
+                    control={control}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        fullWidth
+                        label="Thông tin dị ứng"
+                        multiline
+                        rows={2}
+                        placeholder="Nhập thông tin dị ứng (VD: Tôm, cá, hải sản, phấn hoa...)"
+                        helperText="Liệt kê các chất gây dị ứng, ngăn cách bằng dấu phẩy"
+                      />
+                    )}
+                  />
 
-                        <Box
-                          sx={{
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: 2,
-                          }}
-                        >
-                          <Box
-                            sx={{
-                              display: "flex",
-                              flexDirection: { xs: "column", md: "row" },
-                              gap: 2,
-                            }}
-                          >
-                            <Box sx={{ flex: 1 }}>
-                              <Controller
-                                name={`allergies.${index}.name`}
-                                control={control}
-                                rules={{
-                                  required: "Tên dị ứng là bắt buộc",
-                                  pattern: {
-                                    value: /^[a-zA-ZÀ-ỹ\s,]+$/,
-                                    message: "Tên dị ứng chỉ được nhập chữ cái",
-                                  },
-                                }}
-                                render={({ field }) => (
-                                  <TextField
-                                    {...field}
-                                    fullWidth
-                                    label="Tên dị ứng"
-                                    error={!!errors.allergies?.[index]?.name}
-                                    helperText={
-                                      errors.allergies?.[index]?.name?.message
-                                    }
-                                    onChange={(e) => {
-                                      // Chỉ chấp nhận chữ cái, khoảng trắng và dấu phẩy
-                                      const value = e.target.value.replace(
-                                        /[^a-zA-ZÀ-ỹ\s,]/g,
-                                        ""
-                                      );
-                                      field.onChange(value);
-                                    }}
-                                    placeholder="Nhập tên dị ứng (ví dụ: Dị ứng hải sản, phấn hoa...)"
-                                  />
-                                )}
-                              />
-                            </Box>
-
-                            <Box sx={{ flex: 1 }}>
-                              <Controller
-                                name={`allergies.${index}.severity`}
-                                control={control}
-                                render={({ field }) => (
-                                  <FormControl fullWidth>
-                                    <InputLabel>Mức độ</InputLabel>
-                                    <Select {...field} label="Mức độ">
-                                      <MenuItem value="mild">Nhẹ</MenuItem>
-                                      <MenuItem value="moderate">
-                                        Trung bình
-                                      </MenuItem>
-                                      <MenuItem value="severe">Nặng</MenuItem>
-                                    </Select>
-                                  </FormControl>
-                                )}
-                              />
-                            </Box>
-                          </Box>
-
-                          <Controller
-                            name={`allergies.${index}.symptoms`}
-                            control={control}
-                            rules={{
-                              required: "Triệu chứng là bắt buộc",
-                              pattern: {
-                                value: /^[a-zA-ZÀ-ỹ0-9\s,.]+$/,
-                                message:
-                                  "Triệu chứng chỉ được nhập chữ cái và số",
-                              },
-                            }}
-                            render={({ field }) => (
-                              <TextField
-                                {...field}
-                                fullWidth
-                                label="Triệu chứng"
-                                multiline
-                                rows={2}
-                                error={!!errors.allergies?.[index]?.symptoms}
-                                helperText={
-                                  errors.allergies?.[index]?.symptoms?.message
-                                }
-                                placeholder="Mô tả các triệu chứng khi bị dị ứng"
-                              />
-                            )}
-                          />
-
-                          <Controller
-                            name={`allergies.${index}.treatment`}
-                            control={control}
-                            rules={{
-                              required: "Cách điều trị là bắt buộc",
-                              pattern: {
-                                value: /^[a-zA-ZÀ-ỹ0-9\s,.]+$/,
-                                message:
-                                  "Cách điều trị chỉ được nhập chữ cái và số",
-                              },
-                            }}
-                            render={({ field }) => (
-                              <TextField
-                                {...field}
-                                fullWidth
-                                label="Cách điều trị"
-                                multiline
-                                rows={2}
-                                error={!!errors.allergies?.[index]?.treatment}
-                                helperText={
-                                  errors.allergies?.[index]?.treatment?.message
-                                }
-                                placeholder="Nhập cách xử lý khi có dị ứng"
-                              />
-                            )}
-                          />
-                        </Box>
-                      </Paper>
-                    ))}
-                  </Box>
-                )}
+                  <Controller
+                    name="chronicDiseases"
+                    control={control}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        fullWidth
+                        label="Bệnh mãn tính"
+                        multiline
+                        rows={2}
+                        placeholder="Nhập thông tin bệnh mãn tính (VD: Hen suyễn, tiểu đường...)"
+                        helperText="Liệt kê các bệnh mãn tính, ngăn cách bằng dấu phẩy"
+                      />
+                    )}
+                  />
+                </Box>
               </Box>
 
               <Divider sx={{ my: 4 }} />
 
-              {/* PHẦN 3: BỆNH MÃN TÍNH */}
+              {/* PHẦN 3: LỊCH SỬ Y TẾ */}
               <Box sx={{ mb: 4 }}>
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    mb: 3,
-                  }}
+                <Typography
+                  variant="h6"
+                  gutterBottom
+                  sx={{ color: "#f44336", fontWeight: "bold", mb: 3 }}
                 >
-                  <Typography
-                    variant="h6"
-                    sx={{ color: "#f44336", fontWeight: "bold" }}
-                  >
-                    Bệnh mãn tính
-                  </Typography>
-                  <Button
-                    startIcon={<AddIcon />}
-                    onClick={() =>
-                      appendCondition({
-                        name: "",
-                        diagnosisDate: "",
-                        notes: "",
-                      })
-                    }
-                    variant="outlined"
-                  >
-                    Thêm bệnh mãn tính
-                  </Button>
-                </Box>
-
-                <Typography variant="body2" sx={{ color: "#666", mb: 1 }}>
-                  Vui lòng nhập tên bệnh mãn tính bằng chữ cái, không sử dụng số
-                  hoặc ký tự đặc biệt.
+                  Lịch sử y tế
                 </Typography>
 
-                {conditionFields.length === 0 ? (
-                  <Alert severity="info">
-                    Chưa có thông tin bệnh mãn tính nào. Nhấn "Thêm bệnh mãn
-                    tính" để bổ sung.
-                  </Alert>
-                ) : (
-                  <Box
-                    sx={{ display: "flex", flexDirection: "column", gap: 3 }}
-                  >
-                    {conditionFields.map((field, index) => (
-                      <Paper key={field.id} sx={{ p: 3, bgcolor: "#ffebee" }}>
-                        <Box
-                          sx={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            mb: 2,
-                          }}
-                        >
-                          <Typography
-                            variant="subtitle1"
-                            sx={{ fontWeight: "bold" }}
-                          >
-                            Bệnh mãn tính #{index + 1}
-                          </Typography>
-                          <IconButton
-                            onClick={() => removeCondition(index)}
-                            color="error"
-                          >
-                            <DeleteIcon />
-                          </IconButton>
-                        </Box>
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                  <Controller
+                    name="pastMedicalHistory"
+                    control={control}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        fullWidth
+                        label="Tiền sử bệnh"
+                        multiline
+                        rows={3}
+                        placeholder="Nhập thông tin về tiền sử bệnh tật, phẫu thuật hoặc những vấn đề sức khỏe đáng chú ý trong quá khứ"
+                      />
+                    )}
+                  />
 
-                        <Box
-                          sx={{
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: 2,
-                          }}
-                        >
-                          <Box
-                            sx={{
-                              display: "flex",
-                              flexDirection: { xs: "column", md: "row" },
-                              gap: 2,
-                            }}
-                          >
-                            <Box sx={{ flex: 1 }}>
-                              <Controller
-                                name={`chronicConditions.${index}.name`}
-                                control={control}
-                                rules={{
-                                  required: "Tên bệnh là bắt buộc",
-                                  pattern: {
-                                    value: /^[a-zA-ZÀ-ỹ\s,.]+$/,
-                                    message: "Tên bệnh chỉ được nhập chữ cái",
-                                  },
-                                }}
-                                render={({ field }) => (
-                                  <TextField
-                                    {...field}
-                                    fullWidth
-                                    label="Tên bệnh"
-                                    error={
-                                      !!errors.chronicConditions?.[index]?.name
-                                    }
-                                    helperText={
-                                      errors.chronicConditions?.[index]?.name
-                                        ?.message
-                                    }
-                                    onChange={(e) => {
-                                      // Chỉ chấp nhận chữ cái, khoảng trắng, dấu phẩy và dấu chấm
-                                      const value = e.target.value.replace(
-                                        /[^a-zA-ZÀ-ỹ\s,.]/g,
-                                        ""
-                                      );
-                                      field.onChange(value);
-                                    }}
-                                    placeholder="Nhập tên bệnh mãn tính"
-                                  />
-                                )}
-                              />
-                            </Box>
-
-                            <Box sx={{ flex: 1 }}>
-                              <Controller
-                                name={`chronicConditions.${index}.diagnosisDate`}
-                                control={control}
-                                rules={{
-                                  validate: {
-                                    notInFuture: (value) => {
-                                      if (!value) return true;
-                                      const selected = new Date(value);
-                                      const today = new Date();
-                                      return (
-                                        selected <= today ||
-                                        "Ngày chẩn đoán không thể trong tương lai"
-                                      );
-                                    },
-                                    notTooOld: (value) => {
-                                      if (!value) return true;
-                                      const selected = new Date(value);
-                                      const minDate = new Date();
-                                      minDate.setFullYear(
-                                        minDate.getFullYear() - 100
-                                      );
-                                      return (
-                                        selected >= minDate ||
-                                        "Ngày chẩn đoán quá xa trong quá khứ"
-                                      );
-                                    },
-                                  },
-                                }}
-                                render={({ field }) => {
-                                  // Tính toán giá trị max và min
-                                  const today = new Date()
-                                    .toISOString()
-                                    .split("T")[0]; // YYYY-MM-DD hiện tại
-                                  const minDate = new Date();
-                                  minDate.setFullYear(
-                                    minDate.getFullYear() - 100
-                                  );
-                                  const minDateStr = minDate
-                                    .toISOString()
-                                    .split("T")[0]; // YYYY-MM-DD 100 năm trước
-
-                                  return (
-                                    <TextField
-                                      {...field}
-                                      fullWidth
-                                      label="Ngày chẩn đoán"
-                                      type="date"
-                                      error={
-                                        !!errors.chronicConditions?.[index]
-                                          ?.diagnosisDate
-                                      }
-                                      helperText={
-                                        errors.chronicConditions?.[index]
-                                          ?.diagnosisDate?.message
-                                      }
-                                      InputLabelProps={{ shrink: true }}
-                                      onChange={(e) => {
-                                        // Xử lý và kiểm tra ngày ngay khi người dùng chọn
-                                        const selectedDate = e.target.value;
-                                        field.onChange(selectedDate); // Cập nhật giá trị
-
-                                        // Kiểm tra ngày và hiển thị thông báo
-                                        if (selectedDate) {
-                                          const selected = new Date(
-                                            selectedDate
-                                          );
-                                          const today = new Date();
-                                          const minDate = new Date();
-                                          minDate.setFullYear(
-                                            minDate.getFullYear() - 100
-                                          );
-
-                                          if (selected > today) {
-                                            toast.error(
-                                              "Ngày chẩn đoán không thể trong tương lai!"
-                                            );
-                                          } else if (selected < minDate) {
-                                            toast.error(
-                                              "Ngày chẩn đoán quá xa trong quá khứ!"
-                                            );
-                                          }
-                                        }
-                                      }}
-                                      InputProps={{
-                                        inputProps: {
-                                          max: today, // Không cho phép chọn ngày trong tương lai
-                                          min: minDateStr, // Không cho phép chọn ngày quá xa trong quá khứ
-                                        },
-                                      }}
-                                    />
-                                  );
-                                }}
-                              />
-                            </Box>
-                          </Box>
-
-                          <Controller
-                            name={`chronicConditions.${index}.notes`}
-                            control={control}
-                            rules={{
-                              pattern: {
-                                value: /^[a-zA-ZÀ-ỹ0-9\s,.]+$/,
-                                message: "Ghi chú chỉ được nhập chữ cái và số",
-                              },
-                            }}
-                            render={({ field }) => (
-                              <TextField
-                                {...field}
-                                fullWidth
-                                label="Ghi chú"
-                                multiline
-                                rows={3}
-                                error={
-                                  !!errors.chronicConditions?.[index]?.notes
-                                }
-                                helperText={
-                                  errors.chronicConditions?.[index]?.notes
-                                    ?.message
-                                }
-                                placeholder="Thông tin bổ sung về bệnh mãn tính"
-                              />
-                            )}
-                          />
-                        </Box>
-                      </Paper>
-                    ))}
-                  </Box>
-                )}
+                  <Controller
+                    name="vaccinationHistory"
+                    control={control}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        fullWidth
+                        label="Lịch sử tiêm chủng"
+                        multiline
+                        rows={3}
+                        placeholder="Liệt kê các loại vaccine đã tiêm và thời gian tiêm"
+                      />
+                    )}
+                  />
+                </Box>
               </Box>
 
               <Divider sx={{ my: 4 }} />
 
-              {/* PHẦN 4: THÔNG TIN LIÊN HỆ KHẨN CẤP */}
+              {/* PHẦN 4: ĐÁNH GIÁ THỊ LỰC VÀ THÍNH LỰC */}
+              <Box sx={{ mb: 4 }}>
+                <Typography
+                  variant="h6"
+                  gutterBottom
+                  sx={{ color: "#9c27b0", fontWeight: "bold", mb: 3 }}
+                >
+                  Đánh giá thị lực và thính lực
+                </Typography>
+
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                  <Typography variant="subtitle1">Thị lực</Typography>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: { xs: "column", sm: "row" },
+                      gap: 3,
+                    }}
+                  >
+                    <Box sx={{ flex: 1 }}>
+                      <Controller
+                        name="visionLeft"
+                        control={control}
+                        render={({ field }) => (
+                          <TextField
+                            {...field}
+                            fullWidth
+                            label="Thị lực mắt trái"
+                            placeholder="VD: 10/10 hoặc 20/20"
+                          />
+                        )}
+                      />
+                    </Box>
+                    <Box sx={{ flex: 1 }}>
+                      <Controller
+                        name="visionRight"
+                        control={control}
+                        render={({ field }) => (
+                          <TextField
+                            {...field}
+                            fullWidth
+                            label="Thị lực mắt phải"
+                            placeholder="VD: 10/10 hoặc 20/20"
+                          />
+                        )}
+                      />
+                    </Box>
+                  </Box>
+
+                  <Typography variant="subtitle1" sx={{ mt: 2 }}>
+                    Thính lực
+                  </Typography>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: { xs: "column", sm: "row" },
+                      gap: 3,
+                    }}
+                  >
+                    <Box sx={{ flex: 1 }}>
+                      <Controller
+                        name="hearingLeft"
+                        control={control}
+                        render={({ field }) => (
+                          <TextField
+                            {...field}
+                            fullWidth
+                            label="Thính lực tai trái"
+                            placeholder="VD: Bình thường, Giảm nhẹ, Giảm trung bình..."
+                          />
+                        )}
+                      />
+                    </Box>
+                    <Box sx={{ flex: 1 }}>
+                      <Controller
+                        name="hearingRight"
+                        control={control}
+                        render={({ field }) => (
+                          <TextField
+                            {...field}
+                            fullWidth
+                            label="Thính lực tai phải"
+                            placeholder="VD: Bình thường, Giảm nhẹ, Giảm trung bình..."
+                          />
+                        )}
+                      />
+                    </Box>
+                  </Box>
+                </Box>
+              </Box>
+
+              <Divider sx={{ my: 4 }} />
+
+              {/* PHẦN 5: GHI CHÚ KHÁC */}
               <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
                 <Typography
                   variant="h6"
                   gutterBottom
                   sx={{ color: "#4caf50", fontWeight: "bold" }}
                 >
-                  Thông tin liên hệ khẩn cấp
+                  Ghi chú khác
                 </Typography>
 
-                <Box
-                  sx={{
-                    display: "flex",
-                    flexDirection: { xs: "column", md: "row" },
-                    gap: 3,
-                  }}
-                >
-                  <Box sx={{ flex: 1 }}>
-                    <Controller
-                      name="emergencyContact.name"
-                      control={control}
-                      rules={{
-                        required: "Tên người liên hệ là bắt buộc",
-                        pattern: {
-                          // Pattern chấp nhận chữ cái, khoảng trắng và chữ cái có dấu tiếng Việt
-                          value: /^[a-zA-ZÀ-ỹ\s]+$/,
-                          message: "Tên người liên hệ chỉ được chứa chữ cái",
-                        },
-                      }}
-                      render={({ field }) => (
-                        <TextField
-                          {...field}
-                          fullWidth
-                          label="Tên người liên hệ"
-                          error={!!errors.emergencyContact?.name}
-                          helperText={errors.emergencyContact?.name?.message}
-                          onChange={(e) => {
-                            // Loại bỏ các ký tự không phải chữ cái hoặc khoảng trắng
-                            const value = e.target.value.replace(
-                              /[^a-zA-ZÀ-ỹ\s]/g,
-                              ""
-                            );
-                            field.onChange(value);
-                          }}
-                        />
-                      )}
+                <Controller
+                  name="otherNotes"
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      fullWidth
+                      label="Ghi chú thêm"
+                      multiline
+                      rows={4}
+                      placeholder="Thông tin bổ sung về sức khỏe của học sinh..."
                     />
-                  </Box>
-
-                  <Box sx={{ flex: 1 }}>
-                    <Controller
-                      name="emergencyContact.relationship"
-                      control={control}
-                      rules={{ required: "Mối quan hệ là bắt buộc" }}
-                      render={({ field }) => (
-                        <FormControl
-                          fullWidth
-                          error={!!errors.emergencyContact?.relationship}
-                        >
-                          <InputLabel>Mối quan hệ</InputLabel>
-                          <Select {...field} label="Mối quan hệ">
-                            <MenuItem value="father">Bố</MenuItem>
-                            <MenuItem value="mother">Mẹ</MenuItem>
-                            <MenuItem value="grandfather">Ông</MenuItem>
-                            <MenuItem value="grandmother">Bà</MenuItem>
-                            <MenuItem value="uncle">Chú/Bác</MenuItem>
-                            <MenuItem value="aunt">Cô/Dì</MenuItem>
-                            <MenuItem value="other">Khác</MenuItem>
-                          </Select>
-                        </FormControl>
-                      )}
-                    />
-                  </Box>
-                </Box>
-
-                <Box
-                  sx={{
-                    display: "flex",
-                    flexDirection: { xs: "column", md: "row" },
-                    gap: 3,
-                  }}
-                >
-                  <Box sx={{ flex: 1 }}>
-                    <Controller
-                      name="emergencyContact.phone"
-                      control={control}
-                      rules={{
-                        required: "Số điện thoại là bắt buộc",
-                        pattern: {
-                          value: /^[0-9]{10,11}$/,
-                          message:
-                            "Số điện thoại không hợp lệ (phải có 10-11 chữ số)",
-                        },
-                      }}
-                      render={({ field }) => (
-                        <TextField
-                          {...field}
-                          fullWidth
-                          label="Số điện thoại"
-                          error={!!errors.emergencyContact?.phone}
-                          helperText={errors.emergencyContact?.phone?.message}
-                          onChange={(e) => {
-                            // Loại bỏ chữ 'e' và dấu '+' và các ký tự không phải số
-                            const value = e.target.value
-                              .replace(/[e+]/g, "")
-                              .replace(/[^0-9]/g, "");
-                            field.onChange(value);
-                          }}
-                          inputProps={{
-                            inputMode: "numeric", // Hiển thị bàn phím số trên mobile
-                            pattern: "[0-9]*", // Thêm pattern HTML5
-                          }}
-                        />
-                      )}
-                    />
-                  </Box>
-                  <Box sx={{ flex: 2 }}>
-                    <Controller
-                      name="notes"
-                      control={control}
-                      render={({ field }) => (
-                        <TextField
-                          {...field}
-                          fullWidth
-                          label="Ghi chú thêm"
-                          multiline
-                          rows={4}
-                          placeholder="Thông tin bổ sung về sức khỏe của học sinh..."
-                        />
-                      )}
-                    />
-                  </Box>
-                </Box>
+                  )}
+                />
               </Box>
             </CardContent>
           </Card>

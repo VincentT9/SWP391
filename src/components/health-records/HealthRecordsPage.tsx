@@ -29,21 +29,41 @@ import {
   Bloodtype as BloodtypeIcon,
   Warning as WarningIcon,
   LocalHospital as HospitalIcon,
-  Add as AddIcon,
   Close as CloseIcon,
-  Delete as DeleteIcon,
+  Visibility as VisionIcon,
+  Hearing as HearingIcon,
+  Event as EventIcon,
+  Notes as NotesIcon,
 } from "@mui/icons-material";
 import { mockHealthRecords, mockStudents } from "../../utils/mockData";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
 // ===== KHAI BÁO KIỂU DỮ LIỆU =====
 // Định nghĩa kiểu BloodType cho nhóm máu
 type BloodType = "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-" | "";
 
+// Định nghĩa kiểu cho hồ sơ sức khỏe mới
+type HealthRecord = {
+  id?: string;
+  studentId: string;
+  height: number;
+  weight: number;
+  bloodType?: string;
+  allergies: string;
+  chronicDiseases: string; // Đổi từ chronicConditions
+  pastMedicalHistory: string;
+  visionLeft: string;
+  visionRight: string;
+  hearingLeft: string;
+  hearingRight: string;
+  vaccinationHistory: string;
+  otherNotes: string;
+  lastUpdated?: Date;
+};
+
 const HealthRecordsPage = () => {
+  const navigate = useNavigate();
   // ===== QUẢN LÝ STATE =====
   // State cho việc chọn học sinh trên tab
   const [selectedTab, setSelectedTab] = useState(0);
@@ -56,16 +76,24 @@ const HealthRecordsPage = () => {
   // Tìm hồ sơ sức khỏe tương ứng với học sinh
   const healthRecord = mockHealthRecords.find(
     (record) => record.studentId === student.id
-  );
+  ) as HealthRecord | undefined;
 
   // ===== QUẢN LÝ FORM CẬP NHẬT =====
-  // State lưu trữ dữ liệu đang chỉnh sửa
-  const [updatedRecord, setUpdatedRecord] = useState({
+  // State lưu trữ dữ liệu đang chỉnh sửa - cập nhật theo cấu trúc mới
+  const [updatedRecord, setUpdatedRecord] = useState<HealthRecord>({
+    studentId: student?.id || "",
     height: 0,
     weight: 0,
-    bloodType: "" as BloodType,
-    allergies: [] as any[],
-    chronicConditions: [] as any[],
+    bloodType: "",
+    allergies: "",
+    chronicDiseases: "",
+    pastMedicalHistory: "",
+    visionLeft: "",
+    visionRight: "",
+    hearingLeft: "",
+    hearingRight: "",
+    vaccinationHistory: "",
+    otherNotes: "",
   });
 
   // ===== XỬ LÝ CHUYỂN TAB HỌC SINH =====
@@ -79,11 +107,7 @@ const HealthRecordsPage = () => {
   const handleOpenUpdateDialog = () => {
     if (healthRecord) {
       setUpdatedRecord({
-        height: healthRecord.height,
-        weight: healthRecord.weight,
-        bloodType: (healthRecord.bloodType || "") as BloodType,
-        allergies: [...healthRecord.allergies],
-        chronicConditions: [...healthRecord.chronicConditions],
+        ...healthRecord,
       });
     }
     setUpdateDialogOpen(true);
@@ -105,15 +129,7 @@ const HealthRecordsPage = () => {
       if (recordIndex !== -1) {
         // Cập nhật dữ liệu mới vào hồ sơ
         mockHealthRecords[recordIndex] = {
-          ...mockHealthRecords[recordIndex],
-          height: updatedRecord.height,
-          weight: updatedRecord.weight,
-          bloodType:
-            updatedRecord.bloodType === ""
-              ? undefined
-              : updatedRecord.bloodType,
-          allergies: updatedRecord.allergies,
-          chronicConditions: updatedRecord.chronicConditions,
+          ...updatedRecord,
           lastUpdated: new Date(), // Cập nhật thời gian chỉnh sửa
         };
 
@@ -124,79 +140,6 @@ const HealthRecordsPage = () => {
 
     // Đóng dialog sau khi hoàn thành
     setUpdateDialogOpen(false);
-  };
-
-  // ===== QUẢN LÝ DỊ ỨNG =====
-  // Thêm một dị ứng mới
-  const handleAddAllergy = () => {
-    const newAllergies = [...updatedRecord.allergies];
-    newAllergies.push({
-      id: `new-allergy-${Date.now()}`,
-      name: "",
-      severity: "mild",
-      symptoms: "",
-    });
-    setUpdatedRecord({ ...updatedRecord, allergies: newAllergies });
-  };
-
-  // Xóa một dị ứng
-  const handleRemoveAllergy = (index: number) => {
-    const newAllergies = [...updatedRecord.allergies];
-    newAllergies.splice(index, 1);
-    setUpdatedRecord({ ...updatedRecord, allergies: newAllergies });
-  };
-
-  // Cập nhật thông tin một dị ứng
-  const handleAllergyChange = (index: number, field: string, value: any) => {
-    const newAllergies = [...updatedRecord.allergies];
-    newAllergies[index] = { ...newAllergies[index], [field]: value };
-    setUpdatedRecord({ ...updatedRecord, allergies: newAllergies });
-  };
-
-  // ===== QUẢN LÝ BỆNH MÃN TÍNH =====
-  // Thêm một bệnh mãn tính mới
-  const handleAddChronicCondition = () => {
-    const newConditions = [...updatedRecord.chronicConditions];
-    newConditions.push({
-      id: `new-condition-${Date.now()}`,
-      name: "",
-      diagnosisDate: new Date(),
-      notes: "",
-    });
-    setUpdatedRecord({ ...updatedRecord, chronicConditions: newConditions });
-  };
-
-  // Xóa một bệnh mãn tính
-  const handleRemoveChronicCondition = (index: number) => {
-    const newConditions = [...updatedRecord.chronicConditions];
-    newConditions.splice(index, 1);
-    setUpdatedRecord({ ...updatedRecord, chronicConditions: newConditions });
-  };
-
-  // Cập nhật thông tin một bệnh mãn tính
-  const handleChronicConditionChange = (
-    index: number,
-    field: string,
-    value: any
-  ) => {
-    const newConditions = [...updatedRecord.chronicConditions];
-    newConditions[index] = { ...newConditions[index], [field]: value };
-    setUpdatedRecord({ ...updatedRecord, chronicConditions: newConditions });
-  };
-
-  // ===== HIỂN THỊ TEXT =====
-  // Chuyển đổi cấp độ nghiêm trọng thành text hiển thị
-  const getSeverityText = (severity: string) => {
-    switch (severity) {
-      case "mild":
-        return "Nhẹ";
-      case "moderate":
-        return "Trung bình";
-      case "severe":
-        return "Nặng";
-      default:
-        return "Không xác định";
-    }
   };
 
   return (
@@ -376,23 +319,16 @@ const HealthRecordsPage = () => {
               <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                 <WarningIcon sx={{ color: "#ff9800", mr: 1 }} />
                 <Typography variant="subtitle1" fontWeight="bold">
-                  Dị ứng ({healthRecord.allergies.length})
+                  Dị ứng
                 </Typography>
               </Box>
 
-              {/* Danh sách dị ứng hoặc thông báo không có */}
-              {healthRecord.allergies.length > 0 ? (
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                  {healthRecord.allergies.map((allergy) => (
-                    <Typography
-                      key={allergy.id}
-                      variant="body2"
-                      sx={{ p: 1, bgcolor: "#fff3e0", borderRadius: 1 }}
-                    >
-                      <strong>{allergy.name}</strong> (
-                      {getSeverityText(allergy.severity)}) - {allergy.symptoms}
-                    </Typography>
-                  ))}
+              {/* Hiển thị thông tin dị ứng hoặc thông báo không có */}
+              {healthRecord.allergies ? (
+                <Box sx={{ p: 2, bgcolor: "#fff3e0", borderRadius: 1 }}>
+                  <Typography variant="body1">
+                    {healthRecord.allergies}
+                  </Typography>
                 </Box>
               ) : (
                 <Box sx={{ p: 2, bgcolor: "#f5f5f5", borderRadius: 1 }}>
@@ -414,23 +350,16 @@ const HealthRecordsPage = () => {
               <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                 <HospitalIcon sx={{ color: "#f44336", mr: 1 }} />
                 <Typography variant="subtitle1" fontWeight="bold">
-                  Bệnh mãn tính ({healthRecord.chronicConditions.length})
+                  Bệnh mãn tính
                 </Typography>
               </Box>
 
-              {/* Danh sách bệnh mãn tính hoặc thông báo không có */}
-              {healthRecord.chronicConditions.length > 0 ? (
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                  {healthRecord.chronicConditions.map((condition) => (
-                    <Typography
-                      key={condition.id}
-                      variant="body2"
-                      sx={{ p: 1, bgcolor: "#ffebee", borderRadius: 1 }}
-                    >
-                      <strong>{condition.name}</strong> - {condition.notes} (từ{" "}
-                      {condition.diagnosisDate.toLocaleDateString("vi-VN")})
-                    </Typography>
-                  ))}
+              {/* Hiển thị thông tin bệnh mãn tính hoặc thông báo không có */}
+              {healthRecord.chronicDiseases ? (
+                <Box sx={{ p: 2, bgcolor: "#ffebee", borderRadius: 1 }}>
+                  <Typography variant="body1">
+                    {healthRecord.chronicDiseases}
+                  </Typography>
                 </Box>
               ) : (
                 <Box sx={{ p: 2, bgcolor: "#f5f5f5", borderRadius: 1 }}>
@@ -443,6 +372,117 @@ const HealthRecordsPage = () => {
                   </Typography>
                 </Box>
               )}
+            </Box>
+
+            <Divider sx={{ my: 3 }} />
+
+            {/* ===== THỊ LỰC VÀ THÍNH LỰC ===== */}
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 2 }}>
+                Thị lực và thính lực
+              </Typography>
+
+              <Box
+                sx={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 2,
+                  "& > *": {
+                    flex: {
+                      xs: "1 1 100%",
+                      sm: "1 1 calc(50% - 8px)",
+                    },
+                  },
+                }}
+              >
+                {/* Thị lực */}
+                <Box sx={{ bgcolor: "#e3f2fd", p: 2, borderRadius: 1 }}>
+                  <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                    <VisionIcon sx={{ color: "#1976d2", mr: 1 }} />
+                    <Typography variant="subtitle2">Thị lực</Typography>
+                  </Box>
+                  <Box sx={{ ml: 4 }}>
+                    <Typography variant="body2">
+                      <strong>Mắt trái:</strong>{" "}
+                      {healthRecord.visionLeft || "Chưa có thông tin"}
+                    </Typography>
+                    <Typography variant="body2">
+                      <strong>Mắt phải:</strong>{" "}
+                      {healthRecord.visionRight || "Chưa có thông tin"}
+                    </Typography>
+                  </Box>
+                </Box>
+
+                {/* Thính lực */}
+                <Box sx={{ bgcolor: "#e8f5e9", p: 2, borderRadius: 1 }}>
+                  <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                    <HearingIcon sx={{ color: "#4caf50", mr: 1 }} />
+                    <Typography variant="subtitle2">Thính lực</Typography>
+                  </Box>
+                  <Box sx={{ ml: 4 }}>
+                    <Typography variant="body2">
+                      <strong>Tai trái:</strong>{" "}
+                      {healthRecord.hearingLeft || "Chưa có thông tin"}
+                    </Typography>
+                    <Typography variant="body2">
+                      <strong>Tai phải:</strong>{" "}
+                      {healthRecord.hearingRight || "Chưa có thông tin"}
+                    </Typography>
+                  </Box>
+                </Box>
+              </Box>
+            </Box>
+
+            <Divider sx={{ my: 3 }} />
+
+            {/* ===== LỊCH SỬ Y TẾ ===== */}
+            <Box sx={{ mb: 3 }}>
+              <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+                <EventIcon sx={{ color: "#9c27b0", mr: 1 }} />
+                <Typography variant="subtitle1" fontWeight="bold">
+                  Lịch sử y tế
+                </Typography>
+              </Box>
+
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Tiền sử bệnh
+                </Typography>
+                <Box sx={{ p: 2, bgcolor: "#f3e5f5", borderRadius: 1 }}>
+                  <Typography variant="body2">
+                    {healthRecord.pastMedicalHistory || "Không có thông tin"}
+                  </Typography>
+                </Box>
+              </Box>
+
+              <Box>
+                <Typography variant="subtitle2" gutterBottom>
+                  Lịch sử tiêm chủng
+                </Typography>
+                <Box sx={{ p: 2, bgcolor: "#f3e5f5", borderRadius: 1 }}>
+                  <Typography variant="body2">
+                    {healthRecord.vaccinationHistory || "Không có thông tin"}
+                  </Typography>
+                </Box>
+              </Box>
+            </Box>
+
+            <Divider sx={{ my: 3 }} />
+
+            {/* ===== GHI CHÚ BỔ SUNG ===== */}
+            <Box>
+              <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+                <NotesIcon sx={{ color: "#4caf50", mr: 1 }} />
+                <Typography variant="subtitle1" fontWeight="bold">
+                  Ghi chú bổ sung
+                </Typography>
+              </Box>
+
+              <Box sx={{ p: 2, bgcolor: "#f1f8e9", borderRadius: 1 }}>
+                <Typography variant="body2">
+                  {healthRecord.otherNotes || "Không có ghi chú bổ sung"}
+                </Typography>
+              </Box>
             </Box>
           </CardContent>
         </Card>
@@ -460,7 +500,7 @@ const HealthRecordsPage = () => {
             <Button
               variant="contained"
               color="primary"
-              onClick={() => (window.location.href = "/health-declaration")}
+              onClick={() => navigate("/health-declaration")}
             >
               Khai báo sức khỏe
             </Button>
@@ -474,7 +514,7 @@ const HealthRecordsPage = () => {
           <Button
             variant="outlined"
             color="primary"
-            onClick={() => (window.location.href = "/health-declaration")}
+            onClick={() => navigate("/health-declaration")}
           >
             Khai báo sức khỏe mới
           </Button>
@@ -563,7 +603,7 @@ const HealthRecordsPage = () => {
               <InputLabel id="blood-type-label">Nhóm máu</InputLabel>
               <Select
                 labelId="blood-type-label"
-                value={updatedRecord.bloodType}
+                value={updatedRecord.bloodType || ""}
                 label="Nhóm máu"
                 onChange={(e) =>
                   setUpdatedRecord({
@@ -587,200 +627,177 @@ const HealthRecordsPage = () => {
 
           <Divider sx={{ my: 3 }} />
 
-          {/* ===== PHẦN QUẢN LÝ DỊ ỨNG ===== */}
+          {/* ===== PHẦN QUẢN LÝ DỊ ỨNG & BỆNH MÃN TÍNH ===== */}
           <Box sx={{ mb: 4 }}>
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                mb: 2,
-              }}
-            >
-              <Typography variant="subtitle1" fontWeight="bold">
-                Dị ứng
-              </Typography>
-              <Button
-                startIcon={<AddIcon />}
-                onClick={handleAddAllergy}
-                variant="outlined"
-                size="small"
-              >
-                Thêm dị ứng
-              </Button>
-            </Box>
+            <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 2 }}>
+              Dị ứng & Bệnh mãn tính
+            </Typography>
 
-            {/* Hiển thị khi không có dị ứng */}
-            {updatedRecord.allergies.length === 0 && (
-              <Typography color="text.secondary" align="center" sx={{ py: 2 }}>
-                Không có dị ứng nào được ghi nhận
-              </Typography>
-            )}
+            <TextField
+              label="Thông tin dị ứng"
+              multiline
+              rows={2}
+              fullWidth
+              placeholder="Nhập thông tin dị ứng (VD: Tôm, cá, hải sản, phấn hoa...)"
+              helperText="Liệt kê các chất gây dị ứng, ngăn cách bằng dấu phẩy"
+              value={updatedRecord.allergies}
+              onChange={(e) =>
+                setUpdatedRecord({
+                  ...updatedRecord,
+                  allergies: e.target.value,
+                })
+              }
+              sx={{ mb: 2 }}
+            />
 
-            {/* Form nhập thông tin dị ứng */}
-            {updatedRecord.allergies.map((allergy, index) => (
-              <Box
-                key={allergy.id || index}
-                sx={{
-                  mb: 2,
-                  p: 2,
-                  bgcolor: "#f9f9f9",
-                  borderRadius: 1,
-                  position: "relative",
-                }}
-              >
-                {/* Nút xóa dị ứng */}
-                <IconButton
-                  size="small"
-                  sx={{ position: "absolute", top: 8, right: 8 }}
-                  onClick={() => handleRemoveAllergy(index)}
-                >
-                  <DeleteIcon fontSize="small" />
-                </IconButton>
-
-                {/* Nhập tên dị ứng */}
-                <TextField
-                  label="Tên dị ứng"
-                  value={allergy.name}
-                  onChange={(e) =>
-                    handleAllergyChange(index, "name", e.target.value)
-                  }
-                  fullWidth
-                  margin="normal"
-                  size="small"
-                />
-
-                {/* Nhập mức độ và triệu chứng */}
-                <Box sx={{ display: "flex", gap: 2, mt: 1 }}>
-                  <FormControl fullWidth size="small">
-                    <InputLabel>Mức độ</InputLabel>
-                    <Select
-                      value={allergy.severity}
-                      label="Mức độ"
-                      onChange={(e) =>
-                        handleAllergyChange(index, "severity", e.target.value)
-                      }
-                    >
-                      <MenuItem value="mild">Nhẹ</MenuItem>
-                      <MenuItem value="moderate">Trung bình</MenuItem>
-                      <MenuItem value="severe">Nặng</MenuItem>
-                    </Select>
-                  </FormControl>
-
-                  <TextField
-                    label="Triệu chứng"
-                    value={allergy.symptoms}
-                    onChange={(e) =>
-                      handleAllergyChange(index, "symptoms", e.target.value)
-                    }
-                    fullWidth
-                    size="small"
-                  />
-                </Box>
-              </Box>
-            ))}
+            <TextField
+              label="Bệnh mãn tính"
+              multiline
+              rows={2}
+              fullWidth
+              placeholder="Nhập thông tin bệnh mãn tính (VD: Hen suyễn, tiểu đường...)"
+              helperText="Liệt kê các bệnh mãn tính, ngăn cách bằng dấu phẩy"
+              value={updatedRecord.chronicDiseases}
+              onChange={(e) =>
+                setUpdatedRecord({
+                  ...updatedRecord,
+                  chronicDiseases: e.target.value,
+                })
+              }
+            />
           </Box>
 
           <Divider sx={{ my: 3 }} />
 
-          {/* ===== PHẦN QUẢN LÝ BỆNH MÃN TÍNH ===== */}
-          <Box sx={{ mb: 2 }}>
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                mb: 2,
-              }}
-            >
-              <Typography variant="subtitle1" fontWeight="bold">
-                Bệnh mãn tính
-              </Typography>
-              <Button
-                startIcon={<AddIcon />}
-                onClick={handleAddChronicCondition}
-                variant="outlined"
-                size="small"
-              >
-                Thêm bệnh mãn tính
-              </Button>
+          {/* ===== PHẦN THỊ LỰC & THÍNH LỰC ===== */}
+          <Box sx={{ mb: 4 }}>
+            <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 2 }}>
+              Thị lực & Thính lực
+            </Typography>
+
+            <Typography variant="subtitle2" gutterBottom>
+              Thị lực
+            </Typography>
+            <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
+              <TextField
+                label="Thị lực mắt trái"
+                fullWidth
+                placeholder="VD: 10/10 hoặc 20/20"
+                value={updatedRecord.visionLeft}
+                onChange={(e) =>
+                  setUpdatedRecord({
+                    ...updatedRecord,
+                    visionLeft: e.target.value,
+                  })
+                }
+              />
+              <TextField
+                label="Thị lực mắt phải"
+                fullWidth
+                placeholder="VD: 10/10 hoặc 20/20"
+                value={updatedRecord.visionRight}
+                onChange={(e) =>
+                  setUpdatedRecord({
+                    ...updatedRecord,
+                    visionRight: e.target.value,
+                  })
+                }
+              />
             </Box>
 
-            {/* Hiển thị khi không có bệnh mãn tính */}
-            {updatedRecord.chronicConditions.length === 0 && (
-              <Typography color="text.secondary" align="center" sx={{ py: 2 }}>
-                Không có bệnh mãn tính nào được ghi nhận
-              </Typography>
-            )}
+            <Typography variant="subtitle2" gutterBottom>
+              Thính lực
+            </Typography>
+            <Box sx={{ display: "flex", gap: 2 }}>
+              <TextField
+                label="Thính lực tai trái"
+                fullWidth
+                placeholder="VD: Bình thường, Giảm nhẹ, Giảm trung bình..."
+                value={updatedRecord.hearingLeft}
+                onChange={(e) =>
+                  setUpdatedRecord({
+                    ...updatedRecord,
+                    hearingLeft: e.target.value,
+                  })
+                }
+              />
+              <TextField
+                label="Thính lực tai phải"
+                fullWidth
+                placeholder="VD: Bình thường, Giảm nhẹ, Giảm trung bình..."
+                value={updatedRecord.hearingRight}
+                onChange={(e) =>
+                  setUpdatedRecord({
+                    ...updatedRecord,
+                    hearingRight: e.target.value,
+                  })
+                }
+              />
+            </Box>
+          </Box>
 
-            {/* Form nhập thông tin bệnh mãn tính */}
-            {updatedRecord.chronicConditions.map((condition, index) => (
-              <Box
-                key={condition.id || index}
-                sx={{
-                  mb: 2,
-                  p: 2,
-                  bgcolor: "#f9f9f9",
-                  borderRadius: 1,
-                  position: "relative",
-                }}
-              >
-                {/* Nút xóa bệnh mãn tính */}
-                <IconButton
-                  size="small"
-                  sx={{ position: "absolute", top: 8, right: 8 }}
-                  onClick={() => handleRemoveChronicCondition(index)}
-                >
-                  <DeleteIcon fontSize="small" />
-                </IconButton>
+          <Divider sx={{ my: 3 }} />
 
-                {/* Nhập tên bệnh */}
-                <TextField
-                  label="Tên bệnh"
-                  value={condition.name}
-                  onChange={(e) =>
-                    handleChronicConditionChange(index, "name", e.target.value)
-                  }
-                  fullWidth
-                  margin="normal"
-                  size="small"
-                />
+          {/* ===== PHẦN LỊCH SỬ Y TẾ ===== */}
+          <Box sx={{ mb: 4 }}>
+            <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 2 }}>
+              Lịch sử y tế
+            </Typography>
 
-                {/* Nhập ngày chẩn đoán và ghi chú */}
-                <Box sx={{ display: "flex", gap: 2, mt: 1 }}>
-                  <LocalizationProvider dateAdapter={AdapterDateFns}>
-                    <DatePicker
-                      label="Ngày chẩn đoán"
-                      value={condition.diagnosisDate}
-                      onChange={(date) =>
-                        handleChronicConditionChange(
-                          index,
-                          "diagnosisDate",
-                          date
-                        )
-                      }
-                      slotProps={{
-                        textField: { fullWidth: true, size: "small" },
-                      }}
-                    />
-                  </LocalizationProvider>
+            <TextField
+              label="Tiền sử bệnh"
+              multiline
+              rows={3}
+              fullWidth
+              placeholder="Nhập thông tin về tiền sử bệnh tật, phẫu thuật hoặc những vấn đề sức khỏe đáng chú ý trong quá khứ"
+              value={updatedRecord.pastMedicalHistory}
+              onChange={(e) =>
+                setUpdatedRecord({
+                  ...updatedRecord,
+                  pastMedicalHistory: e.target.value,
+                })
+              }
+              sx={{ mb: 2 }}
+            />
 
-                  <TextField
-                    label="Ghi chú"
-                    value={condition.notes}
-                    onChange={(e) =>
-                      handleChronicConditionChange(
-                        index,
-                        "notes",
-                        e.target.value
-                      )
-                    }
-                    fullWidth
-                    size="small"
-                  />
-                </Box>
-              </Box>
-            ))}
+            <TextField
+              label="Lịch sử tiêm chủng"
+              multiline
+              rows={2}
+              fullWidth
+              placeholder="Liệt kê các loại vaccine đã tiêm và thời gian tiêm"
+              value={updatedRecord.vaccinationHistory}
+              onChange={(e) =>
+                setUpdatedRecord({
+                  ...updatedRecord,
+                  vaccinationHistory: e.target.value,
+                })
+              }
+            />
+          </Box>
+
+          <Divider sx={{ my: 3 }} />
+
+          {/* ===== PHẦN GHI CHÚ BỔ SUNG ===== */}
+          <Box>
+            <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 2 }}>
+              Ghi chú bổ sung
+            </Typography>
+
+            <TextField
+              label="Ghi chú thêm"
+              multiline
+              rows={4}
+              fullWidth
+              placeholder="Thông tin bổ sung về sức khỏe của học sinh..."
+              value={updatedRecord.otherNotes}
+              onChange={(e) =>
+                setUpdatedRecord({
+                  ...updatedRecord,
+                  otherNotes: e.target.value,
+                })
+              }
+            />
           </Box>
         </DialogContent>
 

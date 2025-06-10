@@ -1,20 +1,9 @@
 import {
-  User,
   Student,
   HealthRecord,
-  Allergy,
-  ChronicCondition,
-  VisionAssessment,
-  HearingAssessment,
-  MedicalHistoryItem,
-  Immunization,
-  Medication,
   MedicalEvent,
-  MedicationGiven,
   HealthCheckup,
-  StudentCheckup,
   VaccinationProgram,
-  StudentVaccination,
   MedicalSupply,
   MedicalSupplyTransaction,
   MedicationRequest,
@@ -22,73 +11,9 @@ import {
 } from "../models/types";
 
 // Helper function to generate random ID
-const generateId = (): string => {
-  return Math.random().toString(36).substring(2) + Date.now().toString(36);
-};
-
-// USERS
-// export const mockUsers: User[] = [
-//   {
-//     id: "admin1",
-//     firstName: "Admin",
-//     lastName: "User",
-//     email: "admin@example.com",
-//     role: "admin",
-//     phone: "0901234567",
-//     address: "123 Đường Admin, Quận 1, TP. Hồ Chí Minh",
-//     profileImage: "https://source.unsplash.com/random/200x200/?portrait",
-//     createdAt: new Date("2023-01-01"),
-//     updatedAt: new Date("2023-01-01"),
-//   },
-//   {
-//     id: "nurse1",
-//     firstName: "Y Tá",
-//     lastName: "Nguyễn",
-//     email: "nurse@example.com",
-//     role: "nurse",
-//     phone: "0902345678",
-//     address: "456 Đường Y Tế, Quận 2, TP. Hồ Chí Minh",
-//     profileImage: "https://source.unsplash.com/random/200x200/?nurse",
-//     createdAt: new Date("2023-01-02"),
-//     updatedAt: new Date("2023-01-02"),
-//   },
-//   {
-//     id: "parent1",
-//     firstName: "Phụ Huynh",
-//     lastName: "Trần",
-//     email: "parent@example.com",
-//     role: "parent",
-//     phone: "0903456789",
-//     address: "789 Đường Gia Đình, Quận 3, TP. Hồ Chí Minh",
-//     profileImage: "https://source.unsplash.com/random/200x200/?father",
-//     createdAt: new Date("2023-01-03"),
-//     updatedAt: new Date("2023-01-03"),
-//   },
-//   {
-//     id: "parent2",
-//     firstName: "Phụ Huynh",
-//     lastName: "Lê",
-//     email: "parent2@example.com",
-//     role: "parent",
-//     phone: "0904567890",
-//     address: "101 Đường Gia Đình, Quận 4, TP. Hồ Chí Minh",
-//     profileImage: "https://source.unsplash.com/random/200x200/?mother",
-//     createdAt: new Date("2023-01-04"),
-//     updatedAt: new Date("2023-01-04"),
-//   },
-//   {
-//     id: "teacher1",
-//     firstName: "Giáo Viên",
-//     lastName: "Phạm",
-//     email: "teacher@example.com",
-//     role: "teacher",
-//     phone: "0905678901",
-//     address: "202 Đường Giáo Dục, Quận 5, TP. Hồ Chí Minh",
-//     profileImage: "https://source.unsplash.com/random/200x200/?teacher",
-//     createdAt: new Date("2023-01-05"),
-//     updatedAt: new Date("2023-01-05"),
-//   },
-// ];
+// const generateId = (): string => {
+//   return Math.random().toString(36).substring(2) + Date.now().toString(36);
+// };
 
 // STUDENTS
 export const mockStudents: Student[] = [
@@ -136,271 +61,58 @@ export const mockStudents: Student[] = [
   },
 ];
 
-// ALLERGIES
-export const mockAllergies: Record<string, Allergy[]> = {
-  healthRecord1: [
-    {
-      id: "allergy1",
-      name: "Dị ứng hải sản",
-      severity: "moderate",
-      symptoms: "Phát ban, ngứa, khó thở nhẹ",
-      treatment: "Tránh ăn hải sản, dùng thuốc kháng histamine khi cần",
-      dateIdentified: new Date("2020-03-15"),
-    },
-  ],
-  healthRecord2: [
-    {
-      id: "allergy2",
-      name: "Dị ứng phấn hoa",
-      severity: "mild",
-      symptoms: "Hắt hơi, chảy nước mũi, ngứa mắt",
-      treatment: "Thuốc kháng histamine, tránh tiếp xúc với phấn hoa",
-      dateIdentified: new Date("2021-04-10"),
-    },
-    {
-      id: "allergy3",
-      name: "Dị ứng đậu phộng",
-      severity: "severe",
-      symptoms: "Phát ban, sưng môi và lưỡi, khó thở",
-      treatment: "Tránh tiếp xúc với đậu phộng, mang theo Epipen",
-      dateIdentified: new Date("2019-07-22"),
-    },
-  ],
-  healthRecord3: [],
-};
-
-// CHRONIC CONDITIONS
-export const mockChronicConditions: Record<string, ChronicCondition[]> = {
-  healthRecord1: [
-    {
-      id: "condition1",
-      name: "Hen suyễn",
-      diagnosisDate: new Date("2019-05-10"),
-      medications: [
-        {
-          id: "medication1",
-          name: "Ventolin",
-          dosage: "2 nhát xịt",
-          frequency: "Khi cần, không quá 4 lần mỗi ngày",
-          startDate: new Date("2019-05-12"),
-          requestedByParent: true,
-          approved: true,
-          approvedBy: "nurse1",
-          approvedAt: new Date("2019-05-12"),
-        },
-      ],
-      notes: "Hen nhẹ, chủ yếu xảy ra khi tập thể dục hoặc khi thời tiết lạnh",
-    },
-  ],
-  healthRecord2: [],
-  healthRecord3: [
-    {
-      id: "condition2",
-      name: "Tiểu đường týp 1",
-      diagnosisDate: new Date("2018-12-05"),
-      medications: [
-        {
-          id: "medication2",
-          name: "Insulin",
-          dosage: "Theo chỉ dẫn của bác sĩ",
-          frequency: "Trước bữa ăn",
-          startDate: new Date("2018-12-07"),
-          requestedByParent: true,
-          approved: true,
-          approvedBy: "nurse1",
-          approvedAt: new Date("2018-12-07"),
-        },
-      ],
-      notes: "Cần theo dõi đường huyết định kỳ",
-    },
-  ],
-};
-
-// VISION ASSESSMENTS
-export const mockVisionAssessments: Record<string, VisionAssessment> = {
-  healthRecord1: {
-    id: "vision1",
-    date: new Date("2023-03-15"),
-    leftEye: 0.8,
-    rightEye: 0.9,
-    wearsCorrective: false,
-    notes: "Thị lực tốt, không cần kính",
-  },
-  healthRecord2: {
-    id: "vision2",
-    date: new Date("2023-03-15"),
-    leftEye: 0.6,
-    rightEye: 0.5,
-    wearsCorrective: true,
-    notes: "Đã được đo kính, cần đeo kính khi học bài",
-  },
-  healthRecord3: {
-    id: "vision3",
-    date: new Date("2023-03-15"),
-    leftEye: 0.7,
-    rightEye: 0.7,
-    wearsCorrective: false,
-  },
-};
-
-// HEARING ASSESSMENTS
-export const mockHearingAssessments: Record<string, HearingAssessment> = {
-  healthRecord1: {
-    id: "hearing1",
-    date: new Date("2023-03-15"),
-    leftEar: "normal",
-    rightEar: "normal",
-  },
-  healthRecord2: {
-    id: "hearing2",
-    date: new Date("2023-03-15"),
-    leftEar: "normal",
-    rightEar: "mild loss",
-    notes: "Giảm nhẹ thính lực ở tai phải, nên theo dõi",
-  },
-  healthRecord3: {
-    id: "hearing3",
-    date: new Date("2023-03-15"),
-    leftEar: "normal",
-    rightEar: "normal",
-  },
-};
-
-// MEDICAL HISTORY
-export const mockMedicalHistory: Record<string, MedicalHistoryItem[]> = {
-  healthRecord1: [
-    {
-      id: "history1",
-      date: new Date("2021-07-10"),
-      condition: "Gãy tay",
-      treatment: "Bó bột 6 tuần",
-      hospital: "Bệnh viện Nhi Đồng",
-      doctor: "Bác sĩ Nguyễn Văn A",
-      notes: "Tai nạn khi chơi thể thao, đã hồi phục hoàn toàn",
-    },
-  ],
-  healthRecord2: [
-    {
-      id: "history2",
-      date: new Date("2022-04-15"),
-      condition: "Viêm phổi",
-      treatment: "Kháng sinh và nghỉ ngơi",
-      hospital: "Bệnh viện Nhi Đồng 2",
-      doctor: "Bác sĩ Trần Thị B",
-    },
-  ],
-  healthRecord3: [
-    {
-      id: "history3",
-      date: new Date("2020-11-20"),
-      condition: "Phẫu thuật ruột thừa",
-      treatment: "Phẫu thuật nội soi",
-      hospital: "Bệnh viện Chợ Rẫy",
-      doctor: "Bác sĩ Lê Văn C",
-      notes: "Đã hồi phục tốt, không có biến chứng",
-    },
-  ],
-};
-
-// IMMUNIZATIONS
-export const mockImmunizations: Record<string, Immunization[]> = {
-  healthRecord1: [
-    {
-      id: "imm1",
-      name: "Vắc-xin MMR (Sởi, Quai bị, Rubella)",
-      date: new Date("2018-05-10"),
-      administered: true,
-      administeredBy: "Bệnh viện Nhi Đồng",
-      lotNumber: "MMR20180510",
-    },
-    {
-      id: "imm2",
-      name: "Vắc-xin HPV",
-      date: new Date("2023-06-15"),
-      dueDate: new Date("2023-12-15"),
-      administered: true,
-      administeredBy: "Y tá Nguyễn",
-      location: "Trường THCS Nguyễn Huệ",
-      lotNumber: "HPV20230615",
-      notes: "Mũi 1/3",
-    },
-  ],
-  healthRecord2: [
-    {
-      id: "imm3",
-      name: "Vắc-xin MMR (Sởi, Quai bị, Rubella)",
-      date: new Date("2018-06-12"),
-      administered: true,
-      administeredBy: "Bệnh viện Nhi Đồng 2",
-      lotNumber: "MMR20180612",
-    },
-  ],
-  healthRecord3: [
-    {
-      id: "imm4",
-      name: "Vắc-xin MMR (Sởi, Quai bị, Rubella)",
-      date: new Date("2018-04-15"),
-      administered: true,
-      administeredBy: "Bệnh viện Chợ Rẫy",
-      lotNumber: "MMR20180415",
-    },
-    {
-      id: "imm5",
-      name: "Vắc-xin HPV",
-      date: new Date("2023-06-15"),
-      dueDate: new Date("2023-12-15"),
-      administered: true,
-      administeredBy: "Y tá Nguyễn",
-      location: "Trường THCS Nguyễn Huệ",
-      lotNumber: "HPV20230615",
-      notes: "Mũi 1/3",
-    },
-  ],
-};
-
 // HEALTH RECORDS
 export const mockHealthRecords: HealthRecord[] = [
   {
-    id: "healthRecord1",
+    id: "record1",
     studentId: "student1",
-    height: 155,
-    weight: 48,
-    bloodType: "O+",
-    allergies: mockAllergies["healthRecord1"],
-    chronicConditions: mockChronicConditions["healthRecord1"],
-    visionAssessment: mockVisionAssessments["healthRecord1"],
-    hearingAssessment: mockHearingAssessments["healthRecord1"],
-    medicalHistory: mockMedicalHistory["healthRecord1"],
-    immunizations: mockImmunizations["healthRecord1"],
-    lastUpdated: new Date("2023-03-15"),
-  },
-  {
-    id: "healthRecord2",
-    studentId: "student2",
-    height: 145,
-    weight: 40,
+    height: 135,
+    weight: 30,
     bloodType: "A+",
-    allergies: mockAllergies["healthRecord2"],
-    chronicConditions: mockChronicConditions["healthRecord2"],
-    visionAssessment: mockVisionAssessments["healthRecord2"],
-    hearingAssessment: mockHearingAssessments["healthRecord2"],
-    medicalHistory: mockMedicalHistory["healthRecord2"],
-    immunizations: mockImmunizations["healthRecord2"],
-    lastUpdated: new Date("2023-03-15"),
+    allergies: "Tôm, cá biển, phấn hoa",
+    chronicDiseases: "Hen suyễn theo mùa",
+    pastMedicalHistory: "Gãy tay trái năm 2023, Viêm phế quản năm 2022",
+    visionLeft: "10/10",
+    visionRight: "9/10",
+    hearingLeft: "Bình thường",
+    hearingRight: "Bình thường",
+    vaccinationHistory: "Đã tiêm đầy đủ các loại vaccine theo quy định",
+    otherNotes: "Cần hạn chế các hoạt động nặng khi có dấu hiệu hen",
+    lastUpdated: new Date("2023-10-15"),
   },
   {
-    id: "healthRecord3",
-    studentId: "student3",
-    height: 165,
-    weight: 55,
+    id: "record2",
+    studentId: "student2",
+    height: 142,
+    weight: 35,
     bloodType: "B+",
-    allergies: mockAllergies["healthRecord3"],
-    chronicConditions: mockChronicConditions["healthRecord3"],
-    visionAssessment: mockVisionAssessments["healthRecord3"],
-    hearingAssessment: mockHearingAssessments["healthRecord3"],
-    medicalHistory: mockMedicalHistory["healthRecord3"],
-    immunizations: mockImmunizations["healthRecord3"],
-    lastUpdated: new Date("2023-03-15"),
+    allergies: "Đậu phộng, sữa",
+    chronicDiseases: "Chàm, viêm da dị ứng",
+    pastMedicalHistory: "Nổi mề đay khi 4 tuổi",
+    visionLeft: "8/10",
+    visionRight: "8/10",
+    hearingLeft: "Bình thường",
+    hearingRight: "Bình thường",
+    vaccinationHistory: "Đã tiêm đầy đủ vaccine bắt buộc, chưa tiêm HPV",
+    otherNotes: "Luôn mang theo thuốc kháng histamine",
+    lastUpdated: new Date("2023-09-20"),
+  },
+  {
+    id: "record3",
+    studentId: "student3",
+    height: 150,
+    weight: 45,
+    bloodType: "O+",
+    allergies: "Bụi, lông động vật",
+    chronicDiseases: "Tiểu đường týp 1",
+    pastMedicalHistory: "Phẫu thuật ruột thừa năm 2020",
+    visionLeft: "7/10",
+    visionRight: "7/10",
+    hearingLeft: "Bình thường",
+    hearingRight: "Bình thường",
+    vaccinationHistory: "Đã tiêm đầy đủ vaccine theo lịch",
+    otherNotes: "Cần theo dõi đường huyết hàng ngày",
+    lastUpdated: new Date("2023-11-05"),
   },
 ];
 
