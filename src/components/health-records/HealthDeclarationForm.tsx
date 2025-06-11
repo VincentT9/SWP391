@@ -95,7 +95,7 @@ const HealthDeclarationForm = () => {
 
     try {
       const response = await axios.get(
-        `${process.env.REACT_APP_BASE_URL}/api/Student/code/${studentCode}`
+        `${process.env.REACT_APP_BASE_URL}/api/Student/get-student-by-student-code/${studentCode}`
       );
       setStudentData(response.data);
 
