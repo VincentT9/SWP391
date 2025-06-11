@@ -99,14 +99,16 @@ const toggleButtonVariants = {
   open: { rotate: 180 },
 };
 
-// Define animation for content
+// Define animation for content - remove margins completely
 const contentVariants = {
   narrow: {
-    marginLeft: `${collapsedDrawerWidth}px`,
+    marginLeft: 0,
+    paddingLeft: `${collapsedDrawerWidth}px`,
     transition: { type: "spring", stiffness: 400, damping: 40 },
   },
   wide: {
-    marginLeft: `${drawerWidth}px`,
+    marginLeft: 0,
+    paddingLeft: `${drawerWidth}px`,
     transition: { type: "spring", stiffness: 400, damping: 40 },
   },
 };
@@ -241,7 +243,7 @@ const MainLayout = () => {
     <Box
       ref={sidebarRef}
       sx={{
-        background: "linear-gradient(to bottom, #f3f6fc, #e6eff9)",
+        background: "#f0f2f5", // Changed from #f5f9ff to more gray tone
         height: "100%",
         position: "relative",
         overflow: "hidden",
@@ -356,7 +358,7 @@ const MainLayout = () => {
         display: "flex",
         flexDirection: "column",
         height: "100vh",
-        bgcolor: "#f5f9ff", // Lighter blue background
+        bgcolor: "#f0f2f5", // Changed from #f5f9ff to more gray tone
         overflow: "hidden",
       }}
     >
@@ -369,7 +371,7 @@ const MainLayout = () => {
         position="fixed"
         sx={{
           zIndex: (theme) => theme.zIndex.drawer + 1,
-          background: "linear-gradient(90deg, #034EA1 0%, #1976d2 100%)", // Blue gradient
+          background: "linear-gradient(90deg, #034EA2 0%, #1976d2 100%)", // Blue gradient updated with new primary color
           boxShadow: "none",
           borderBottom: "1px solid rgba(0,0,0,0.05)",
         }}
@@ -526,11 +528,14 @@ const MainLayout = () => {
             width: { xs: 0, sm: sidebarOpen ? drawerWidth : collapsedDrawerWidth },
             flexShrink: 0,
             transition: "width 0.3s",
+            position: "absolute",
+            height: "calc(100vh - 48px)",
+            zIndex: 1200,
             "& .MuiDrawer-paper": {
               boxSizing: "border-box",
               border: "none",
-              bgcolor: "background.paper",
-              boxShadow: "0px 0px 15px rgba(0,0,0,0.05)",
+              bgcolor: "#f0f2f5", // Changed from #f5f9ff to more gray tone
+              boxShadow: "none",
               top: "auto",
               height: "100%",
               borderTop: "none",
@@ -602,7 +607,7 @@ const MainLayout = () => {
               aria-label="toggle sidebar"
               onClick={toggleSidebar}
               sx={{
-                bgcolor: "#034EA1",
+                bgcolor: "#034EA2", // Updated to use the requested color
                 "&:hover": {
                   bgcolor: "#023a7a",
                 },
@@ -621,12 +626,14 @@ const MainLayout = () => {
           variants={!isMobile ? contentVariants : {}}
           sx={{
             flexGrow: 1,
-            p: 3,
-            bgcolor: "#f5f9ff",
-            overflow: "auto", // Changed from 'auto' to ensure scrolling works
-            width: isMobile ? "100%" : "auto",
-            ml: isMobile ? 0 : undefined,
-            height: "100%", // Ensure full height
+            p: 0,
+            bgcolor: "#f0f2f5", // Changed from #f5f9ff to more gray tone
+            overflow: "auto",
+            width: "100%",
+            ml: 0,
+            height: "100%",
+            position: "relative",
+            zIndex: 1,
             "&::-webkit-scrollbar": {
               width: "8px",
             },
@@ -634,7 +641,7 @@ const MainLayout = () => {
               background: "#f1f1f1",
             },
             "&::-webkit-scrollbar-thumb": {
-              background: "#034ea2",
+              background: "#034EA2",
               borderRadius: "4px",
             },
             "&::-webkit-scrollbar-thumb:hover": {
