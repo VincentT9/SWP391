@@ -303,56 +303,110 @@ const HealthRecordsPage = () => {
 
       // Chuẩn bị dữ liệu để gửi đến API
       const healthRecordData = {
-        id: updatedRecord.id || undefined,
         studentId: selectedStudent.id,
-        height: updatedRecord.height,
-        weight: updatedRecord.weight,
-        bloodType: updatedRecord.bloodType,
-        allergies: updatedRecord.allergies,
-        chronicDiseases: updatedRecord.chronicDiseases,
-        pastMedicalHistory: updatedRecord.pastMedicalHistory,
-        visionLeft: updatedRecord.visionLeft,
-        visionRight: updatedRecord.visionRight,
-        hearingLeft: updatedRecord.hearingLeft,
-        hearingRight: updatedRecord.hearingRight,
-        vaccinationHistory: updatedRecord.vaccinationHistory,
-        otherNotes: updatedRecord.otherNotes,
+        height: updatedRecord.height?.toString() || "",
+        weight: updatedRecord.weight?.toString() || "",
+        bloodType: updatedRecord.bloodType || "",
+        allergies: updatedRecord.allergies || "",
+        chronicDiseases: updatedRecord.chronicDiseases || "",
+        pastMedicalHistory: updatedRecord.pastMedicalHistory || "",
+        visionLeft: updatedRecord.visionLeft || "",
+        visionRight: updatedRecord.visionRight || "",
+        hearingLeft: updatedRecord.hearingLeft || "",
+        hearingRight: updatedRecord.hearingRight || "",
+        vaccinationHistory: updatedRecord.vaccinationHistory || "",
+        otherNotes: updatedRecord.otherNotes || "",
       };
+
+      console.log("Sending health record data:", healthRecordData);
 
       // Lấy token từ localStorage
       const token = localStorage.getItem("authToken");
 
-      // Gọi API để lưu dữ liệu (bạn sẽ cần điều chỉnh endpoint API thực tế)
-      // const response = await axios({
-      //   method: healthRecord ? 'PUT' : 'POST',
-      //   url: `${process.env.REACT_APP_BASE_URL}/api/HealthRecord${healthRecord ? `/${updatedRecord.id}` : ''}`,
-      //   data: healthRecordData,
-      //   headers: {
-      //     Authorization: `Bearer ${token}`
-      //   }
-      // });
-
-      // Giả lập API call thành công
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Cập nhật lại danh sách học sinh với dữ liệu mới
-      const updatedStudents = [...students];
-      if (updatedStudents[selectedTab]) {
-        updatedStudents[selectedTab] = {
-          ...updatedStudents[selectedTab],
-          healthRecord: updatedRecord,
-        };
+      let response;
+      if (healthRecord && healthRecord.id) {
+        // Cập nhật hồ sơ hiện có
+        response = await axios.put(
+          `${process.env.REACT_APP_BASE_URL}/api/HealthRecord/update-health-record/${healthRecord.id}`,
+          healthRecordData,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        console.log("Update response:", response.data);
+      } else {
+        // Tạo mới hồ sơ
+        response = await axios.post(
+          `${process.env.REACT_APP_BASE_URL}/api/HealthRecord/create-health-record`,
+          healthRecordData,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        console.log("Create response:", response.data);
       }
-      setStudents(updatedStudents);
+
+      // Sau khi cập nhật thành công, cập nhật lại danh sách học sinh
+      // Tải lại dữ liệu từ API
+      const refreshResponse = await axios.get(
+        `${process.env.REACT_APP_BASE_URL}/api/User/get-all-users`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      // Lấy thông tin user từ localStorage
+      const authUserJson = localStorage.getItem("authUser");
+      if (authUserJson) {
+        const authUser = JSON.parse(authUserJson);
+        const userId = authUser.id;
+
+        // Tìm user hiện tại trong response mới
+        const refreshedUser = refreshResponse.data.find(
+          (user: ApiUser) => user.id === userId
+        );
+        if (refreshedUser && refreshedUser.students) {
+          setStudents(refreshedUser.students);
+        }
+      }
 
       // Hiển thị thông báo thành công
-      toast.success("Hồ sơ sức khỏe đã được cập nhật thành công!");
+      toast.success(
+        healthRecord
+          ? "Hồ sơ sức khỏe đã được cập nhật thành công!"
+          : "Hồ sơ sức khỏe đã được tạo thành công!"
+      );
 
       // Đóng dialog
       setUpdateDialogOpen(false);
     } catch (err) {
       console.error("Error updating health record:", err);
-      toast.error("Đã xảy ra lỗi khi cập nhật hồ sơ sức khỏe.");
+
+      // Xử lý lỗi chi tiết hơn
+      if (axios.isAxiosError(err) && err.response) {
+        const statusCode = err.response.status;
+        const errorMessage = err.response.data?.message || "Đã xảy ra lỗi khi cập nhật hồ sơ sức khỏe.";
+
+        if (statusCode === 400) {
+          toast.error(`Lỗi dữ liệu: ${errorMessage}`);
+        } else if (statusCode === 401) {
+          toast.error("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại!");
+        } else if (statusCode === 404) {
+          toast.error("Không tìm thấy hồ sơ sức khỏe hoặc học sinh này!");
+        } else {
+          toast.error(`Đã xảy ra lỗi: ${errorMessage}`);
+        }
+      } else {
+        toast.error("Đã xảy ra lỗi khi cập nhật hồ sơ sức khỏe.");
+      }
     } finally {
       setLoading(false);
     }
@@ -401,9 +455,7 @@ const HealthRecordsPage = () => {
             Hồ sơ sức khỏe học sinh
           </Typography>
         </Box>
-        <Alert severity="info">
-          Không tìm thấy học sinh nào cho tài khoản của bạn.
-        </Alert>
+        <Alert severity="info">Không tìm thấy học sinh nào cho tài khoản của bạn.</Alert>
       </Container>
     );
   }
