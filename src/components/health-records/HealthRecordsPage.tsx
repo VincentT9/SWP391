@@ -393,7 +393,9 @@ const HealthRecordsPage = () => {
       // Xử lý lỗi chi tiết hơn
       if (axios.isAxiosError(err) && err.response) {
         const statusCode = err.response.status;
-        const errorMessage = err.response.data?.message || "Đã xảy ra lỗi khi cập nhật hồ sơ sức khỏe.";
+        const errorMessage =
+          err.response.data?.message ||
+          "Đã xảy ra lỗi khi cập nhật hồ sơ sức khỏe.";
 
         if (statusCode === 400) {
           toast.error(`Lỗi dữ liệu: ${errorMessage}`);
@@ -455,7 +457,9 @@ const HealthRecordsPage = () => {
             Hồ sơ sức khỏe học sinh
           </Typography>
         </Box>
-        <Alert severity="info">Không tìm thấy học sinh nào cho tài khoản của bạn.</Alert>
+        <Alert severity="info">
+          Không tìm thấy học sinh nào cho tài khoản của bạn.
+        </Alert>
       </Container>
     );
   }
