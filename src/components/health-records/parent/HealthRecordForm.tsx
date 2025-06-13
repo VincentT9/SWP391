@@ -1,36 +1,23 @@
 import React, { useState, useEffect } from "react";
 import {
-  Box,
   Typography,
-  TextField,
+  Box,
   Button,
-  Paper,
-  Divider,
+  Card,
+  CardContent,
+  TextField,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
-  IconButton,
-  FormControlLabel,
-  Switch,
-  Stack,
-  Card,
-  CardContent,
+  Paper,
+  Divider,
 } from "@mui/material";
-import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import AddIcon from "@mui/icons-material/Add";
-import DeleteIcon from "@mui/icons-material/Delete";
+import { useForm, Controller } from "react-hook-form";
+import { toast } from "react-toastify";
+import { Save as SaveIcon, Cancel as CancelIcon } from "@mui/icons-material";
+import { HealthRecord, Student } from "../../../models/types";
 import { mockStudents } from "../../../utils/mockData";
-import {
-  HealthRecord,
-  Student,
-  Allergy,
-  ChronicCondition,
-  VisionAssessment,
-  HearingAssessment,
-} from "../../../models/types";
 
 interface HealthRecordFormProps {
   studentId: string;
@@ -46,50 +33,30 @@ const HealthRecordForm: React.FC<HealthRecordFormProps> = ({
   onCancel,
 }) => {
   const [student, setStudent] = useState<Student | null>(null);
-  const [height, setHeight] = useState(initialRecord?.height || 0);
-  const [weight, setWeight] = useState(initialRecord?.weight || 0);
-  const [bloodType, setBloodType] = useState<
-    "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-" | ""
-  >(initialRecord?.bloodType || "");
+  const [loading, setLoading] = useState(false);
 
-  // Allergies
-  const [allergies, setAllergies] = useState<Allergy[]>(
-    initialRecord?.allergies || []
-  );
-  const [newAllergy, setNewAllergy] = useState<Partial<Allergy>>({
-    name: "",
-    severity: "mild",
-    symptoms: "",
-    treatment: "",
-    dateIdentified: new Date(),
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<HealthRecord>({
+    defaultValues: {
+      studentId: studentId,
+      height: initialRecord?.height || 0,
+      weight: initialRecord?.weight || 0,
+      bloodType: initialRecord?.bloodType || "",
+      allergies: initialRecord?.allergies || "",
+      chronicDiseases: initialRecord?.chronicDiseases || "",
+      pastMedicalHistory: initialRecord?.pastMedicalHistory || "",
+      visionLeft: initialRecord?.visionLeft || "",
+      visionRight: initialRecord?.visionRight || "",
+      hearingLeft: initialRecord?.hearingLeft || "",
+      hearingRight: initialRecord?.hearingRight || "",
+      vaccinationHistory: initialRecord?.vaccinationHistory || "",
+      otherNotes: initialRecord?.otherNotes || "",
+    },
   });
-
-  // Chronic Conditions
-  const [chronicConditions, setChronicConditions] = useState<
-    ChronicCondition[]
-  >(initialRecord?.chronicConditions || []);
-  const [newCondition, setNewCondition] = useState<Partial<ChronicCondition>>({
-    name: "",
-    diagnosisDate: new Date(),
-    medications: [],
-    notes: "",
-  });
-
-  // Vision Assessment
-  const [visionAssessment, setVisionAssessment] = useState<
-    VisionAssessment | undefined
-  >(initialRecord?.visionAssessment);
-  const [hasVisionData, setHasVisionData] = useState(
-    !!initialRecord?.visionAssessment
-  );
-
-  // Hearing Assessment
-  const [hearingAssessment, setHearingAssessment] = useState<
-    HearingAssessment | undefined
-  >(initialRecord?.hearingAssessment);
-  const [hasHearingData, setHasHearingData] = useState(
-    !!initialRecord?.hearingAssessment
-  );
 
   useEffect(() => {
     // Get student info
@@ -99,98 +66,39 @@ const HealthRecordForm: React.FC<HealthRecordFormProps> = ({
     }
   }, [studentId]);
 
-  const handleAddAllergy = () => {
-    if (!newAllergy.name || !newAllergy.symptoms || !newAllergy.treatment)
-      return;
+  useEffect(() => {
+    if (initialRecord) {
+      reset({
+        studentId: studentId,
+        height: initialRecord.height || 0,
+        weight: initialRecord.weight || 0,
+        bloodType: initialRecord.bloodType || "",
+        allergies: initialRecord.allergies || "",
+        chronicDiseases: initialRecord.chronicDiseases || "",
+        pastMedicalHistory: initialRecord.pastMedicalHistory || "",
+        visionLeft: initialRecord.visionLeft || "",
+        visionRight: initialRecord.visionRight || "",
+        hearingLeft: initialRecord.hearingLeft || "",
+        hearingRight: initialRecord.hearingRight || "",
+        vaccinationHistory: initialRecord.vaccinationHistory || "",
+        otherNotes: initialRecord.otherNotes || "",
+      });
+    }
+  }, [initialRecord, reset, studentId]);
 
-    const allergyToAdd: Allergy = {
-      id: `allergy-${Date.now()}`,
-      name: newAllergy.name || "",
-      severity: newAllergy.severity as "mild" | "moderate" | "severe",
-      symptoms: newAllergy.symptoms || "",
-      treatment: newAllergy.treatment || "",
-      dateIdentified: newAllergy.dateIdentified || new Date(),
-    };
-
-    setAllergies([...allergies, allergyToAdd]);
-    setNewAllergy({
-      name: "",
-      severity: "mild",
-      symptoms: "",
-      treatment: "",
-      dateIdentified: new Date(),
-    });
-  };
-
-  const handleRemoveAllergy = (id: string) => {
-    setAllergies(allergies.filter((a) => a.id !== id));
-  };
-
-  const handleAddChronicCondition = () => {
-    if (!newCondition.name) return;
-
-    const conditionToAdd: ChronicCondition = {
-      id: `condition-${Date.now()}`,
-      name: newCondition.name || "",
-      diagnosisDate: newCondition.diagnosisDate || new Date(),
-      medications: [],
-      notes: newCondition.notes || "",
-    };
-
-    setChronicConditions([...chronicConditions, conditionToAdd]);
-    setNewCondition({
-      name: "",
-      diagnosisDate: new Date(),
-      medications: [],
-      notes: "",
-    });
-  };
-
-  const handleRemoveChronicCondition = (id: string) => {
-    setChronicConditions(chronicConditions.filter((c) => c.id !== id));
-  };
-
-  const handleSaveRecord = () => {
-    if (!student) return;
-
-    // Create vision and hearing assessment if switched on
-    const finalVisionAssessment = hasVisionData
-      ? {
-          id: visionAssessment?.id || `vision-${Date.now()}`,
-          date: visionAssessment?.date || new Date(),
-          leftEye: visionAssessment?.leftEye || 0,
-          rightEye: visionAssessment?.rightEye || 0,
-          wearsCorrective: visionAssessment?.wearsCorrective || false,
-          notes: visionAssessment?.notes || "",
-        }
-      : undefined;
-
-    const finalHearingAssessment = hasHearingData
-      ? {
-          id: hearingAssessment?.id || `hearing-${Date.now()}`,
-          date: hearingAssessment?.date || new Date(),
-          leftEar: hearingAssessment?.leftEar || "normal",
-          rightEar: hearingAssessment?.rightEar || "normal",
-          notes: hearingAssessment?.notes || "",
-        }
-      : undefined;
-
-    const healthRecord: HealthRecord = {
-      id: initialRecord?.id || `record-${Date.now()}`,
-      studentId: student.id,
-      height,
-      weight,
-      bloodType: bloodType === "" ? undefined : bloodType,
-      allergies,
-      chronicConditions,
-      visionAssessment: finalVisionAssessment,
-      hearingAssessment: finalHearingAssessment,
-      medicalHistory: initialRecord?.medicalHistory || [],
-      immunizations: initialRecord?.immunizations || [],
-      lastUpdated: new Date(),
-    };
-
-    onSave(healthRecord);
+  const onSubmit = async (data: HealthRecord) => {
+    setLoading(true);
+    try {
+      // In a real app, this would be an API call
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      onSave(data);
+      toast.success("Hồ sơ sức khỏe đã được cập nhật thành công!");
+    } catch (error) {
+      console.error("Error saving health record:", error);
+      toast.error("Không thể cập nhật hồ sơ sức khỏe!");
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (!student) {
@@ -198,528 +106,340 @@ const HealthRecordForm: React.FC<HealthRecordFormProps> = ({
   }
 
   return (
-    <Paper sx={{ p: 3 }}>
+    <Paper sx={{ p: 3, mb: 4 }}>
       <Box sx={{ mb: 3 }}>
-        <Typography variant="h4" gutterBottom>
+        <Typography variant="h5" gutterBottom>
           Cập nhật hồ sơ sức khỏe
         </Typography>
-        <Typography variant="body1" color="text.secondary">
+        <Typography variant="body2" color="text.secondary">
           {student.lastName} {student.firstName} - Lớp {student.class}
         </Typography>
       </Box>
 
-      <Divider sx={{ mb: 3 }} />
-
-      <Stack spacing={3}>
-        {/* Basic Information */}
-        <Card>
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <Card sx={{ mb: 3 }}>
           <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Thông tin cơ bản
-            </Typography>
-
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
-              <TextField
-                label="Chiều cao (cm)"
-                type="number"
-                value={height}
-                onChange={(e) => setHeight(Number(e.target.value))}
-                sx={{ width: "200px" }}
-                inputProps={{ min: 0 }}
-              />
-
-              <TextField
-                label="Cân nặng (kg)"
-                type="number"
-                value={weight}
-                onChange={(e) => setWeight(Number(e.target.value))}
-                sx={{ width: "200px" }}
-                inputProps={{ min: 0 }}
-              />
-
-              <FormControl sx={{ width: "200px" }}>
-                <InputLabel>Nhóm máu</InputLabel>
-                <Select
-                  value={bloodType}
-                  onChange={(e) => {
-                    // Using type assertion to fix TypeScript error
-                    const value = e.target.value as typeof bloodType;
-                    setBloodType(value);
-                  }}
-                  label="Nhóm máu"
-                >
-                  <MenuItem value="">
-                    <em>Chưa xác định</em>
-                  </MenuItem>
-                  <MenuItem value="A+">A+</MenuItem>
-                  <MenuItem value="A-">A-</MenuItem>
-                  <MenuItem value="B+">B+</MenuItem>
-                  <MenuItem value="B-">B-</MenuItem>
-                  <MenuItem value="AB+">AB+</MenuItem>
-                  <MenuItem value="AB-">AB-</MenuItem>
-                  <MenuItem value="O+">O+</MenuItem>
-                  <MenuItem value="O-">O-</MenuItem>
-                </Select>
-              </FormControl>
-            </Box>
-          </CardContent>
-        </Card>
-
-        {/* Allergies */}
-        <Card>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Dị ứng
-            </Typography>
-
-            {allergies.length > 0 && (
-              <Stack spacing={2} sx={{ mb: 3 }}>
-                {allergies.map((allergy) => (
-                  <Box
-                    key={allergy.id}
-                    sx={{
-                      p: 2,
-                      border: "1px solid #e0e0e0",
-                      borderRadius: 1,
-                      position: "relative",
-                    }}
-                  >
-                    <IconButton
-                      size="small"
-                      color="error"
-                      onClick={() => handleRemoveAllergy(allergy.id)}
-                      sx={{ position: "absolute", top: 8, right: 8 }}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-
-                    <Typography variant="subtitle1" sx={{ mb: 1 }}>
-                      {allergy.name} - Mức độ:{" "}
-                      {allergy.severity === "mild"
-                        ? "Nhẹ"
-                        : allergy.severity === "moderate"
-                        ? "Trung bình"
-                        : "Nặng"}
-                    </Typography>
-                    <Typography variant="body2">
-                      <strong>Triệu chứng:</strong> {allergy.symptoms}
-                    </Typography>
-                    <Typography variant="body2">
-                      <strong>Điều trị:</strong> {allergy.treatment}
-                    </Typography>
-                  </Box>
-                ))}
-              </Stack>
-            )}
-
-            <Box sx={{ mt: 2 }}>
-              <Typography variant="subtitle1" gutterBottom>
-                Thêm dị ứng mới
+            {/* PHẦN 1: THÔNG TIN CƠ BẢN */}
+            <Box sx={{ mb: 4 }}>
+              <Typography
+                variant="h6"
+                gutterBottom
+                sx={{ color: "#1976d2", fontWeight: "bold" }}
+              >
+                Thông tin cơ bản
               </Typography>
-              <Stack spacing={2}>
-                <TextField
-                  label="Tên dị ứng"
-                  fullWidth
-                  value={newAllergy.name}
-                  onChange={(e) =>
-                    setNewAllergy({ ...newAllergy, name: e.target.value })
-                  }
-                />
 
-                <FormControl fullWidth>
-                  <InputLabel>Mức độ</InputLabel>
-                  <Select
-                    value={newAllergy.severity}
-                    label="Mức độ"
-                    onChange={(e) =>
-                      setNewAllergy({
-                        ...newAllergy,
-                        severity: e.target.value as
-                          | "mild"
-                          | "moderate"
-                          | "severe",
-                      })
-                    }
-                  >
-                    <MenuItem value="mild">Nhẹ</MenuItem>
-                    <MenuItem value="moderate">Trung bình</MenuItem>
-                    <MenuItem value="severe">Nặng</MenuItem>
-                  </Select>
-                </FormControl>
-
-                <TextField
-                  label="Triệu chứng"
-                  fullWidth
-                  multiline
-                  rows={2}
-                  value={newAllergy.symptoms}
-                  onChange={(e) =>
-                    setNewAllergy({ ...newAllergy, symptoms: e.target.value })
-                  }
-                />
-
-                <TextField
-                  label="Điều trị"
-                  fullWidth
-                  multiline
-                  rows={2}
-                  value={newAllergy.treatment}
-                  onChange={(e) =>
-                    setNewAllergy({ ...newAllergy, treatment: e.target.value })
-                  }
-                />
-
-                <LocalizationProvider dateAdapter={AdapterDateFns}>
-                  <DatePicker
-                    label="Ngày phát hiện"
-                    value={newAllergy.dateIdentified}
-                    onChange={(date) =>
-                      setNewAllergy({
-                        ...newAllergy,
-                        dateIdentified: date || new Date(),
-                      })
-                    }
-                    slotProps={{ textField: { fullWidth: true } }}
-                  />
-                </LocalizationProvider>
-
-                <Button
-                  variant="contained"
-                  color="primary"
-                  startIcon={<AddIcon />}
-                  onClick={handleAddAllergy}
-                  disabled={
-                    !newAllergy.name ||
-                    !newAllergy.symptoms ||
-                    !newAllergy.treatment
-                  }
-                >
-                  Thêm dị ứng
-                </Button>
-              </Stack>
-            </Box>
-          </CardContent>
-        </Card>
-
-        {/* Chronic Conditions */}
-        <Card>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Bệnh mãn tính
-            </Typography>
-
-            {chronicConditions.length > 0 && (
-              <Stack spacing={2} sx={{ mb: 3 }}>
-                {chronicConditions.map((condition) => (
-                  <Box
-                    key={condition.id}
-                    sx={{
-                      p: 2,
-                      border: "1px solid #e0e0e0",
-                      borderRadius: 1,
-                      position: "relative",
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: { xs: "column", sm: "row" },
+                  gap: 3,
+                  mb: 3,
+                }}
+              >
+                <Box sx={{ flex: 1 }}>
+                  <Controller
+                    name="height"
+                    control={control}
+                    rules={{
+                      min: { value: 50, message: "Chiều cao phải > 50cm" },
+                      max: { value: 250, message: "Chiều cao phải ≤ 250cm" },
                     }}
-                  >
-                    <IconButton
-                      size="small"
-                      color="error"
-                      onClick={() => handleRemoveChronicCondition(condition.id)}
-                      sx={{ position: "absolute", top: 8, right: 8 }}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-
-                    <Typography variant="subtitle1" sx={{ mb: 1 }}>
-                      {condition.name}
-                    </Typography>
-                    <Typography variant="body2">
-                      <strong>Ngày chẩn đoán:</strong>{" "}
-                      {condition.diagnosisDate.toLocaleDateString("vi-VN")}
-                    </Typography>
-                    <Typography variant="body2">
-                      <strong>Ghi chú:</strong> {condition.notes}
-                    </Typography>
-                  </Box>
-                ))}
-              </Stack>
-            )}
-
-            <Box sx={{ mt: 2 }}>
-              <Typography variant="subtitle1" gutterBottom>
-                Thêm bệnh mãn tính
-              </Typography>
-              <Stack spacing={2}>
-                <TextField
-                  label="Tên bệnh"
-                  fullWidth
-                  value={newCondition.name}
-                  onChange={(e) =>
-                    setNewCondition({ ...newCondition, name: e.target.value })
-                  }
-                />
-
-                <LocalizationProvider dateAdapter={AdapterDateFns}>
-                  <DatePicker
-                    label="Ngày chẩn đoán"
-                    value={newCondition.diagnosisDate}
-                    onChange={(date) =>
-                      setNewCondition({
-                        ...newCondition,
-                        diagnosisDate: date || new Date(),
-                      })
-                    }
-                    slotProps={{ textField: { fullWidth: true } }}
-                  />
-                </LocalizationProvider>
-
-                <TextField
-                  label="Ghi chú"
-                  fullWidth
-                  multiline
-                  rows={2}
-                  value={newCondition.notes}
-                  onChange={(e) =>
-                    setNewCondition({ ...newCondition, notes: e.target.value })
-                  }
-                />
-
-                <Button
-                  variant="contained"
-                  color="primary"
-                  startIcon={<AddIcon />}
-                  onClick={handleAddChronicCondition}
-                  disabled={!newCondition.name}
-                >
-                  Thêm bệnh mãn tính
-                </Button>
-              </Stack>
-            </Box>
-          </CardContent>
-        </Card>
-
-        {/* Vision Assessment */}
-        <Card>
-          <CardContent>
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                mb: 2,
-              }}
-            >
-              <Typography variant="h6">Thị lực</Typography>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={hasVisionData}
-                    onChange={(e) => setHasVisionData(e.target.checked)}
-                  />
-                }
-                label="Nhập thông tin thị lực"
-              />
-            </Box>
-
-            {hasVisionData && (
-              <Stack spacing={2}>
-                <LocalizationProvider dateAdapter={AdapterDateFns}>
-                  <DatePicker
-                    label="Ngày đo"
-                    value={visionAssessment?.date || new Date()}
-                    onChange={(date) =>
-                      setVisionAssessment({
-                        ...visionAssessment!,
-                        id: visionAssessment?.id || `vision-${Date.now()}`,
-                        date: date || new Date(),
-                      })
-                    }
-                    slotProps={{ textField: { fullWidth: true } }}
-                  />
-                </LocalizationProvider>
-
-                <Box sx={{ display: "flex", gap: 2 }}>
-                  <TextField
-                    label="Thị lực mắt trái"
-                    type="number"
-                    value={visionAssessment?.leftEye || 0}
-                    onChange={(e) =>
-                      setVisionAssessment({
-                        ...visionAssessment!,
-                        id: visionAssessment?.id || `vision-${Date.now()}`,
-                        leftEye: Number(e.target.value),
-                      })
-                    }
-                    inputProps={{ step: 0.1, min: 0, max: 1 }}
-                    sx={{ flex: 1 }}
-                  />
-
-                  <TextField
-                    label="Thị lực mắt phải"
-                    type="number"
-                    value={visionAssessment?.rightEye || 0}
-                    onChange={(e) =>
-                      setVisionAssessment({
-                        ...visionAssessment!,
-                        id: visionAssessment?.id || `vision-${Date.now()}`,
-                        rightEye: Number(e.target.value),
-                      })
-                    }
-                    inputProps={{ step: 0.1, min: 0, max: 1 }}
-                    sx={{ flex: 1 }}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        fullWidth
+                        label="Chiều cao (cm)"
+                        type="number"
+                        error={!!errors.height}
+                        helperText={errors.height?.message}
+                        InputProps={{ inputProps: { min: 50, max: 250 } }}
+                      />
+                    )}
                   />
                 </Box>
-
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={visionAssessment?.wearsCorrective || false}
-                      onChange={(e) =>
-                        setVisionAssessment({
-                          ...visionAssessment!,
-                          id: visionAssessment?.id || `vision-${Date.now()}`,
-                          wearsCorrective: e.target.checked,
-                        })
-                      }
-                    />
-                  }
-                  label="Có đeo kính"
-                />
-
-                <TextField
-                  label="Ghi chú"
-                  fullWidth
-                  multiline
-                  rows={2}
-                  value={visionAssessment?.notes || ""}
-                  onChange={(e) =>
-                    setVisionAssessment({
-                      ...visionAssessment!,
-                      id: visionAssessment?.id || `vision-${Date.now()}`,
-                      notes: e.target.value,
-                    })
-                  }
-                />
-              </Stack>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Hearing Assessment */}
-        <Card>
-          <CardContent>
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                mb: 2,
-              }}
-            >
-              <Typography variant="h6">Thính lực</Typography>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={hasHearingData}
-                    onChange={(e) => setHasHearingData(e.target.checked)}
+                <Box sx={{ flex: 1 }}>
+                  <Controller
+                    name="weight"
+                    control={control}
+                    rules={{
+                      min: { value: 10, message: "Cân nặng phải > 10kg" },
+                      max: { value: 150, message: "Cân nặng phải ≤ 150kg" },
+                    }}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        fullWidth
+                        label="Cân nặng (kg)"
+                        type="number"
+                        error={!!errors.weight}
+                        helperText={errors.weight?.message}
+                        InputProps={{ inputProps: { min: 10, max: 150 } }}
+                      />
+                    )}
                   />
-                }
-                label="Nhập thông tin thính lực"
-              />
+                </Box>
+              </Box>
+
+              <Box sx={{ mb: 2 }}>
+                <Controller
+                  name="bloodType"
+                  control={control}
+                  render={({ field }) => (
+                    <FormControl fullWidth>
+                      <InputLabel>Nhóm máu</InputLabel>
+                      <Select {...field} label="Nhóm máu">
+                        <MenuItem value="">Chưa xác định</MenuItem>
+                        <MenuItem value="A+">A+</MenuItem>
+                        <MenuItem value="A-">A-</MenuItem>
+                        <MenuItem value="B+">B+</MenuItem>
+                        <MenuItem value="B-">B-</MenuItem>
+                        <MenuItem value="AB+">AB+</MenuItem>
+                        <MenuItem value="AB-">AB-</MenuItem>
+                        <MenuItem value="O+">O+</MenuItem>
+                        <MenuItem value="O-">O-</MenuItem>
+                      </Select>
+                    </FormControl>
+                  )}
+                />
+              </Box>
             </Box>
 
-            {hasHearingData && (
-              <Stack spacing={2}>
-                <LocalizationProvider dateAdapter={AdapterDateFns}>
-                  <DatePicker
-                    label="Ngày đo"
-                    value={hearingAssessment?.date || new Date()}
-                    onChange={(date) =>
-                      setHearingAssessment({
-                        ...hearingAssessment!,
-                        id: hearingAssessment?.id || `hearing-${Date.now()}`,
-                        date: date || new Date(),
-                      })
-                    }
-                    slotProps={{ textField: { fullWidth: true } }}
-                  />
-                </LocalizationProvider>
+            <Divider sx={{ my: 3 }} />
 
-                <FormControl fullWidth>
-                  <InputLabel>Thính lực tai trái</InputLabel>
-                  <Select
-                    value={hearingAssessment?.leftEar || "normal"}
-                    label="Thính lực tai trái"
-                    onChange={(e) =>
-                      setHearingAssessment({
-                        ...hearingAssessment!,
-                        id: hearingAssessment?.id || `hearing-${Date.now()}`,
-                        leftEar: e.target.value as
-                          | "normal"
-                          | "mild loss"
-                          | "moderate loss"
-                          | "severe loss",
-                      })
-                    }
-                  >
-                    <MenuItem value="normal">Bình thường</MenuItem>
-                    <MenuItem value="mild loss">Giảm nhẹ</MenuItem>
-                    <MenuItem value="moderate loss">Giảm trung bình</MenuItem>
-                    <MenuItem value="severe loss">Giảm nặng</MenuItem>
-                  </Select>
-                </FormControl>
+            {/* PHẦN 2: THÔNG TIN DỊ ỨNG VÀ BỆNH MÃN TÍNH */}
+            <Box sx={{ mb: 4 }}>
+              <Typography
+                variant="h6"
+                gutterBottom
+                sx={{ color: "#ff9800", fontWeight: "bold" }}
+              >
+                Thông tin dị ứng và bệnh mãn tính
+              </Typography>
 
-                <FormControl fullWidth>
-                  <InputLabel>Thính lực tai phải</InputLabel>
-                  <Select
-                    value={hearingAssessment?.rightEar || "normal"}
-                    label="Thính lực tai phải"
-                    onChange={(e) =>
-                      setHearingAssessment({
-                        ...hearingAssessment!,
-                        id: hearingAssessment?.id || `hearing-${Date.now()}`,
-                        rightEar: e.target.value as
-                          | "normal"
-                          | "mild loss"
-                          | "moderate loss"
-                          | "severe loss",
-                      })
-                    }
-                  >
-                    <MenuItem value="normal">Bình thường</MenuItem>
-                    <MenuItem value="mild loss">Giảm nhẹ</MenuItem>
-                    <MenuItem value="moderate loss">Giảm trung bình</MenuItem>
-                    <MenuItem value="severe loss">Giảm nặng</MenuItem>
-                  </Select>
-                </FormControl>
-
-                <TextField
-                  label="Ghi chú"
-                  fullWidth
-                  multiline
-                  rows={2}
-                  value={hearingAssessment?.notes || ""}
-                  onChange={(e) =>
-                    setHearingAssessment({
-                      ...hearingAssessment!,
-                      id: hearingAssessment?.id || `hearing-${Date.now()}`,
-                      notes: e.target.value,
-                    })
-                  }
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                <Controller
+                  name="allergies"
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      fullWidth
+                      label="Thông tin dị ứng"
+                      multiline
+                      rows={2}
+                      placeholder="Nhập thông tin dị ứng (VD: Tôm, cá, hải sản, phấn hoa...)"
+                      helperText="Liệt kê các chất gây dị ứng, ngăn cách bằng dấu phẩy"
+                    />
+                  )}
                 />
-              </Stack>
-            )}
+
+                <Controller
+                  name="chronicDiseases"
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      fullWidth
+                      label="Bệnh mãn tính"
+                      multiline
+                      rows={2}
+                      placeholder="Nhập thông tin bệnh mãn tính (VD: Hen suyễn, tiểu đường...)"
+                      helperText="Liệt kê các bệnh mãn tính, ngăn cách bằng dấu phẩy"
+                    />
+                  )}
+                />
+              </Box>
+            </Box>
+
+            <Divider sx={{ my: 3 }} />
+
+            {/* PHẦN 3: LỊCH SỬ Y TẾ */}
+            <Box sx={{ mb: 4 }}>
+              <Typography
+                variant="h6"
+                gutterBottom
+                sx={{ color: "#f44336", fontWeight: "bold" }}
+              >
+                Lịch sử y tế
+              </Typography>
+
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                <Controller
+                  name="pastMedicalHistory"
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      fullWidth
+                      label="Tiền sử bệnh"
+                      multiline
+                      rows={3}
+                      placeholder="Nhập thông tin về tiền sử bệnh tật, phẫu thuật hoặc những vấn đề sức khỏe đáng chú ý trong quá khứ"
+                    />
+                  )}
+                />
+
+                <Controller
+                  name="vaccinationHistory"
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      fullWidth
+                      label="Lịch sử tiêm chủng"
+                      multiline
+                      rows={2}
+                      placeholder="Liệt kê các loại vaccine đã tiêm và thời gian tiêm"
+                    />
+                  )}
+                />
+              </Box>
+            </Box>
+
+            <Divider sx={{ my: 3 }} />
+
+            {/* PHẦN 4: ĐÁNH GIÁ THỊ LỰC VÀ THÍNH LỰC */}
+            <Box sx={{ mb: 4 }}>
+              <Typography
+                variant="h6"
+                gutterBottom
+                sx={{ color: "#9c27b0", fontWeight: "bold" }}
+              >
+                Đánh giá thị lực và thính lực
+              </Typography>
+
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                <Typography variant="subtitle1">Thị lực</Typography>
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: { xs: "column", sm: "row" },
+                    gap: 3,
+                  }}
+                >
+                  <Box sx={{ flex: 1 }}>
+                    <Controller
+                      name="visionLeft"
+                      control={control}
+                      render={({ field }) => (
+                        <TextField
+                          {...field}
+                          fullWidth
+                          label="Thị lực mắt trái"
+                          placeholder="VD: 10/10 hoặc 20/20"
+                        />
+                      )}
+                    />
+                  </Box>
+                  <Box sx={{ flex: 1 }}>
+                    <Controller
+                      name="visionRight"
+                      control={control}
+                      render={({ field }) => (
+                        <TextField
+                          {...field}
+                          fullWidth
+                          label="Thị lực mắt phải"
+                          placeholder="VD: 10/10 hoặc 20/20"
+                        />
+                      )}
+                    />
+                  </Box>
+                </Box>
+
+                <Typography variant="subtitle1" sx={{ mt: 2 }}>
+                  Thính lực
+                </Typography>
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: { xs: "column", sm: "row" },
+                    gap: 3,
+                  }}
+                >
+                  <Box sx={{ flex: 1 }}>
+                    <Controller
+                      name="hearingLeft"
+                      control={control}
+                      render={({ field }) => (
+                        <TextField
+                          {...field}
+                          fullWidth
+                          label="Thính lực tai trái"
+                          placeholder="VD: Bình thường, Giảm nhẹ, Giảm trung bình..."
+                        />
+                      )}
+                    />
+                  </Box>
+                  <Box sx={{ flex: 1 }}>
+                    <Controller
+                      name="hearingRight"
+                      control={control}
+                      render={({ field }) => (
+                        <TextField
+                          {...field}
+                          fullWidth
+                          label="Thính lực tai phải"
+                          placeholder="VD: Bình thường, Giảm nhẹ, Giảm trung bình..."
+                        />
+                      )}
+                    />
+                  </Box>
+                </Box>
+              </Box>
+            </Box>
+
+            <Divider sx={{ my: 3 }} />
+
+            {/* PHẦN 5: GHI CHÚ KHÁC */}
+            <Box>
+              <Typography
+                variant="h6"
+                gutterBottom
+                sx={{ color: "#4caf50", fontWeight: "bold" }}
+              >
+                Ghi chú khác
+              </Typography>
+
+              <Controller
+                name="otherNotes"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    fullWidth
+                    label="Ghi chú thêm"
+                    multiline
+                    rows={4}
+                    placeholder="Thông tin bổ sung về sức khỏe của học sinh..."
+                  />
+                )}
+              />
+            </Box>
           </CardContent>
         </Card>
-      </Stack>
 
-      <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 3 }}>
-        <Button variant="outlined" onClick={onCancel} sx={{ mr: 2 }}>
-          Hủy
-        </Button>
-        <Button variant="contained" color="primary" onClick={handleSaveRecord}>
-          Lưu thông tin
-        </Button>
-      </Box>
+        <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2 }}>
+          <Button
+            variant="outlined"
+            color="error"
+            onClick={onCancel}
+            startIcon={<CancelIcon />}
+          >
+            Hủy
+          </Button>
+          <Button
+            type="submit"
+            variant="contained"
+            color="primary"
+            disabled={loading}
+            startIcon={<SaveIcon />}
+          >
+            {loading ? "Đang lưu..." : "Lưu thay đổi"}
+          </Button>
+        </Box>
+      </form>
     </Paper>
   );
 };

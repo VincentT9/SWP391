@@ -296,9 +296,12 @@ const MainLayout = () => {
                       "&:hover": {
                         bgcolor: "rgba(3, 78, 162, 0.08)",
                       },
-                      bgcolor: isActive ? "rgba(3, 78, 162, 0.12)" : "transparent",
-                      borderLeft:
-                        isActive ? `4px solid #034ea2` : "4px solid transparent",
+                      bgcolor: isActive
+                        ? "rgba(3, 78, 162, 0.12)"
+                        : "transparent",
+                      borderLeft: isActive
+                        ? `4px solid #034ea2`
+                        : "4px solid transparent",
                       transition: "all 0.2s ease",
                     }}
                   >
@@ -419,7 +422,10 @@ const MainLayout = () => {
                 >
                   ({user.role})
                 </Typography>
-                <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
+                <motion.div
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                >
                   <IconButton
                     size="small"
                     aria-label="account of current user"
@@ -525,7 +531,10 @@ const MainLayout = () => {
         <Box
           component="nav"
           sx={{
-            width: { xs: 0, sm: sidebarOpen ? drawerWidth : collapsedDrawerWidth },
+            width: {
+              xs: 0,
+              sm: sidebarOpen ? drawerWidth : collapsedDrawerWidth,
+            },
             flexShrink: 0,
             transition: "width 0.3s",
             position: "absolute",

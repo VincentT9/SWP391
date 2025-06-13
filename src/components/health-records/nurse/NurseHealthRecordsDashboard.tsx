@@ -55,10 +55,14 @@ const NurseHealthRecordsDashboard: React.FC<
     const fullName = `${student.lastName} ${student.firstName}`.toLowerCase();
     const searchLower = searchTerm.toLowerCase();
 
+    // Kiểm tra student.grade có tồn tại không vì đã được đánh dấu là optional
+    const grade = student.grade?.toLowerCase() || "";
+    const className = student.class.toLowerCase();
+
     return (
       fullName.includes(searchLower) ||
-      student.class.toLowerCase().includes(searchLower) ||
-      student.grade.toLowerCase().includes(searchLower)
+      className.includes(searchLower) ||
+      grade.includes(searchLower)
     );
   });
 

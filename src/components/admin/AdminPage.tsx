@@ -85,23 +85,20 @@ const AdminPage = () => {
   };
 
   const BASE_API = process.env.REACT_APP_BASE_URL;
-  
+
   // Fetch users from API
   const fetchUsers = async () => {
     setLoading(true);
     setError("");
     try {
       const token = localStorage.getItem("authToken");
-      const response = await fetch(
-        `${BASE_API}/api/User/get-all-users`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}` // Thêm token vào header
-          },
-        }
-      );
+      const response = await fetch(`${BASE_API}/api/User/get-all-users`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // Thêm token vào header
+        },
+      });
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -250,18 +247,18 @@ const AdminPage = () => {
     try {
       console.log("Saving user:", formData);
       const token = localStorage.getItem("authToken");
-      
-      const url = selectedUser 
+
+      const url = selectedUser
         ? `${BASE_API}/api/User/update-user/${selectedUser.id}`
         : `${BASE_API}/api/User/create-user`;
-      
+
       const method = selectedUser ? "PUT" : "POST";
-      
+
       const response = await fetch(url, {
         method: method,
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           username: formData.username,
@@ -270,7 +267,7 @@ const AdminPage = () => {
           address: formData.address,
           email: formData.email,
           userRole: parseInt(formData.userRole),
-          ...(selectedUser && { id: selectedUser.id })
+          ...(selectedUser && { id: selectedUser.id }),
         }),
       });
 
@@ -308,7 +305,7 @@ const AdminPage = () => {
             method: "DELETE",
             headers: {
               "Content-Type": "application/json",
-              "Authorization": `Bearer ${token}`
+              Authorization: `Bearer ${token}`,
             },
           }
         );
@@ -484,7 +481,9 @@ const AdminPage = () => {
                         </TableCell>
                         <TableCell>{userData.fullName || "Chưa có"}</TableCell>
                         <TableCell>{userData.email || "Chưa có"}</TableCell>
-                        <TableCell>{userData.phoneNumber || "Chưa có"}</TableCell>
+                        <TableCell>
+                          {userData.phoneNumber || "Chưa có"}
+                        </TableCell>
                         <TableCell>
                           <Chip
                             label={getUserRoleText(userData.userRole)}
