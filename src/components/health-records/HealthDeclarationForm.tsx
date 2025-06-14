@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom"; // Thêm useLocation
 import {
   Container,
   Typography,
@@ -51,13 +51,34 @@ interface Student {
 type FormData = HealthRecord;
 
 const HealthDeclarationForm = () => {
+  const navigate = useNavigate();
+  const location = useLocation(); // Lấy state từ navigation
+  const studentFromState = location.state; // Đọc dữ liệu học sinh từ state
+
+  // Khởi tạo state với dữ liệu từ navigation nếu có
+  const [studentCode, setStudentCode] = useState(
+    studentFromState?.studentCode || ""
+  );
+  const [studentData, setStudentData] = useState<Student | null>(
+    studentFromState
+      ? {
+          id: studentFromState.studentId,
+          parentId: "",
+          studentCode: studentFromState.studentCode,
+          fullName: studentFromState.studentName,
+          dateOfBirth: studentFromState.dateOfBirth,
+          gender: 0,
+          class: studentFromState.studentClass,
+          schoolYear: "",
+          image: "",
+        }
+      : null
+  );
   const [loading, setLoading] = useState(false);
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
-  const [studentCode, setStudentCode] = useState("");
   const [searchingStudent, setSearchingStudent] = useState(false);
-  const [studentData, setStudentData] = useState<Student | null>(null);
   const [searchError, setSearchError] = useState("");
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   const {
     control,
@@ -82,6 +103,13 @@ const HealthDeclarationForm = () => {
       otherNotes: "",
     },
   });
+
+  // Cập nhật defaultValues và setValue trong useForm
+  useEffect(() => {
+    if (studentFromState?.studentId) {
+      setValue("studentId", studentFromState.studentId);
+    }
+  }, []);
 
   const searchStudent = async () => {
     if (!studentCode.trim()) {
@@ -125,29 +153,108 @@ const HealthDeclarationForm = () => {
     }
   };
 
+  // Cập nhật onSubmit để gọi API thực tế
   const onSubmit = async (data: FormData) => {
     setLoading(true);
 
     try {
-      // API call to save data
-      console.log("Health declaration submitted:", data);
+      // Chuẩn bị dữ liệu để gửi đến API
+      const healthRecordData = {
+        studentId: data.studentId,
+        height: data.height?.toString() || "",
+        weight: data.weight?.toString() || "",
+        bloodType: data.bloodType || "",
+        allergies: data.allergies || "",
+        chronicDiseases: data.chronicDiseases || "",
+        pastMedicalHistory: data.pastMedicalHistory || "",
+        visionLeft: data.visionLeft || "",
+        visionRight: data.visionRight || "",
+        hearingLeft: data.hearingLeft || "",
+        hearingRight: data.hearingRight || "",
+        vaccinationHistory: data.vaccinationHistory || "",
+        otherNotes: data.otherNotes || "",
+      };
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      console.log("Sending health record data:", healthRecordData);
 
-      // Example API call (uncomment in real implementation)
-      // const response = await fetch('/api/health-records', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(data),
-      // });
-      // if (!response.ok) throw new Error('Failed to save health record');
+      // Lấy token từ localStorage
+      const token = localStorage.getItem("authToken");
+      const authUserJson = localStorage.getItem("authUser");
+      let parentId = null;
+
+      if (authUserJson) {
+        const authUser = JSON.parse(authUserJson);
+        parentId = authUser.id;
+      }
+
+      // Gọi API để tạo mới hồ sơ sức khỏe
+      const response = await axios.post(
+        `${process.env.REACT_APP_BASE_URL}/api/HealthRecord/create-health-record`,
+        healthRecordData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      console.log("Create health record response:", response.data);
+
+      // Sau khi tạo hồ sơ thành công, cập nhật parentId cho student
+      if (studentData && parentId) {
+        // Chuẩn bị dữ liệu học sinh để cập nhật
+        const studentUpdateData = {
+          parentId: parentId,
+          studentCode: studentData.studentCode,
+          fullName: studentData.fullName,
+          dateOfBirth: studentData.dateOfBirth,
+          gender: studentData.gender,
+          class: studentData.class,
+          schoolYear: studentData.schoolYear || "",
+          image: studentData.image || "",
+        };
+
+        console.log("Updating student with parent ID:", studentUpdateData);
+
+        // Gọi API để cập nhật thông tin học sinh - sử dụng update-student endpoint
+        const studentResponse = await axios.put(
+          `${process.env.REACT_APP_BASE_URL}/api/Student/update-student/${studentData.id}`,
+          studentUpdateData,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        console.log("Update student response:", studentResponse.data);
+      }
 
       toast.success("Khai báo sức khỏe thành công!");
       navigate("/health-records");
     } catch (error) {
       console.error("Submit error:", error);
-      toast.error("Đã xảy ra lỗi khi gửi thông tin!");
+
+      // Xử lý lỗi chi tiết
+      if (axios.isAxiosError(error) && error.response) {
+        const statusCode = error.response.status;
+        const errorMessage =
+          error.response.data?.message || "Đã xảy ra lỗi khi gửi thông tin!";
+
+        if (statusCode === 400) {
+          toast.error(`Lỗi dữ liệu: ${errorMessage}`);
+        } else if (statusCode === 401) {
+          toast.error("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại!");
+        } else if (statusCode === 404) {
+          toast.error("Không tìm thấy học sinh này!");
+        } else {
+          toast.error(`Đã xảy ra lỗi: ${errorMessage}`);
+        }
+      } else {
+        toast.error("Đã xảy ra lỗi khi gửi thông tin!");
+      }
     } finally {
       setLoading(false);
     }
@@ -198,37 +305,43 @@ const HealthDeclarationForm = () => {
                 </Typography>
 
                 {/* Tìm kiếm học sinh bằng studentCode */}
-                <Box
-                  sx={{
-                    display: "flex",
-                    flexDirection: { xs: "column", sm: "row" },
-                    gap: 2,
-                    alignItems: { xs: "stretch", sm: "flex-start" },
-                  }}
-                >
-                  <TextField
-                    fullWidth
-                    label="Mã học sinh"
-                    value={studentCode}
-                    onChange={handleStudentCodeChange}
-                    sx={{ flex: 2 }}
-                    InputProps={{
-                      endAdornment: searchingStudent ? (
-                        <InputAdornment position="end">
-                          <CircularProgress size={20} />
-                        </InputAdornment>
-                      ) : null,
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant="subtitle2" sx={{ mb: 1, color: "#666" }}>
+                    Nhập mã học sinh được nhà trường cung cấp để tìm kiếm và
+                    liên kết với tài khoản của bạn
+                  </Typography>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: { xs: "column", sm: "row" },
+                      gap: 2,
+                      alignItems: { xs: "stretch", sm: "flex-start" },
                     }}
-                  />
-                  <Button
-                    variant="contained"
-                    onClick={searchStudent}
-                    disabled={searchingStudent || !studentCode.trim()}
-                    startIcon={<SearchIcon />}
-                    sx={{ height: { sm: 56 }, minWidth: 120 }}
                   >
-                    Tìm kiếm
-                  </Button>
+                    <TextField
+                      fullWidth
+                      label="Mã học sinh"
+                      value={studentCode}
+                      onChange={handleStudentCodeChange}
+                      sx={{ flex: 2 }}
+                      InputProps={{
+                        endAdornment: searchingStudent ? (
+                          <InputAdornment position="end">
+                            <CircularProgress size={20} />
+                          </InputAdornment>
+                        ) : null,
+                      }}
+                    />
+                    <Button
+                      variant="contained"
+                      onClick={searchStudent}
+                      disabled={searchingStudent || !studentCode.trim()}
+                      startIcon={<SearchIcon />}
+                      sx={{ height: { sm: 56 }, minWidth: 120 }}
+                    >
+                      Tìm kiếm
+                    </Button>
+                  </Box>
                 </Box>
 
                 {/* Hiển thị lỗi nếu không tìm thấy học sinh */}
@@ -270,14 +383,6 @@ const HealthDeclarationForm = () => {
                     </Typography>
                   </Box>
                 )}
-
-                {/* Trường studentId ẩn */}
-                <Controller
-                  name="studentId"
-                  control={control}
-                  rules={{ required: "Vui lòng chọn học sinh" }}
-                  render={({ field }) => <input type="hidden" {...field} />}
-                />
 
                 <Box
                   sx={{
