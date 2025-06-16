@@ -44,6 +44,7 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import InfoIcon from "@mui/icons-material/Info";
+import instance from "../../utils/axiosConfig";
 
 // ===== KHAI BÁO KIỂU DỮ LIỆU =====
 // Định nghĩa kiểu BloodType cho nhóm máu
@@ -160,8 +161,8 @@ const HealthRecordsPage = () => {
         }
 
         // Gọi API lấy thông tin user theo ID thay vì lấy tất cả users
-        const response = await axios.get(
-          `${process.env.REACT_APP_BASE_URL}/api/User/get-user-by-id/${userId}`,
+        const response = await instance.get(
+          `/api/User/get-user-by-id/${userId}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -369,28 +370,16 @@ const HealthRecordsPage = () => {
       let response;
       if (healthRecord && healthRecord.id) {
         // Cập nhật hồ sơ hiện có
-        response = await axios.put(
-          `${process.env.REACT_APP_BASE_URL}/api/HealthRecord/update-health-record/${healthRecord.id}`,
-          healthRecordData,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
+        response = await instance.put(
+          `/api/HealthRecord/update-health-record/${healthRecord.id}`,
+          healthRecordData
         );
         console.log("Update response:", response.data);
       } else {
         // Tạo mới hồ sơ
-        response = await axios.post(
-          `${process.env.REACT_APP_BASE_URL}/api/HealthRecord/create-health-record`,
-          healthRecordData,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
+        response = await instance.post(
+          `/api/HealthRecord/create-health-record`,
+          healthRecordData
         );
         console.log("Create response:", response.data);
 
@@ -419,15 +408,9 @@ const HealthRecordsPage = () => {
             );
 
             // Sử dụng API update-student để cập nhật liên kết, không tạo mới học sinh
-            const studentResponse = await axios.put(
-              `${process.env.REACT_APP_BASE_URL}/api/Student/update-student/${selectedStudent.id}`,
-              studentUpdateData,
-              {
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${token}`,
-                },
-              }
+            const studentResponse = await instance.put(
+              `/api/Student/update-student/${selectedStudent.id}`,
+              studentUpdateData
             );
 
             console.log("Kết quả cập nhật liên kết:", studentResponse.data);
@@ -443,14 +426,11 @@ const HealthRecordsPage = () => {
 
       // Sau khi cập nhật thành công, cập nhật lại danh sách học sinh
       // Tải lại dữ liệu từ API
-      const refreshResponse = await axios.get(
-        `${process.env.REACT_APP_BASE_URL}/api/User/get-all-users`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const refreshResponse = await instance.get(`/api/User/get-all-users`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       // Sử dụng lại authUserJson và parentId đã khai báo trước đó
       if (authUserJson) {

@@ -19,6 +19,8 @@ import {
   MedicationLog as MedicationLogType,
 } from "../../../models/types";
 import { addDays as dateAddDays } from "date-fns"; // Renamed to avoid conflict
+import instance from "../../../utils/axiosConfig"; // Importing axios instance for API calls
+import MedicationRequestDetail from "./MedicationRequestDetail"; // Thêm import cho component mới
 
 // Updated interfaces to match the API responses
 interface Student {
@@ -153,17 +155,24 @@ const ParentMedicationDashboard: React.FC<ParentMedicationDashboardProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshData, setRefreshData] = useState(0);
+  const [detailModalOpen, setDetailModalOpen] = useState(false); // Thêm state để lưu chi tiết yêu cầu và trạng thái modal
+  const [selectedRequest, setSelectedRequest] =
+    useState<MedicationRequestFromAPI | null>(null);
+  const [allApiRequests, setAllApiRequests] = useState<
+    MedicationRequestFromAPI[]
+  >([]); // Thêm state để lưu phản hồi API gốc
 
   // Fetch medication requests for all students
   const fetchMedicationRequests = useCallback(
     async (students: Student[]) => {
-      const baseUrl = process.env.REACT_APP_BASE_URL; // Add fallback URL
+      const baseUrl = process.env.REACT_APP_BASE_URL || "http://localhost:5112";
       const allRequests: MedicationRequestType[] = [];
+      let allApiData: MedicationRequestFromAPI[] = [];
 
       try {
         // Fetch medication requests for each student
         for (const student of students) {
-          const response = await axios.get<MedicationRequestFromAPI[]>(
+          const response = await instance.get<MedicationRequestFromAPI[]>(
             `${baseUrl}/api/MedicationRequest/get-medication-requests-by-student-id/${student.id}`
           );
 
@@ -171,6 +180,9 @@ const ParentMedicationDashboard: React.FC<ParentMedicationDashboardProps> = ({
             `Received medication data for student ${student.fullName}:`,
             response.data
           );
+
+          // Lưu dữ liệu API gốc
+          allApiData = [...allApiData, ...response.data];
 
           // Map API response to our component's format
           const studentRequests = response.data.map((req) =>
@@ -180,6 +192,7 @@ const ParentMedicationDashboard: React.FC<ParentMedicationDashboardProps> = ({
           allRequests.push(...studentRequests);
         }
 
+        setAllApiRequests(allApiData);
         setRequests(allRequests);
       } catch (error: any) {
         // Enhanced error logging
@@ -208,9 +221,8 @@ const ParentMedicationDashboard: React.FC<ParentMedicationDashboardProps> = ({
         setLoading(true);
         setError(null);
 
-        const baseUrl =
-          process.env.REACT_APP_BASE_URL || "http://localhost:5112";
-        const response = await axios.get<User>(
+        const baseUrl = process.env.REACT_APP_BASE_URL;
+        const response = await instance.get<User>(
           `${baseUrl}/api/User/get-user-by-id/${parentId}`
         );
 
@@ -260,6 +272,21 @@ const ParentMedicationDashboard: React.FC<ParentMedicationDashboardProps> = ({
     setLogModalOpen(false);
   };
 
+  // Thêm hàm mở modal chi tiết
+  const handleViewDetail = (requestId: string) => {
+    // Tìm request từ API response (không phải đã chuyển đổi)
+    const apiRequest = allApiRequests.find((req) => req.id === requestId);
+    if (apiRequest) {
+      setSelectedRequest(apiRequest);
+      setDetailModalOpen(true);
+    }
+  };
+
+  // Thêm hàm đóng modal chi tiết
+  const handleCloseDetailModal = () => {
+    setDetailModalOpen(false);
+  };
+
   return (
     <Container maxWidth="lg">
       <Box sx={{ my: 4 }}>
@@ -303,10 +330,43 @@ const ParentMedicationDashboard: React.FC<ParentMedicationDashboardProps> = ({
               <MedicationRequestList
                 requests={requests}
                 onViewLogs={handleViewLogs}
+                onViewDetail={handleViewDetail} // Thêm prop mới
               />
             )}
           </Box>
         )}
+
+        {/* Modal hiển thị chi tiết thuốc */}
+        <Modal
+          open={detailModalOpen}
+          onClose={handleCloseDetailModal}
+          aria-labelledby="medication-detail-modal"
+        >
+          <Box
+            sx={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              width: "80%",
+              maxWidth: 800,
+              bgcolor: "background.paper",
+              boxShadow: 24,
+              p: 4,
+              maxHeight: "80vh",
+              overflow: "auto",
+            }}
+          >
+            {selectedRequest ? (
+              <MedicationRequestDetail request={selectedRequest} />
+            ) : (
+              <Typography>Không tìm thấy thông tin chi tiết</Typography>
+            )}
+            <Box sx={{ mt: 3, textAlign: "right" }}>
+              <Button onClick={handleCloseDetailModal}>Đóng</Button>
+            </Box>
+          </Box>
+        </Modal>
 
         <Modal
           open={logModalOpen}
