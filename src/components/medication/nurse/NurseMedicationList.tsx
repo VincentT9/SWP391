@@ -16,14 +16,27 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
-  DialogContentText,
   DialogTitle,
   CircularProgress,
+  List,
+  ListItem,
+  ListItemText,
+  Divider,
 } from "@mui/material";
 import { format } from "date-fns";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
-import MedicationIcon from "@mui/icons-material/Medication";
+import HistoryIcon from "@mui/icons-material/History";
 import { MedicationRequest } from "../../../models/types";
+import axiosInstance from "../../../utils/axiosConfig";
+
+// New interface for diary entries
+interface MedicationDiaryEntry {
+  id: string;
+  medicationRequestId: string;
+  date: string;
+  notes: string;
+  administeredBy: string;
+  administeredTime: string;
+}
 
 interface NurseMedicationListProps {
   requests: MedicationRequest[];
@@ -40,7 +53,9 @@ const NurseMedicationList: React.FC<NurseMedicationListProps> = ({
 }) => {
   const [selectedRequest, setSelectedRequest] =
     useState<MedicationRequest | null>(null);
+  const [diaryEntries, setDiaryEntries] = useState<MedicationDiaryEntry[]>([]);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [loadingDiary, setLoadingDiary] = useState(false);
 
   // Filter requests that are assigned to this nurse with status "received" (1)
   const assignedRequests = requests.filter(
@@ -62,16 +77,21 @@ const NurseMedicationList: React.FC<NurseMedicationListProps> = ({
     }
   };
 
-  const handleMedicationClick = (request: MedicationRequest) => {
+  const handleDiaryClick = async (request: MedicationRequest) => {
     setSelectedRequest(request);
+    setLoadingDiary(true);
     setConfirmDialogOpen(true);
-  };
 
-  const handleConfirmReceive = () => {
-    if (selectedRequest) {
-      onReceiveMedication(selectedRequest.id);
+    try {
+      // Fetch diary entries for this medication request
+      const response = await axiosInstance.get(`/api/MedicaDiary/${request.id}`);
+      setDiaryEntries(response.data);
+    } catch (error) {
+      console.error("Error fetching medication diary:", error);
+      setDiaryEntries([]);
+    } finally {
+      setLoadingDiary(false);
     }
-    setConfirmDialogOpen(false);
   };
 
   const handleCloseDialog = () => {
@@ -132,13 +152,13 @@ const NurseMedicationList: React.FC<NurseMedicationListProps> = ({
                     {getStatusChip(request.status)}
                   </TableCell>
                   <TableCell align="center">
-                    <Tooltip title="Xem chi tiết thuốc">
+                    <Tooltip title="Xem nhật ký">
                       <IconButton
                         size="small"
                         color="primary"
-                        onClick={() => handleMedicationClick(request)}
+                        onClick={() => handleDiaryClick(request)}
                       >
-                        <MedicationIcon fontSize="small" />
+                        <HistoryIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
                   </TableCell>
@@ -149,34 +169,53 @@ const NurseMedicationList: React.FC<NurseMedicationListProps> = ({
         </TableContainer>
       )}
 
-      <Dialog open={confirmDialogOpen} onClose={handleCloseDialog}>
-        <DialogTitle>Chi tiết thuốc</DialogTitle>
+      <Dialog open={confirmDialogOpen} onClose={handleCloseDialog} maxWidth="md">
+        <DialogTitle>Nhật ký sử dụng thuốc</DialogTitle>
         <DialogContent>
           {selectedRequest && (
             <>
-              <Typography variant="body1" gutterBottom>
-                <strong>Tên thuốc:</strong> {selectedRequest.medicationName}
+              <Typography variant="h6" gutterBottom>
+                {selectedRequest.medicationName} - {selectedRequest.studentName}
               </Typography>
-              <Typography variant="body1" gutterBottom>
-                <strong>Học sinh:</strong> {selectedRequest.studentName}
+              <Typography variant="body2" color="textSecondary" gutterBottom>
+                {selectedRequest.dosage} | {selectedRequest.instructions}
               </Typography>
-              <Typography variant="body1" gutterBottom>
-                <strong>Liều lượng:</strong> {selectedRequest.dosage}
-              </Typography>
-              <Typography variant="body1" gutterBottom>
-                <strong>Hướng dẫn:</strong> {selectedRequest.instructions}
-              </Typography>
-              <Typography variant="body1" gutterBottom>
-                <strong>Thời gian:</strong>{" "}
-                {format(new Date(selectedRequest.startDate), "dd/MM/yyyy")} -{" "}
-                {format(new Date(selectedRequest.endDate), "dd/MM/yyyy")}
-              </Typography>
-              <Typography variant="body1" gutterBottom>
-                <strong>Trạng thái:</strong>{" "}
-                {selectedRequest.status === "received"
-                  ? "Đã xác nhận"
-                  : selectedRequest.status}
-              </Typography>
+              <Divider sx={{ my: 2 }} />
+
+              {loadingDiary ? (
+                <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
+                  <CircularProgress size={24} />
+                </Box>
+              ) : diaryEntries.length === 0 ? (
+                <Typography variant="body1" color="textSecondary">
+                  Chưa có nhật ký sử dụng thuốc nào.
+                </Typography>
+              ) : (
+                <List>
+                  {diaryEntries.map((entry) => (
+                    <React.Fragment key={entry.id}>
+                      <ListItem alignItems="flex-start">
+                        <ListItemText
+                          primary={format(new Date(entry.administeredTime), "dd/MM/yyyy HH:mm")}
+                          secondary={
+                            <>
+                              <Typography component="span" variant="body2" color="text.primary">
+                                Người dùng thuốc: {entry.administeredBy}
+                              </Typography>
+                              {entry.notes && (
+                                <Typography variant="body2" sx={{ mt: 1 }}>
+                                  Ghi chú: {entry.notes}
+                                </Typography>
+                              )}
+                            </>
+                          }
+                        />
+                      </ListItem>
+                      <Divider component="li" />
+                    </React.Fragment>
+                  ))}
+                </List>
+              )}
             </>
           )}
         </DialogContent>

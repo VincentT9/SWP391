@@ -121,17 +121,23 @@ const MedicationRequestList: React.FC<MedicationRequestListProps> = ({
         throw new Error("Request not found");
       }
       
+      // Match the exact schema required by the API
       const updateData = {
         studentId: requestData.student.id,
         medicationName: requestData.medicationName,
         dosage: requestData.dosage,
         numberOfDayToTake: requestData.numberOfDayToTake,
         instructions: requestData.instructions,
-        imagesMedicalInvoice: requestData.imagesMedicalInvoice,
-        startDate: requestData.startDate,
+        imagesMedicalInvoice: Array.isArray(requestData.imagesMedicalInvoice) 
+          ? requestData.imagesMedicalInvoice 
+          : [],
+        // Use full ISO string format as expected by the API
+        startDate: new Date(requestData.startDate).toISOString(),
         status: 1, // Set status to 1 for accepted
-        MedicalStaffId: nurseId
+        medicalStaffId: nurseId
       };
+      
+      console.log("Sending update data:", JSON.stringify(updateData));
       
       // Make the API call
       const apiUrl = `${BASE_API}/api/MedicationRequest/update-medication-request/${requestId}`;
@@ -142,9 +148,14 @@ const MedicationRequestList: React.FC<MedicationRequestListProps> = ({
         // Call the parent component's onAccept function to update UI
         onAccept(requestId);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error accepting request:", error);
-      toast.error("Không thể chấp nhận yêu cầu. Vui lòng thử lại sau.");
+      // More detailed error message
+      if (error.response) {
+        console.error("Error response data:", error.response.data);
+        console.error("Error response status:", error.response.status);
+      }
+      toast.error(`Không thể chấp nhận yêu cầu: ${error.message || 'Lỗi không xác định'}`);
     } finally {
       setProcessingRequestId(null);
       pendingRequests.current.delete(requestId);
@@ -180,7 +191,7 @@ const MedicationRequestList: React.FC<MedicationRequestListProps> = ({
       
       // Make the API call
       const apiUrl = `${BASE_API}/api/MedicationRequest/delete-medication-request/${requestId}`;
-      const response = await axios.put(apiUrl);
+      const response = await axios.delete(apiUrl);
       
       if (response.status === 200) {
         toast.success("Yêu cầu đã bị từ chối");

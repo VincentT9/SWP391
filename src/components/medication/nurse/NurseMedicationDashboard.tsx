@@ -7,7 +7,7 @@ import { MedicationRequest } from "../../../models/types";
 import MedicationRequestList from "./MedicationRequestList";
 import axios from "axios";
 import { toast } from "react-toastify";
-
+import instance from "../../../utils/axiosConfig";
 // API base URL from environment variables
 const API_BASE_URL = process.env.REACT_APP_BASE_URL;
 
@@ -76,7 +76,7 @@ const NurseMedicationDashboard: React.FC<NurseMedicationDashboardProps> = ({
     setIsLoading(true);
     try {
       // Using the correct API endpoint from the image
-      const response = await axios.get(
+      const response = await instance.get(
         `${API_BASE_URL}/api/MedicationRequest/get-all-medication-requests`
       );
       console.log("Medication requests response:", response.data);
@@ -118,7 +118,7 @@ const NurseMedicationDashboard: React.FC<NurseMedicationDashboardProps> = ({
     setIsLoading(true);
     try {
       // Get all accepted medication requests (status 1)
-      const response = await axios.get(
+      const response = await instance.get(
         `${API_BASE_URL}/api/MedicationRequest/get-medication-requests-by-status/1`
       );
       
@@ -178,7 +178,7 @@ const NurseMedicationDashboard: React.FC<NurseMedicationDashboardProps> = ({
   const handleReceiveMedication = async (requestId: string) => {
     try {
       // In a real implementation, you would call the API to update the medication status
-      await axios.put(`${API_BASE_URL}/api/MedicationRequest/update-medication-request/${requestId}`, {
+      await instance.put(`${API_BASE_URL}/api/MedicationRequest/update-medication-request/${requestId}`, {
         status: 1, // 1 = received
         medicalStaffId: nurseId
       });
@@ -194,16 +194,17 @@ const NurseMedicationDashboard: React.FC<NurseMedicationDashboardProps> = ({
   const handleMedicationAdministered = async (
     requestId: string,
     wasAdministered: boolean,
-    data: {
-      conditionBefore?: string;
-      conditionAfter?: string;
-      notes?: string;
-      reasonForNotAdministering?: string;
-    }
+    description: string  // Simplified to just take a description string instead of object
   ) => {
     try {
-      // This would be a separate API endpoint for medication logs
-      // For now, we'll simulate this with a toast message
+      // Create medication diary entry using the exact API schema
+      await instance.post(`${API_BASE_URL}/api/MedicaDiary/create`, {
+        medicationReqId: requestId,
+        status: wasAdministered ? 1 : 0, // 1 for administered, 0 for not administered
+        description: description
+      });
+
+      
       if (wasAdministered) {
         toast.success("Đã ghi nhận thông tin dùng thuốc của học sinh");
       } else {
@@ -215,60 +216,6 @@ const NurseMedicationDashboard: React.FC<NurseMedicationDashboardProps> = ({
     } catch (error) {
       console.error("Error logging medication administration:", error);
       toast.error("Không thể cập nhật thông tin dùng thuốc. Vui lòng thử lại sau.");
-    }
-  };
-
-  const handleAcceptMedicationRequest = async (requestId: string) => {
-    try {
-      console.log("Accepting medication request:", requestId);
-      
-      // Using the update endpoint with the correct request ID
-      const response = await axios.put(
-        `${API_BASE_URL}/api/MedicationRequest/update-medication-request/${requestId}`, 
-        {
-          status: 1, // 1 = received/accepted
-          medicalStaffId: nurseId
-        }
-      );
-      
-      console.log("Accept response:", response);
-      
-      // Refresh medication requests
-      await fetchMedicationRequests();
-      await fetchTodayMedications();
-      toast.success("Đã chấp nhận yêu cầu thuốc thành công");
-      return response;
-    } catch (error) {
-      console.error("Error accepting medication request:", error);
-      toast.error("Không thể chấp nhận yêu cầu thuốc. Vui lòng thử lại sau.");
-      throw error; // Re-throw to handle in the component
-    }
-  };
-
-  const handleRejectMedicationRequest = async (requestId: string, reason: string) => {
-    try {
-      console.log("Rejecting medication request:", requestId);
-      
-      // Using the update endpoint with the correct request ID
-      const response = await axios.put(
-        `${API_BASE_URL}/api/MedicationRequest/update-medication-request/${requestId}`, 
-        {
-          status: 2, // 2 = rejected
-          medicalStaffId: nurseId,
-          rejectionReason: reason
-        }
-      );
-      
-      console.log("Reject response:", response);
-      
-      // Refresh medication requests
-      await fetchMedicationRequests();
-      toast.success("Đã từ chối yêu cầu thuốc thành công");
-      return response;
-    } catch (error) {
-      console.error("Error rejecting medication request:", error);
-      toast.error("Không thể từ chối yêu cầu thuốc. Vui lòng thử lại sau.");
-      throw error;
     }
   };
 
@@ -311,8 +258,8 @@ const NurseMedicationDashboard: React.FC<NurseMedicationDashboardProps> = ({
                     <MedicationAdministrationForm
                       medicationRequest={medication}
                       nurseName={nurseName}
-                      onMedicationAdministered={(wasGiven, data) => 
-                        handleMedicationAdministered(medication.id, wasGiven, data)
+                      onMedicationAdministered={(wasGiven, description) => 
+                        handleMedicationAdministered(medication.id, wasGiven, description)
                       }
                     />
                   </Box>
@@ -334,8 +281,15 @@ const NurseMedicationDashboard: React.FC<NurseMedicationDashboardProps> = ({
         {tabValue === 2 && (
           <MedicationRequestList 
             requests={apiMedicationRequests}
-            onAccept={handleAcceptMedicationRequest}
-            onReject={handleRejectMedicationRequest}
+            onAccept={(requestId) => {
+              // Just refresh the data after a successful operation
+              fetchMedicationRequests();
+              fetchTodayMedications();
+            }}
+            onReject={(requestId) => {
+              // Just refresh the data after a successful operation
+              fetchMedicationRequests();
+            }}
             isLoading={isLoading}
             nurseId={nurseId}
           />
@@ -344,5 +298,9 @@ const NurseMedicationDashboard: React.FC<NurseMedicationDashboardProps> = ({
     </Container>
   );
 };
+
+
+
+
 
 export default NurseMedicationDashboard;

@@ -111,7 +111,7 @@ const MedicalSupplierPage = () => {
   // Delete a supplier
   const deleteSupplier = async (id: number) => {
     try {
-      const response = await axios.delete(`${process.env.REACT_APP_MEDICAL_SUPPLIER_API}/delete-supplier/${id}`);
+      const response = await axios.delete(`${process.env.REACT_APP_BASE_URL}/delete-supplier/${id}`);
       return response.data;
     } catch (err) {
       console.error(`Error deleting supplier with ID ${id}:`, err);

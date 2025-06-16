@@ -8,7 +8,6 @@ import {
   Alert,
   Card,
   CardContent,
-  Divider,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -49,12 +48,7 @@ interface MedicationAdministrationFormProps {
   nurseName: string;
   onMedicationAdministered: (
     wasGiven: boolean,
-    data: {
-      conditionBefore?: string;
-      conditionAfter?: string;
-      notes?: string;
-      reasonForNotAdministering?: string;
-    }
+    description: string
   ) => void;
 }
 
@@ -63,12 +57,9 @@ const MedicationAdministrationForm: React.FC<MedicationAdministrationFormProps> 
   nurseName,
   onMedicationAdministered,
 }) => {
-  const [conditionBefore, setConditionBefore] = useState("");
-  const [conditionAfter, setConditionAfter] = useState("");
-  const [notes, setNotes] = useState("");
+  const [description, setDescription] = useState("");
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [notGivenDialogOpen, setNotGivenDialogOpen] = useState(false);
-  const [reasonForNotGiving, setReasonForNotGiving] = useState("");
   const [givenDialogOpen, setGivenDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -83,23 +74,17 @@ const MedicationAdministrationForm: React.FC<MedicationAdministrationFormProps> 
   const handleGivenSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!conditionBefore.trim() || !conditionAfter.trim()) {
-      toast.error("Vui lòng điền đầy đủ thông tin tình trạng học sinh");
+    if (!description.trim()) {
+      toast.error("Vui lòng nhập mô tả");
       return;
     }
 
     try {
       setIsSubmitting(true);
-      await onMedicationAdministered(true, {
-        conditionBefore,
-        conditionAfter,
-        notes,
-      });
+      await onMedicationAdministered(true, description);
 
       // Reset form and close dialog
-      setConditionBefore("");
-      setConditionAfter("");
-      setNotes("");
+      setDescription("");
       setGivenDialogOpen(false);
     } catch (error) {
       console.error("Error administering medication:", error);
@@ -110,19 +95,17 @@ const MedicationAdministrationForm: React.FC<MedicationAdministrationFormProps> 
   };
 
   const handleNotGivenSubmit = async () => {
-    if (reasonForNotGiving.trim() === "") {
+    if (description.trim() === "") {
       toast.error("Vui lòng nhập lý do không cho uống thuốc.");
       return;
     }
 
     try {
       setIsSubmitting(true);
-      await onMedicationAdministered(false, {
-        reasonForNotAdministering: reasonForNotGiving,
-      });
+      await onMedicationAdministered(false, description);
 
       // Reset form and close dialog
-      setReasonForNotGiving("");
+      setDescription("");
       setNotGivenDialogOpen(false);
     } catch (error) {
       console.error("Error logging not given medication:", error);
@@ -270,30 +253,13 @@ const MedicationAdministrationForm: React.FC<MedicationAdministrationFormProps> 
           >
             <TextField
               fullWidth
-              id="condition-before"
-              label="Tình trạng học sinh trước khi uống thuốc"
-              value={conditionBefore}
-              onChange={(e) => setConditionBefore(e.target.value)}
-              required
-            />
-
-            <TextField
-              fullWidth
-              id="condition-after"
-              label="Tình trạng học sinh sau khi uống thuốc"
-              value={conditionAfter}
-              onChange={(e) => setConditionAfter(e.target.value)}
-              required
-            />
-
-            <TextField
-              fullWidth
-              id="notes"
-              label="Ghi chú"
+              id="description"
+              label="Mô tả"
               multiline
-              rows={2}
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
+              rows={3}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              required
             />
           </Box>
         </DialogContent>
@@ -325,14 +291,14 @@ const MedicationAdministrationForm: React.FC<MedicationAdministrationFormProps> 
           <TextField
             autoFocus
             margin="dense"
-            id="reason"
+            id="description"
             label="Lý do không cho uống thuốc"
             type="text"
             fullWidth
             multiline
             rows={4}
-            value={reasonForNotGiving}
-            onChange={(e) => setReasonForNotGiving(e.target.value)}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
             required
           />
         </DialogContent>
@@ -366,5 +332,7 @@ const MedicationAdministrationForm: React.FC<MedicationAdministrationFormProps> 
     </Card>
   );
 };
+
+
 
 export default MedicationAdministrationForm;
