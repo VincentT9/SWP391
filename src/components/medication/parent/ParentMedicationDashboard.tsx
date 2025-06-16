@@ -13,10 +13,12 @@ import {
 import MedicationRequestForm from "./MedicationRequestForm";
 import MedicationRequestList from "./MedicationRequestList";
 import MedicationLogView from "../MedicationLogView";
+import MedicationDiaryView from "../MedicationDiaryView"; // Import component mới
 import axios from "axios";
 import {
   MedicationRequest as MedicationRequestType,
   MedicationLog as MedicationLogType,
+  MedicationDiaryEntry,
 } from "../../../models/types";
 import { addDays as dateAddDays } from "date-fns"; // Renamed to avoid conflict
 import instance from "../../../utils/axiosConfig"; // Importing axios instance for API calls
@@ -161,11 +163,14 @@ const ParentMedicationDashboard: React.FC<ParentMedicationDashboardProps> = ({
   const [allApiRequests, setAllApiRequests] = useState<
     MedicationRequestFromAPI[]
   >([]); // Thêm state để lưu phản hồi API gốc
+  const [medicationDiaries, setMedicationDiaries] = useState<
+    MedicationDiaryEntry[]
+  >([]); // Cập nhật state để lưu dữ liệu nhật ký mới
 
   // Fetch medication requests for all students
   const fetchMedicationRequests = useCallback(
     async (students: Student[]) => {
-      const baseUrl = process.env.REACT_APP_BASE_URL || "http://localhost:5112";
+      const baseUrl = process.env.REACT_APP_BASE_URL;
       const allRequests: MedicationRequestType[] = [];
       let allApiData: MedicationRequestFromAPI[] = [];
 
@@ -261,11 +266,31 @@ const ParentMedicationDashboard: React.FC<ParentMedicationDashboardProps> = ({
     setTabValue(1);
   };
 
-  const handleViewLogs = (requestId: string) => {
-    // Creating empty logs array with proper type structure
-    const emptyLogs: MedicationLogType[] = [];
-    setSelectedLogs(emptyLogs);
-    setLogModalOpen(true);
+  const handleViewLogs = async (requestId: string, studentId: string) => {
+    setLoading(true);
+    try {
+      const baseUrl = process.env.REACT_APP_BASE_URL || "http://localhost:5112";
+
+      // Gọi API mới lấy danh sách nhật ký uống thuốc dựa vào studentId
+      const response = await instance.get<MedicationDiaryEntry[]>(
+        `${baseUrl}/api/MedicaDiary/student/${studentId}`
+      );
+
+      console.log("Medication diary data:", response.data);
+
+      // Lưu dữ liệu nhật ký vào state
+      setMedicationDiaries(response.data);
+
+      // Mở modal để hiển thị nhật ký
+      setLogModalOpen(true);
+    } catch (error) {
+      console.error("Error fetching medication diaries:", error);
+      setError(
+        "Không thể lấy dữ liệu nhật ký uống thuốc. Vui lòng thử lại sau."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCloseLogModal = () => {
@@ -392,12 +417,12 @@ const ParentMedicationDashboard: React.FC<ParentMedicationDashboardProps> = ({
               Nhật ký uống thuốc
             </Typography>
 
-            {selectedLogs.length > 0 ? (
-              <MedicationLogView logs={selectedLogs} />
+            {loading ? (
+              <Box sx={{ display: "flex", justifyContent: "center", my: 2 }}>
+                <CircularProgress />
+              </Box>
             ) : (
-              <Typography variant="body1" color="textSecondary">
-                Chưa có nhật ký uống thuốc nào.
-              </Typography>
+              <MedicationDiaryView diaries={medicationDiaries} />
             )}
 
             <Box sx={{ mt: 3, textAlign: "right" }}>

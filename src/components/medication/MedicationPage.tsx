@@ -2,7 +2,7 @@ import React from "react";
 import { Container, Typography, Box, Alert } from "@mui/material";
 import ParentMedicationDashboard from "./parent/ParentMedicationDashboard";
 import NurseMedicationDashboard from "./nurse/NurseMedicationDashboard";
-import { useAuth } from '../auth/AuthContext';
+import { useAuth } from "../auth/AuthContext";
 
 const MedicationPage: React.FC = () => {
   const { user } = useAuth();
@@ -21,17 +21,11 @@ const MedicationPage: React.FC = () => {
         return <ParentMedicationDashboard parentId={user.id} />;
       case "MedicalStaff":
         return (
-          <NurseMedicationDashboard
-            nurseId={user.id}
-            nurseName={user.name}
-          />
+          <NurseMedicationDashboard nurseId={user.id} nurseName={user.name} />
         );
       case "Admin":
         return (
-          <NurseMedicationDashboard
-            nurseId={user.id}
-            nurseName={user.name}
-          />
+          <NurseMedicationDashboard nurseId={user.id} nurseName={user.name} />
         );
       default:
         return (
@@ -46,7 +40,9 @@ const MedicationPage: React.FC = () => {
     return (
       <Container maxWidth="lg">
         <Box sx={{ my: 4 }}>
-          <Typography variant="body1">Đang tải thông tin người dùng...</Typography>
+          <Typography variant="body1">
+            Đang tải thông tin người dùng...
+          </Typography>
         </Box>
       </Container>
     );
@@ -54,9 +50,7 @@ const MedicationPage: React.FC = () => {
 
   return (
     <Container maxWidth="lg">
-      <Box sx={{ my: 4 }}>
-        {renderDashboardByRole()}
-      </Box>
+      <Box sx={{ my: 4 }}>{renderDashboardByRole()}</Box>
     </Container>
   );
 };

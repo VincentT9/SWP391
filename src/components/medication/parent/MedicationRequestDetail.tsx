@@ -1,7 +1,6 @@
 import React from "react";
 import { Box, Typography, Paper, Divider, Chip, Avatar } from "@mui/material";
 import { format } from "date-fns";
-import { MedicationRequest } from "../../../models/types";
 
 interface MedicationRequestDetailProps {
   request: any; // Sử dụng dữ liệu gốc từ API thay vì MedicationRequest
@@ -43,14 +42,35 @@ const MedicationRequestDetail: React.FC<MedicationRequestDetailProps> = ({
         Chi tiết thuốc đã gửi
       </Typography>
 
-      {/* Thông tin học sinh */}
+      {/* Thông tin học sinh - Cập nhật để sử dụng các trường trực tiếp từ API */}
       <Box sx={{ mb: 3 }}>
         <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
           Thông tin học sinh
         </Typography>
-        <Typography variant="body1">
-          {request.student?.fullName || "N/A"}
-        </Typography>
+        <Box sx={{ pl: 2 }}>
+          <Box sx={{ display: "flex", mb: 1 }}>
+            <Typography
+              variant="body2"
+              sx={{ fontWeight: "medium", minWidth: 120 }}
+            >
+              Mã học sinh:
+            </Typography>
+            <Typography variant="body1">
+              {request.studentCode || "N/A"}
+            </Typography>
+          </Box>
+          <Box sx={{ display: "flex" }}>
+            <Typography
+              variant="body2"
+              sx={{ fontWeight: "medium", minWidth: 120 }}
+            >
+              Tên học sinh:
+            </Typography>
+            <Typography variant="body1">
+              {request.studentName || "N/A"}
+            </Typography>
+          </Box>
+        </Box>
       </Box>
 
       <Divider sx={{ my: 2 }} />
@@ -60,25 +80,33 @@ const MedicationRequestDetail: React.FC<MedicationRequestDetailProps> = ({
         <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
           Thông tin thuốc
         </Typography>
-        <Typography variant="body1" gutterBottom>
-          Tên thuốc và thành phần:
-        </Typography>
-        <Typography variant="body2" sx={{ pl: 2, mb: 1 }}>
-          {request.medicationName || "N/A"}
-        </Typography>
-
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
-          <Box sx={{ flex: "1 1 45%", minWidth: "200px" }}>
-            <Typography variant="body1">Số lần uống/ngày:</Typography>
-            <Typography variant="body2" sx={{ pl: 2 }}>
-              {request.dosage} lần/ngày
+        <Box sx={{ pl: 2 }}>
+          <Box sx={{ mb: 1 }}>
+            <Typography variant="body2" sx={{ fontWeight: "medium" }}>
+              Tên thuốc và thành phần:
+            </Typography>
+            <Typography variant="body1" sx={{ pl: 1 }}>
+              {request.medicationName || "N/A"}
             </Typography>
           </Box>
-          <Box sx={{ flex: "1 1 45%", minWidth: "200px" }}>
-            <Typography variant="body1">Số ngày cần uống:</Typography>
-            <Typography variant="body2" sx={{ pl: 2 }}>
-              {request.numberOfDayToTake} ngày
-            </Typography>
+
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
+            <Box sx={{ flex: "1 1 45%", minWidth: "200px" }}>
+              <Typography variant="body2" sx={{ fontWeight: "medium" }}>
+                Số lần uống/ngày:
+              </Typography>
+              <Typography variant="body1" sx={{ pl: 1 }}>
+                {request.dosage} lần/ngày
+              </Typography>
+            </Box>
+            <Box sx={{ flex: "1 1 45%", minWidth: "200px" }}>
+              <Typography variant="body2" sx={{ fontWeight: "medium" }}>
+                Số ngày cần uống:
+              </Typography>
+              <Typography variant="body1" sx={{ pl: 1 }}>
+                {request.numberOfDayToTake} ngày
+              </Typography>
+            </Box>
           </Box>
         </Box>
       </Box>
@@ -90,16 +118,20 @@ const MedicationRequestDetail: React.FC<MedicationRequestDetailProps> = ({
         <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
           Thời gian
         </Typography>
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
+        <Box sx={{ pl: 2, display: "flex", flexWrap: "wrap", gap: 2 }}>
           <Box sx={{ flex: "1 1 45%", minWidth: "200px" }}>
-            <Typography variant="body1">Ngày bắt đầu:</Typography>
-            <Typography variant="body2" sx={{ pl: 2 }}>
+            <Typography variant="body2" sx={{ fontWeight: "medium" }}>
+              Ngày bắt đầu:
+            </Typography>
+            <Typography variant="body1" sx={{ pl: 1 }}>
               {formatDate(request.startDate)}
             </Typography>
           </Box>
           <Box sx={{ flex: "1 1 45%", minWidth: "200px" }}>
-            <Typography variant="body1">Ngày kết thúc:</Typography>
-            <Typography variant="body2" sx={{ pl: 2 }}>
+            <Typography variant="body2" sx={{ fontWeight: "medium" }}>
+              Ngày kết thúc:
+            </Typography>
+            <Typography variant="body1" sx={{ pl: 1 }}>
               {request.endDate ? formatDate(request.endDate) : "N/A"}
             </Typography>
           </Box>
@@ -113,7 +145,7 @@ const MedicationRequestDetail: React.FC<MedicationRequestDetailProps> = ({
         <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
           Hướng dẫn sử dụng và ghi chú
         </Typography>
-        <Typography variant="body2" sx={{ pl: 2 }}>
+        <Typography variant="body1" sx={{ pl: 2 }}>
           {request.instructions || "Không có ghi chú"}
         </Typography>
       </Box>
@@ -125,22 +157,24 @@ const MedicationRequestDetail: React.FC<MedicationRequestDetailProps> = ({
         <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
           Trạng thái
         </Typography>
-        <Chip
-          label={statusInfo.label}
-          color={statusInfo.color as "info" | "primary" | "success" | "error"}
-        />
+        <Box sx={{ pl: 2 }}>
+          <Chip
+            label={statusInfo.label}
+            color={statusInfo.color as "info" | "primary" | "success" | "error"}
+          />
+        </Box>
       </Box>
 
       <Divider sx={{ my: 2 }} />
 
-      {/* PHẦN MỚI: Hình ảnh hóa đơn */}
+      {/* Hình ảnh hóa đơn */}
       <Box sx={{ mb: 3 }}>
         <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
           Hình ảnh hóa đơn thuốc
         </Typography>
         {request.imagesMedicalInvoice &&
         request.imagesMedicalInvoice.length > 0 ? (
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, pl: 2 }}>
             {request.imagesMedicalInvoice.map(
               (imageUrl: string, index: number) => (
                 <Box
@@ -157,37 +191,109 @@ const MedicationRequestDetail: React.FC<MedicationRequestDetailProps> = ({
             )}
           </Box>
         ) : (
-          <Typography variant="body2">Không có hình ảnh hóa đơn</Typography>
+          <Typography variant="body1" sx={{ pl: 2 }}>
+            Không có hình ảnh hóa đơn
+          </Typography>
         )}
       </Box>
 
       <Divider sx={{ my: 2 }} />
 
-      {/* PHẦN MỚI: Thông tin y tá/nhân viên y tế */}
+      {/* Y tá phụ trách */}
       <Box sx={{ mb: 3 }}>
         <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-          Thông tin nhân viên y tế
+          Y tá phụ trách
         </Typography>
-        {request.medicalStaff ? (
-          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-            <Avatar
-              alt={request.medicalStaff.fullName || "Y tá"}
-              src={request.medicalStaff.image || ""}
-            />
-            <Box sx={{ flex: 1 }}>
-              <Typography variant="body1">
-                {request.medicalStaff.fullName || "Chưa có thông tin"}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Email: {request.medicalStaff.email || "N/A"}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Điện thoại: {request.medicalStaff.phoneNumber || "N/A"}
-              </Typography>
-            </Box>
+        <Box sx={{ pl: 2 }}>
+          <Typography variant="body1">
+            {request.medicalStaffName || "Chưa có y tá phụ trách"}
+          </Typography>
+        </Box>
+      </Box>
+
+      <Divider sx={{ my: 2 }} />
+
+      {/* Nhật ký uống thuốc */}
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+          Nhật ký uống thuốc
+        </Typography>
+
+        {request.medicalDiaries && request.medicalDiaries.length > 0 ? (
+          <Box sx={{ pl: 2 }}>
+            {request.medicalDiaries.map((diary: any) => (
+              <Box
+                key={diary.id}
+                sx={{
+                  mb: 2,
+                  p: 2,
+                  border: "1px solid #eee",
+                  borderRadius: 1,
+                }}
+              >
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    mb: 1,
+                  }}
+                >
+                  <Typography variant="body2" sx={{ fontWeight: "medium" }}>
+                    Thời gian:
+                  </Typography>
+                  <Typography variant="body2">
+                    {formatDate(diary.createAt)}{" "}
+                    {format(new Date(diary.createAt), "HH:mm")}
+                  </Typography>
+                </Box>
+
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    mb: 1,
+                  }}
+                >
+                  <Typography variant="body2" sx={{ fontWeight: "medium" }}>
+                    Trạng thái:
+                  </Typography>
+                  <Chip
+                    size="small"
+                    label={diary.status === 0 ? "Đã uống thuốc" : "Đã bỏ lỡ"}
+                    color={diary.status === 0 ? "success" : "error"}
+                  />
+                </Box>
+
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    mb: 1,
+                  }}
+                >
+                  <Typography variant="body2" sx={{ fontWeight: "medium" }}>
+                    Người thực hiện:
+                  </Typography>
+                  <Typography variant="body2">{diary.createdBy}</Typography>
+                </Box>
+
+                {diary.description && (
+                  <Box>
+                    <Typography variant="body2" sx={{ fontWeight: "medium" }}>
+                      Ghi chú:
+                    </Typography>
+                    <Typography variant="body2" sx={{ pl: 1 }}>
+                      {diary.description}
+                    </Typography>
+                  </Box>
+                )}
+              </Box>
+            ))}
           </Box>
         ) : (
-          <Typography variant="body2">Chưa có nhân viên y tế xử lý</Typography>
+          <Typography variant="body1" sx={{ pl: 2 }}>
+            Chưa có nhật ký uống thuốc nào.
+          </Typography>
         )}
       </Box>
     </Box>

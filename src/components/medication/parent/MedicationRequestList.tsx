@@ -25,7 +25,7 @@ import { MedicationRequest } from "../../../models/types";
 
 interface MedicationRequestListProps {
   requests: MedicationRequest[];
-  onViewLogs: (requestId: string) => void;
+  onViewLogs: (requestId: string, studentId: string) => void; // Cập nhật để truyền cả studentId
   onViewDetail: (requestId: string) => void;
 }
 
@@ -134,7 +134,9 @@ const MedicationRequestList: React.FC<MedicationRequestListProps> = ({
                           <IconButton
                             size="small"
                             color="primary"
-                            onClick={() => onViewLogs(request.id)}
+                            onClick={() =>
+                              onViewLogs(request.id, request.studentId)
+                            } // Truyền cả studentId
                             disabled={request.status === "requested"}
                           >
                             <VisibilityIcon fontSize="small" />
