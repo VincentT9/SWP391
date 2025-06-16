@@ -19,11 +19,8 @@ import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { addDays } from "date-fns";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import axios from "axios";
 
-// For demo purposes - would be replaced with actual API calls
-import { medicationRequests } from "../../../utils/mockData";
-
-// Update MedicationRequestForm props to add loading
 interface MedicationRequestFormProps {
   parentId: string;
   onRequestSubmitted: () => void;
@@ -46,8 +43,25 @@ const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [receiptImage, setReceiptImage] = useState<File | null>(null);
   const [components, setComponents] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Helper function to convert File to base64 string
+  const convertFileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        const base64String = reader.result as string;
+        // Remove the data URL prefix (e.g., "data:image/jpeg;base64,")
+        const base64Content = base64String.split(",")[1];
+        resolve(base64Content);
+      };
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Validate các trường bắt buộc
@@ -62,46 +76,56 @@ const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
       return;
     }
 
-    // Create a new medication request
-    const newRequest = {
-      id: (medicationRequests.length + 1).toString(),
-      studentId,
-      studentName: studentOptions.find((s) => s.id === studentId)?.name || "",
-      parentId,
-      medicationName,
-      dosesPerDay,
-      // Thêm thuộc tính dosage để khớp với interface MedicationRequest
-      dosage: `${dosesPerDay} lần/ngày`,
-      instructions: notes, // Gộp instructions vào notes
-      daysRequired,
-      startDate: startDate as Date,
-      endDate: addDays(startDate as Date, daysRequired),
-      status: "requested" as const,
-      notes,
-      hasReceipt: receiptImage !== null,
-      components,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+    setIsSubmitting(true);
+    setError(null);
 
-    // In a real app, this would make an API call
-    medicationRequests.push(newRequest);
+    try {
+      // Convert image to base64 if available
+      let imageArray: string[] = [];
+      if (receiptImage) {
+        const base64Image = await convertFileToBase64(receiptImage);
+        imageArray = [base64Image];
+      }
 
-    // Show success message
-    setOpenSnackbar(true);
+      // Prepare the request payload
+      const requestData = {
+        studentId: studentId,
+        medicationName: components, // Using components field for medication name and details
+        dosage: dosesPerDay,
+        numberOfDayToTake: daysRequired,
+        instructions: notes,
+        imagesMedicalInvoice: imageArray,
+        startDate: startDate?.toISOString(),
+      };
 
-    // Reset form
-    setStudentId("");
-    setMedicationName("");
-    setDosesPerDay(1);
-    setDaysRequired(1);
-    setStartDate(new Date());
-    setNotes("");
-    setReceiptImage(null);
-    setComponents("");
+      // Make the API call
+      const baseUrl = process.env.REACT_APP_BASE_URL;
+      await axios.post(
+        `${baseUrl}/api/MedicationRequest/create-medication-request`,
+        requestData
+      );
 
-    // Notify parent component
-    onRequestSubmitted();
+      // Show success message
+      setOpenSnackbar(true);
+
+      // Reset form
+      setStudentId("");
+      setMedicationName("");
+      setDosesPerDay(1);
+      setDaysRequired(1);
+      setStartDate(new Date());
+      setNotes("");
+      setReceiptImage(null);
+      setComponents("");
+
+      // Notify parent component
+      onRequestSubmitted();
+    } catch (error) {
+      console.error("Error creating medication request:", error);
+      setError("Có lỗi xảy ra khi gửi yêu cầu. Vui lòng thử lại.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleCloseSnackbar = () => {
@@ -123,6 +147,12 @@ const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
       <Alert severity="info" sx={{ mb: 2 }}>
         Vui lòng nhập thành phần thuốc để nhà trường có thể kiểm tra.
       </Alert>
+
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
 
       <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
         {loading ? (
@@ -295,8 +325,14 @@ const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
         </Box>
 
         <Box>
-          <Button variant="contained" color="primary" type="submit" fullWidth>
-            Gửi yêu cầu
+          <Button
+            variant="contained"
+            color="primary"
+            type="submit"
+            fullWidth
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? <CircularProgress size={24} /> : "Gửi yêu cầu"}
           </Button>
         </Box>
       </Box>
