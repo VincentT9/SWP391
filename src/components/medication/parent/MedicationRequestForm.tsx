@@ -12,6 +12,7 @@ import {
   Snackbar,
   Alert,
   Divider,
+  CircularProgress,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
@@ -22,16 +23,19 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 // For demo purposes - would be replaced with actual API calls
 import { medicationRequests } from "../../../utils/mockData";
 
+// Update MedicationRequestForm props to add loading
 interface MedicationRequestFormProps {
   parentId: string;
   onRequestSubmitted: () => void;
   studentOptions: { id: string; name: string }[];
+  loading: boolean;
 }
 
 const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
   parentId,
   onRequestSubmitted,
   studentOptions,
+  loading,
 }) => {
   const [studentId, setStudentId] = useState("");
   const [medicationName, setMedicationName] = useState("");
@@ -121,15 +125,18 @@ const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
       </Alert>
 
       <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
-        <Box sx={{ mb: 2 }}>
-          <FormControl fullWidth required>
-            <InputLabel id="student-select-label">Tên học sinh</InputLabel>
+        {loading ? (
+          <CircularProgress />
+        ) : (
+          <FormControl fullWidth sx={{ mb: 2 }}>
+            <InputLabel id="student-select-label">Tên học sinh *</InputLabel>
             <Select
               labelId="student-select-label"
               id="student-select"
               value={studentId}
-              label="Tên học sinh"
+              label="Tên học sinh *"
               onChange={(e) => setStudentId(e.target.value)}
+              required
             >
               {studentOptions.map((student) => (
                 <MenuItem key={student.id} value={student.id}>
@@ -138,7 +145,7 @@ const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
               ))}
             </Select>
           </FormControl>
-        </Box>
+        )}
 
         {/* Phần thông tin thuốc */}
         <Box sx={{ mb: 3 }}>

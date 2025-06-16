@@ -11,10 +11,43 @@ import {
 import MedicationRequestForm from "./MedicationRequestForm";
 import MedicationRequestList from "./MedicationRequestList";
 import { MedicationRequest, MedicationLog } from "../../../models/types";
+import axios from "axios";
 
 // Mock data imports - would be replaced with API calls
 import { medicationRequests, medicationLogs } from "../../../utils/mockData";
 import MedicationLogView from "../../medication/MedicationLogView";
+
+// New interface for student data based on API response
+interface Student {
+  id: string;
+  studentCode: string;
+  fullName: string;
+  dateOfBirth: string;
+  gender: number;
+  class: string;
+  schoolYear: string;
+  image: string;
+  healthRecord?: {
+    id: string;
+    height: string;
+    weight: string;
+    bloodType: string;
+    allergies: string;
+    chronicDiseases: string;
+    pastMedicalHistory: string;
+    visionLeft: string;
+    visionRight: string;
+    hearingLeft: string;
+    hearingRight: string;
+    vaccinationHistory: string;
+    otherNotes: string;
+  };
+}
+
+interface StudentOption {
+  id: string;
+  name: string;
+}
 
 interface ParentMedicationDashboardProps {
   parentId: string;
@@ -30,13 +63,36 @@ const ParentMedicationDashboard: React.FC<ParentMedicationDashboardProps> = ({
   );
   const [logModalOpen, setLogModalOpen] = useState(false);
   const [selectedLogs, setSelectedLogs] = useState<MedicationLog[]>([]);
+  const [studentOptions, setStudentOptions] = useState<StudentOption[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Mock student data - would come from API
-  const studentOptions = [
-    { id: "1", name: "Nguyen Van An" },
-    { id: "2", name: "Le Thi Binh" },
-    { id: "3", name: "Pham Van Cuong" },
-  ];
+  // Fetch students associated with the parent
+  useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        setLoading(true);
+        const baseUrl =
+          process.env.REACT_APP_BASE_URL || "http://localhost:5112";
+        const response = await axios.get<Student[]>(
+          `${baseUrl}/api/Student/get-student-by-parent-id/${parentId}`
+        );
+
+        // Transform the API response into the format needed for student options
+        const options: StudentOption[] = response.data.map((student) => ({
+          id: student.id,
+          name: student.fullName,
+        }));
+
+        setStudentOptions(options);
+      } catch (error) {
+        console.error("Error fetching student data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStudents();
+  }, [parentId]);
 
   // Load parent's medication requests
   useEffect(() => {
@@ -97,6 +153,7 @@ const ParentMedicationDashboard: React.FC<ParentMedicationDashboardProps> = ({
             parentId={parentId}
             onRequestSubmitted={handleRequestSubmitted}
             studentOptions={studentOptions}
+            loading={loading}
           />
         )}
 
