@@ -18,43 +18,51 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
+  CircularProgress,
 } from "@mui/material";
 import { format } from "date-fns";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import MedicationIcon from "@mui/icons-material/Medication";
 import { MedicationRequest } from "../../../models/types";
 
 interface NurseMedicationListProps {
   requests: MedicationRequest[];
   onReceiveMedication: (requestId: string) => void;
+  isLoading: boolean;
+  nurseId: string;
 }
 
 const NurseMedicationList: React.FC<NurseMedicationListProps> = ({
   requests,
   onReceiveMedication,
+  isLoading,
+  nurseId,
 }) => {
   const [selectedRequest, setSelectedRequest] =
     useState<MedicationRequest | null>(null);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
 
-  const pendingRequests = requests.filter((req) => req.status === "requested");
-  const receivedRequests = requests.filter((req) => req.status === "received");
+  // Filter requests that are assigned to this nurse with status "received" (1)
+  const assignedRequests = requests.filter(
+    (req) => req.receivedBy === nurseId && req.status === "received"
+  );
 
   const getStatusChip = (status: string) => {
     switch (status) {
       case "requested":
-        return <Chip label="Đã yêu cầu" color="primary" size="small" />;
+        return <Chip label="Chờ xác nhận" color="warning" size="small" />;
       case "received":
-        return <Chip label="Đã nhận" color="info" size="small" />;
+        return <Chip label="Đã xác nhận" color="info" size="small" />;
       case "completed":
         return <Chip label="Hoàn thành" color="success" size="small" />;
-      case "cancelled":
-        return <Chip label="Đã hủy" color="error" size="small" />;
+      case "rejected":
+        return <Chip label="Đã từ chối" color="error" size="small" />;
       default:
         return <Chip label={status} size="small" />;
     }
   };
 
-  const handleReceiveClick = (request: MedicationRequest) => {
+  const handleMedicationClick = (request: MedicationRequest) => {
     setSelectedRequest(request);
     setConfirmDialogOpen(true);
   };
@@ -70,19 +78,27 @@ const NurseMedicationList: React.FC<NurseMedicationListProps> = ({
     setConfirmDialogOpen(false);
   };
 
-  const renderMedicationTable = (
-    title: string,
-    medicationList: MedicationRequest[],
-    showReceiveButton: boolean = false
-  ) => (
-    <Box sx={{ mb: 4 }}>
+  if (isLoading) {
+    return (
+      <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  return (
+    <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
       <Typography variant="h6" gutterBottom>
-        {title}
+        Yêu cầu thuốc đã xác nhận
       </Typography>
 
-      {medicationList.length === 0 ? (
+      {isLoading ? (
+        <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
+          <CircularProgress />
+        </Box>
+      ) : assignedRequests.length === 0 ? (
         <Typography variant="body1" color="textSecondary">
-          Không có yêu cầu nào.
+          Không có yêu cầu thuốc nào đã được xác nhận.
         </Typography>
       ) : (
         <TableContainer>
@@ -96,13 +112,11 @@ const NurseMedicationList: React.FC<NurseMedicationListProps> = ({
                 <TableCell align="center">Ngày bắt đầu</TableCell>
                 <TableCell align="center">Ngày kết thúc</TableCell>
                 <TableCell align="center">Trạng thái</TableCell>
-                {showReceiveButton && (
-                  <TableCell align="center">Thao tác</TableCell>
-                )}
+                <TableCell align="center">Thao tác</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {medicationList.map((request) => (
+              {assignedRequests.map((request) => (
                 <TableRow key={request.id}>
                   <TableCell>{request.studentName}</TableCell>
                   <TableCell>{request.medicationName}</TableCell>
@@ -117,46 +131,57 @@ const NurseMedicationList: React.FC<NurseMedicationListProps> = ({
                   <TableCell align="center">
                     {getStatusChip(request.status)}
                   </TableCell>
-                  {showReceiveButton && (
-                    <TableCell align="center">
-                      <Tooltip title="Xác nhận đã nhận thuốc">
-                        <IconButton
-                          size="small"
-                          color="success"
-                          onClick={() => handleReceiveClick(request)}
-                        >
-                          <CheckCircleOutlineIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    </TableCell>
-                  )}
+                  <TableCell align="center">
+                    <Tooltip title="Xem chi tiết thuốc">
+                      <IconButton
+                        size="small"
+                        color="primary"
+                        onClick={() => handleMedicationClick(request)}
+                      >
+                        <MedicationIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </TableContainer>
       )}
-    </Box>
-  );
-
-  return (
-    <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-      {renderMedicationTable("Yêu cầu chờ xác nhận", pendingRequests, true)}
-      {renderMedicationTable("Thuốc đã nhận", receivedRequests)}
 
       <Dialog open={confirmDialogOpen} onClose={handleCloseDialog}>
-        <DialogTitle>Xác nhận nhận thuốc</DialogTitle>
+        <DialogTitle>Chi tiết thuốc</DialogTitle>
         <DialogContent>
-          <DialogContentText>
-            Bạn xác nhận đã nhận thuốc {selectedRequest?.medicationName} cho học
-            sinh {selectedRequest?.studentName}?
-          </DialogContentText>
+          {selectedRequest && (
+            <>
+              <Typography variant="body1" gutterBottom>
+                <strong>Tên thuốc:</strong> {selectedRequest.medicationName}
+              </Typography>
+              <Typography variant="body1" gutterBottom>
+                <strong>Học sinh:</strong> {selectedRequest.studentName}
+              </Typography>
+              <Typography variant="body1" gutterBottom>
+                <strong>Liều lượng:</strong> {selectedRequest.dosage}
+              </Typography>
+              <Typography variant="body1" gutterBottom>
+                <strong>Hướng dẫn:</strong> {selectedRequest.instructions}
+              </Typography>
+              <Typography variant="body1" gutterBottom>
+                <strong>Thời gian:</strong>{" "}
+                {format(new Date(selectedRequest.startDate), "dd/MM/yyyy")} -{" "}
+                {format(new Date(selectedRequest.endDate), "dd/MM/yyyy")}
+              </Typography>
+              <Typography variant="body1" gutterBottom>
+                <strong>Trạng thái:</strong>{" "}
+                {selectedRequest.status === "received"
+                  ? "Đã xác nhận"
+                  : selectedRequest.status}
+              </Typography>
+            </>
+          )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog}>Hủy</Button>
-          <Button onClick={handleConfirmReceive} color="primary" autoFocus>
-            Xác nhận
-          </Button>
+          <Button onClick={handleCloseDialog}>Đóng</Button>
         </DialogActions>
       </Dialog>
     </Paper>

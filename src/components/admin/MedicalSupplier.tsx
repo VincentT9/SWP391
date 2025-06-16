@@ -40,6 +40,7 @@ import {
   Lock as LockIcon
 } from '@mui/icons-material';
 import { useAuth } from '../auth/AuthContext'; // Fix import path
+import axios from 'axios';
 
 // SupplyType enum mapping
 enum SupplyType {
@@ -48,71 +49,6 @@ enum SupplyType {
   ConsumableSupply = 2
 }
 
-
-// Mock data theo MedicalSupplier entity
-const mockMedicalSuppliers = [
-  {
-    id: 1,
-    supplyName: 'Paracetamol 500mg',
-    supplyType: SupplyType.Medication,
-    unit: 'viên',
-    quantity: 150,
-    supplier: 'Công ty Dược A',
-    image: ['paracetamol1.jpg', 'paracetamol2.jpg'],
-    isDeleted: false,
-    createdAt: '2024-01-15',
-    updatedAt: '2024-05-20'
-  },
-  {
-    id: 2,
-    supplyName: 'Máy đo huyết áp điện tử',
-    supplyType: SupplyType.Equipment,
-    unit: 'cái',
-    quantity: 3,
-    supplier: 'Công ty Thiết bị Y tế ABC',
-    image: ['blood_pressure_monitor.jpg'],
-    isDeleted: false,
-    createdAt: '2024-02-10',
-    updatedAt: '2024-05-15'
-  },
-  {
-    id: 3,
-    supplyName: 'Băng gạc vô trùng',
-    supplyType: SupplyType.ConsumableSupply,
-    unit: 'cuộn',
-    quantity: 200,
-    supplier: 'Công ty Vật tư Y tế DEF',
-    image: ['gauze1.jpg', 'gauze2.jpg'],
-    isDeleted: false,
-    createdAt: '2024-03-05',
-    updatedAt: '2024-05-18'
-  },
-  {
-    id: 4,
-    supplyName: 'Amoxicillin 250mg',
-    supplyType: SupplyType.Medication,
-    unit: 'viên',
-    quantity: 25,
-    supplier: 'Công ty Dược B',
-    image: ['amoxicillin.jpg'],
-    isDeleted: false,
-    createdAt: '2024-01-20',
-    updatedAt: '2024-05-22'
-  },
-  {
-    id: 5,
-    supplyName: 'Kim tiêm 5ml',
-    supplyType: SupplyType.ConsumableSupply,
-    unit: 'hộp',
-    quantity: 15,
-    supplier: 'Công ty Vật tư Y tế GHI',
-    image: ['syringe.jpg'],
-    isDeleted: false,
-    createdAt: '2024-02-28',
-    updatedAt: '2024-05-25'
-  }
-];
-
 const MedicalSupplierPage = () => {
   const navigate = useNavigate();
   const { user, loading } = useAuth(); // Use AuthContext với user và loading
@@ -120,6 +56,75 @@ const MedicalSupplierPage = () => {
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [formData, setFormData] = useState<any>({});
   const [filterType, setFilterType] = useState<number | 'all'>('all');
+  const [medicalSuppliers, setMedicalSuppliers] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch suppliers from API
+  const fetchSuppliers = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await axios.get(`${process.env.REACT_APP_MEDICAL_SUPPLIER_API}/get-all-suppliers`);
+      setMedicalSuppliers(response.data);
+    } catch (err) {
+      console.error('Error fetching suppliers:', err);
+      setError('Không thể tải dữ liệu vật tư y tế. Vui lòng thử lại sau.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Fetch a single supplier by ID
+  const fetchSupplierById = async (id: number) => {
+    try {
+      const response = await axios.get(`${process.env.REACT_APP_MEDICAL_SUPPLIER_API}/get-supplier-by-id/${id}`);
+      return response.data;
+    } catch (err) {
+      console.error(`Error fetching supplier with ID ${id}:`, err);
+      throw new Error('Không thể tải thông tin vật tư');
+    }
+  };
+
+  // Create a new supplier
+  const createSupplier = async (supplierData: any) => {
+    try {
+      const response = await axios.post(`${process.env.REACT_APP_MEDICAL_SUPPLIER_API}/create-supplier`, supplierData);
+      return response.data;
+    } catch (err) {
+      console.error('Error creating supplier:', err);
+      throw new Error('Không thể tạo vật tư mới');
+    }
+  };
+
+  // Update an existing supplier
+  const updateSupplier = async (id: number, supplierData: any) => {
+    try {
+      const response = await axios.put(`${process.env.REACT_APP_MEDICAL_SUPPLIER_API}/update-supplier/${id}`, supplierData);
+      return response.data;
+    } catch (err) {
+      console.error(`Error updating supplier with ID ${id}:`, err);
+      throw new Error('Không thể cập nhật vật tư');
+    }
+  };
+
+  // Delete a supplier
+  const deleteSupplier = async (id: number) => {
+    try {
+      const response = await axios.delete(`${process.env.REACT_APP_MEDICAL_SUPPLIER_API}/delete-supplier/${id}`);
+      return response.data;
+    } catch (err) {
+      console.error(`Error deleting supplier with ID ${id}:`, err);
+      throw new Error('Không thể xóa vật tư');
+    }
+  };
+
+  // Load suppliers on component mount
+  useEffect(() => {
+    if (user && user.isAuthenticated && user.role !== 'Parent') {
+      fetchSuppliers();
+    }
+  }, [user]);
 
   // Loading state while checking authentication
   if (loading) {
@@ -187,6 +192,40 @@ const MedicalSupplierPage = () => {
     );
   }
 
+  // Show loading state while fetching data
+  if (isLoading) {
+    return (
+      <Container maxWidth="lg">
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
+          <CircularProgress size={60} />
+          <Typography variant="h6" sx={{ ml: 2 }}>
+            Đang tải dữ liệu vật tư y tế...
+          </Typography>
+        </Box>
+      </Container>
+    );
+  }
+
+  // Show error message if fetching failed
+  if (error) {
+    return (
+      <Container maxWidth="lg">
+        <Box sx={{ my: 4, textAlign: 'center' }}>
+          <Alert severity="error" sx={{ mb: 2 }}>
+            <Typography variant="h6">Lỗi</Typography>
+            <Typography>{error}</Typography>
+          </Alert>
+          <Button 
+            variant="contained" 
+            onClick={() => fetchSuppliers()}
+          >
+            Thử lại
+          </Button>
+        </Box>
+      </Container>
+    );
+  }
+
   // Helper function để hiển thị tên role
   const getRoleDisplayName = (role: string) => {
     switch (role) {
@@ -218,15 +257,15 @@ const MedicalSupplierPage = () => {
 
   const getFilteredData = () => {
     if (filterType === 'all') {
-      return mockMedicalSuppliers.filter(item => !item.isDeleted);
+      return medicalSuppliers.filter(item => !item.isDeleted);
     }
-    return mockMedicalSuppliers.filter(item => 
+    return medicalSuppliers.filter(item => 
       !item.isDeleted && item.supplyType === filterType
     );
   };
 
   const getLowStockItems = () => {
-    return mockMedicalSuppliers.filter(item => {
+    return medicalSuppliers.filter(item => {
       if (item.isDeleted) return false;
       switch (item.supplyType) {
         case SupplyType.Medication: return item.quantity < 50;
@@ -237,16 +276,27 @@ const MedicalSupplierPage = () => {
     });
   };
 
-  const handleOpenDialog = (item?: any) => {
-    setSelectedItem(item);
-    setFormData(item || {
-      supplyName: '',
-      supplyType: SupplyType.Medication,
-      unit: '',
-      quantity: 0,
-      supplier: '',
-      image: []
-    });
+  const handleOpenDialog = async (item?: any) => {
+    if (item) {
+      try {
+        const supplierData = await fetchSupplierById(item.id);
+        setSelectedItem(supplierData);
+        setFormData(supplierData);
+      } catch (err) {
+        alert('Không thể tải thông tin vật tư. Vui lòng thử lại.');
+        return;
+      }
+    } else {
+      setSelectedItem(null);
+      setFormData({
+        supplyName: '',
+        supplyType: SupplyType.Medication,
+        unit: '',
+        quantity: 0,
+        supplier: '',
+        image: []
+      });
+    }
     setOpenDialog(true);
   };
 
@@ -258,38 +308,36 @@ const MedicalSupplierPage = () => {
 
   const handleSave = async () => {
     try {
-      console.log('Saving medical supplier:', formData);
-      // TODO: Call API to save/update medical supplier
-      // const response = await apiRequest('/medical-suppliers', {
-      //   method: selectedItem ? 'PUT' : 'POST',
-      //   body: JSON.stringify(formData)
-      // });
-      
-      // Show success message
-      alert(selectedItem ? 'Cập nhật vật tư thành công!' : 'Thêm vật tư thành công!');
+      setIsLoading(true);
+      if (selectedItem) {
+        await updateSupplier(selectedItem.id, formData);
+        alert('Cập nhật vật tư thành công!');
+      } else {
+        await createSupplier(formData);
+        alert('Thêm vật tư thành công!');
+      }
       handleCloseDialog();
-      
-      // TODO: Refresh data from API
+      fetchSuppliers();
     } catch (error) {
       console.error('Error saving medical supplier:', error);
       alert('Có lỗi xảy ra khi lưu vật tư!');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleDelete = async (id: number) => {
     if (window.confirm('Bạn có chắc chắn muốn xóa vật tư này?')) {
       try {
-        console.log('Deleting medical supplier:', id);
-        // TODO: Call API to soft delete medical supplier
-        // await apiRequest(`/medical-suppliers/${id}`, {
-        //   method: 'DELETE'
-        // });
-        
+        setIsLoading(true);
+        await deleteSupplier(id);
         alert('Xóa vật tư thành công!');
-        // TODO: Refresh data from API
+        fetchSuppliers();
       } catch (error) {
         console.error('Error deleting medical supplier:', error);
         alert('Có lỗi xảy ra khi xóa vật tư!');
+      } finally {
+        setIsLoading(false);
       }
     }
   };
@@ -314,36 +362,7 @@ const MedicalSupplierPage = () => {
             </Box>
           </Box>
           
-          {/* User info với AuthContext data */}
-          <Card sx={{ minWidth: 250 }}>
-            <CardContent sx={{ p: 2 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Avatar 
-                  src={user.avatar} 
-                  sx={{ width: 40, height: 40, bgcolor: '#1976d2' }}
-                >
-                  {user.name.charAt(0).toUpperCase()}
-                </Avatar>
-                <Box>
-                  <Typography variant="caption" color="text.secondary">
-                    Đăng nhập với tư cách
-                  </Typography>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
-                    {user.name}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    @{user.username}
-                  </Typography>
-                </Box>
-              </Box>
-              <Chip 
-                label={getRoleDisplayName(user.role)}
-                color="error" 
-                size="small" 
-                sx={{ mt: 1, width: '100%' }}
-              />
-            </CardContent>
-          </Card>
+        
         </Box>
 
         {/* Alert cho low stock */}
@@ -395,7 +414,7 @@ const MedicalSupplierPage = () => {
                 <Card sx={{ flex: 1, minWidth: 200, bgcolor: '#e3f2fd' }}>
                   <CardContent sx={{ p: 2, textAlign: 'center' }}>
                     <Typography variant="h4" sx={{ color: '#1976d2', fontWeight: 'bold' }}>
-                      {mockMedicalSuppliers.filter(i => i.supplyType === SupplyType.Medication && !i.isDeleted).length}
+                      {medicalSuppliers.filter(i => i.supplyType === SupplyType.Medication && !i.isDeleted).length}
                     </Typography>
                     <Typography variant="body2">Loại thuốc</Typography>
                   </CardContent>
@@ -403,7 +422,7 @@ const MedicalSupplierPage = () => {
                 <Card sx={{ flex: 1, minWidth: 200, bgcolor: '#f3e5f5' }}>
                   <CardContent sx={{ p: 2, textAlign: 'center' }}>
                     <Typography variant="h4" sx={{ color: '#7b1fa2', fontWeight: 'bold' }}>
-                      {mockMedicalSuppliers.filter(i => i.supplyType === SupplyType.Equipment && !i.isDeleted).length}
+                      {medicalSuppliers.filter(i => i.supplyType === SupplyType.Equipment && !i.isDeleted).length}
                     </Typography>
                     <Typography variant="body2">Thiết bị</Typography>
                   </CardContent>
@@ -411,7 +430,7 @@ const MedicalSupplierPage = () => {
                 <Card sx={{ flex: 1, minWidth: 200, bgcolor: '#fff3e0' }}>
                   <CardContent sx={{ p: 2, textAlign: 'center' }}>
                     <Typography variant="h4" sx={{ color: '#f57c00', fontWeight: 'bold' }}>
-                      {mockMedicalSuppliers.filter(i => i.supplyType === SupplyType.ConsumableSupply && !i.isDeleted).length}
+                      {medicalSuppliers.filter(i => i.supplyType === SupplyType.ConsumableSupply && !i.isDeleted).length}
                     </Typography>
                     <Typography variant="body2">Vật tư tiêu hao</Typography>
                   </CardContent>
@@ -452,7 +471,7 @@ const MedicalSupplierPage = () => {
                           <Box sx={{ display: 'flex', gap: 1 }}>
                             {item.image && item.image.length > 0 ? (
                               <Box sx={{ display: 'flex', gap: 0.5 }}>
-                                {item.image.slice(0, 2).map((img, index) => (
+                                {item.image.slice(0, 2).map((img: string, index: number) => (
                                   <Avatar
                                     key={index}
                                     src={`/images/${img}`}
