@@ -1,11 +1,11 @@
-import axios from 'axios';
+import axios from "axios";
 
 // Create axios instance
 const instance = axios.create({
   baseURL: process.env.REACT_APP_BASE_URL,
   headers: {
-    'Content-Type': 'application/json',
-    'Authorization' : `Bearer ${localStorage.getItem('authToken') || ''}`,
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${localStorage.getItem("authToken") || ""}`,
   },
   timeout: 10000, // 10 seconds
 });
@@ -14,7 +14,7 @@ const instance = axios.create({
 instance.interceptors.request.use(
   (config) => {
     // Get token from storage
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem("authToken");
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -34,13 +34,13 @@ instance.interceptors.response.use(
     // Handle unauthorized errors
     if (error.response?.status === 401) {
       // Handle token expiration - e.g., redirect to login
-      localStorage.removeItem('authToken');
-      window.location.href = '/login';
+      localStorage.removeItem("authToken");
+      window.location.href = "/login";
     }
-    
+
     // Log errors
-    console.error('API Error:', error);
-    
+    console.error("API Error:", error);
+
     return Promise.reject(error);
   }
 );

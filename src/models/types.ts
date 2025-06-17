@@ -19,35 +19,38 @@ export interface User {
   updatedAt: Date;
 }
 
-export interface Student {
+export type Student = {
   id: string;
   firstName: string;
   lastName: string;
   dateOfBirth: Date;
-  gender: "male" | "female" | "other";
-  grade: string;
+  gender?: string;
+  grade?: string;
   class: string;
   parentId: string;
   profileImage?: string;
-  healthRecordId: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
+  healthRecordId?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+};
 
-export interface HealthRecord {
-  id: string;
+export type HealthRecord = {
+  id?: string;
   studentId: string;
-  height: number; // in cm
-  weight: number; // in kg
-  bloodType?: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-";
-  allergies: Allergy[];
-  chronicConditions: ChronicCondition[];
-  visionAssessment?: VisionAssessment;
-  hearingAssessment?: HearingAssessment;
-  medicalHistory: MedicalHistoryItem[];
-  immunizations: Immunization[];
-  lastUpdated: Date;
-}
+  height: number;
+  weight: number;
+  bloodType?: string;
+  allergies: string;
+  chronicDiseases: string;
+  pastMedicalHistory: string;
+  visionLeft: string;
+  visionRight: string;
+  hearingLeft: string;
+  hearingRight: string;
+  vaccinationHistory: string;
+  otherNotes: string;
+  lastUpdated?: Date;
+};
 
 export interface Allergy {
   id: string;
@@ -266,4 +269,13 @@ export interface MedicationLog {
   studentConditionBefore?: string;
   studentConditionAfter?: string;
   notes?: string;
+}
+
+export interface MedicationDiaryEntry {
+  id: string;
+  studentName: string;
+  status: number;
+  description: string;
+  createAt: string;
+  createdBy: string;
 }

@@ -22,18 +22,10 @@ interface ApiMedicationRequest {
   startDate: string;
   endDate: string | null;
   status: number;
-  student: {
-    id: string;
-    studentCode: string;
-    fullName: string;
-    dateOfBirth: string;
-    gender: number;
-    class: string;
-    schoolYear: string;
-    image: string;
-    healthRecord: any;
-  };
-  medicalStaff: any;
+  studentCode: string;
+  studentName: string;
+  medicalStaffId: string;
+  medicalStaffName: string | null;
 }
 
 interface MedicationAdminLog {
@@ -84,6 +76,7 @@ const NurseMedicationDashboard: React.FC<NurseMedicationDashboardProps> = ({
       
       // Convert API format to local format for compatibility with existing components
       const convertedRequests = response.data.map((req: ApiMedicationRequest) => {
+        console.log("dssadas ",req );
         // Calculate end date by adding numberOfDayToTake to startDate
         const startDate = parseISO(req.startDate);
         const calculatedEndDate = addDays(startDate, req.numberOfDayToTake - 1); // subtract 1 because first day counts
@@ -91,22 +84,22 @@ const NurseMedicationDashboard: React.FC<NurseMedicationDashboardProps> = ({
         
         return {
           id: req.id,
-          studentId: req.student.id,
-          studentName: req.student.fullName,
+          studentId: req.studentCode,
+          studentName: req.studentName,
           medicationName: req.medicationName,
           dosage: req.dosage,
           instructions: req.instructions,
           startDate: req.startDate,
           endDate: endDateStr, // Use calculated end date
           status: statusNumberToString(req.status),
-          receivedBy: req.medicalStaff?.id || null,
-          receivedAt: req.medicalStaff ? new Date() : null,
+          receivedBy: req.medicalStaffId || null,
           updatedAt: new Date(),
         };
       });
       
       setRequests(convertedRequests);
     } catch (error) {
+    
       console.error("Error fetching medication requests:", error);
       toast.error("Không thể tải danh sách yêu cầu thuốc. Vui lòng thử lại sau.");
     } finally {
@@ -130,7 +123,7 @@ const NurseMedicationDashboard: React.FC<NurseMedicationDashboardProps> = ({
       
       const medicationsForToday = response.data.filter((req: ApiMedicationRequest) => {
         // Only include medications assigned to this nurse
-        if (req.medicalStaff?.id !== nurseId) {
+        if (req.medicalStaffId !== nurseId) {
           return false;
         }
         

@@ -22,50 +22,30 @@ const StudentHealthRecordView: React.FC<StudentHealthRecordViewProps> = ({
   healthRecord,
   onBack,
 }) => {
+  // Cập nhật để xử lý allergies là chuỗi thay vì mảng
   const renderAllergies = () => {
-    if (!healthRecord || healthRecord.allergies.length === 0) {
+    if (!healthRecord || !healthRecord.allergies) {
       return <Typography>Không có dị ứng nào được ghi nhận</Typography>;
     }
 
-    return healthRecord.allergies.map((allergy) => (
-      <Box key={allergy.id} sx={{ mb: 2 }}>
-        <Typography variant="subtitle1" color="primary">
-          {allergy.name} - Mức độ:{" "}
-          {allergy.severity === "mild"
-            ? "Nhẹ"
-            : allergy.severity === "moderate"
-            ? "Trung bình"
-            : "Nặng"}
-        </Typography>
-        <Typography variant="body2">
-          <strong>Triệu chứng:</strong> {allergy.symptoms}
-        </Typography>
-        <Typography variant="body2">
-          <strong>Điều trị:</strong> {allergy.treatment}
-        </Typography>
+    return (
+      <Box sx={{ mb: 2 }}>
+        <Typography variant="body1">{healthRecord.allergies}</Typography>
       </Box>
-    ));
+    );
   };
 
+  // Cập nhật để xử lý chronicDiseases là chuỗi thay vì mảng chronicConditions
   const renderChronicConditions = () => {
-    if (!healthRecord || healthRecord.chronicConditions.length === 0) {
+    if (!healthRecord || !healthRecord.chronicDiseases) {
       return <Typography>Không có bệnh mãn tính nào được ghi nhận</Typography>;
     }
 
-    return healthRecord.chronicConditions.map((condition) => (
-      <Box key={condition.id} sx={{ mb: 2 }}>
-        <Typography variant="subtitle1" color="primary">
-          {condition.name}
-        </Typography>
-        <Typography variant="body2">
-          <strong>Ngày chẩn đoán:</strong>{" "}
-          {condition.diagnosisDate.toLocaleDateString("vi-VN")}
-        </Typography>
-        <Typography variant="body2">
-          <strong>Ghi chú:</strong> {condition.notes}
-        </Typography>
+    return (
+      <Box sx={{ mb: 2 }}>
+        <Typography variant="body1">{healthRecord.chronicDiseases}</Typography>
       </Box>
-    ));
+    );
   };
 
   return (
@@ -137,57 +117,60 @@ const StudentHealthRecordView: React.FC<StudentHealthRecordViewProps> = ({
               </Typography>
               {renderChronicConditions()}
 
-              {healthRecord.visionAssessment && (
-                <>
-                  <Divider sx={{ my: 2 }} />
-                  <Typography variant="h6" gutterBottom>
-                    Thị lực
-                  </Typography>
-                  <Typography variant="body1">
-                    <strong>Đo ngày:</strong>{" "}
-                    {healthRecord.visionAssessment.date.toLocaleDateString(
-                      "vi-VN"
-                    )}
-                  </Typography>
-                  <Typography variant="body1">
-                    <strong>Mắt trái:</strong>{" "}
-                    {healthRecord.visionAssessment.leftEye}
-                  </Typography>
-                  <Typography variant="body1">
-                    <strong>Mắt phải:</strong>{" "}
-                    {healthRecord.visionAssessment.rightEye}
-                  </Typography>
-                  <Typography variant="body1">
-                    <strong>Có đeo kính:</strong>{" "}
-                    {healthRecord.visionAssessment.wearsCorrective
-                      ? "Có"
-                      : "Không"}
-                  </Typography>
-                </>
-              )}
+              {/* Cập nhật phần hiển thị thị lực */}
+              <Divider sx={{ my: 2 }} />
+              <Typography variant="h6" gutterBottom>
+                Thị lực
+              </Typography>
+              <Typography variant="body1">
+                <strong>Mắt trái:</strong>{" "}
+                {healthRecord.visionLeft || "Chưa có thông tin"}
+              </Typography>
+              <Typography variant="body1">
+                <strong>Mắt phải:</strong>{" "}
+                {healthRecord.visionRight || "Chưa có thông tin"}
+              </Typography>
 
-              {healthRecord.hearingAssessment && (
-                <>
-                  <Divider sx={{ my: 2 }} />
-                  <Typography variant="h6" gutterBottom>
-                    Thính lực
-                  </Typography>
-                  <Typography variant="body1">
-                    <strong>Đo ngày:</strong>{" "}
-                    {healthRecord.hearingAssessment.date.toLocaleDateString(
-                      "vi-VN"
-                    )}
-                  </Typography>
-                  <Typography variant="body1">
-                    <strong>Tai trái:</strong>{" "}
-                    {healthRecord.hearingAssessment.leftEar}
-                  </Typography>
-                  <Typography variant="body1">
-                    <strong>Tai phải:</strong>{" "}
-                    {healthRecord.hearingAssessment.rightEar}
-                  </Typography>
-                </>
-              )}
+              {/* Cập nhật phần hiển thị thính lực */}
+              <Divider sx={{ my: 2 }} />
+              <Typography variant="h6" gutterBottom>
+                Thính lực
+              </Typography>
+              <Typography variant="body1">
+                <strong>Tai trái:</strong>{" "}
+                {healthRecord.hearingLeft || "Chưa có thông tin"}
+              </Typography>
+              <Typography variant="body1">
+                <strong>Tai phải:</strong>{" "}
+                {healthRecord.hearingRight || "Chưa có thông tin"}
+              </Typography>
+
+              {/* Thêm phần hiển thị tiền sử bệnh */}
+              <Divider sx={{ my: 2 }} />
+              <Typography variant="h6" gutterBottom>
+                Tiền sử bệnh
+              </Typography>
+              <Typography variant="body1">
+                {healthRecord.pastMedicalHistory || "Không có thông tin"}
+              </Typography>
+
+              {/* Thêm phần hiển thị lịch sử tiêm chủng */}
+              <Divider sx={{ my: 2 }} />
+              <Typography variant="h6" gutterBottom>
+                Lịch sử tiêm chủng
+              </Typography>
+              <Typography variant="body1">
+                {healthRecord.vaccinationHistory || "Không có thông tin"}
+              </Typography>
+
+              {/* Thêm phần hiển thị ghi chú bổ sung */}
+              <Divider sx={{ my: 2 }} />
+              <Typography variant="h6" gutterBottom>
+                Ghi chú bổ sung
+              </Typography>
+              <Typography variant="body1">
+                {healthRecord.otherNotes || "Không có ghi chú bổ sung"}
+              </Typography>
             </CardContent>
           </Card>
         </Box>

@@ -25,12 +25,14 @@ import { MedicationRequest } from "../../../models/types";
 
 interface MedicationRequestListProps {
   requests: MedicationRequest[];
-  onViewLogs: (requestId: string) => void;
+  onViewLogs: (requestId: string, studentId: string) => void; // Cập nhật để truyền cả studentId
+  onViewDetail: (requestId: string) => void;
 }
 
 const MedicationRequestList: React.FC<MedicationRequestListProps> = ({
   requests,
   onViewLogs,
+  onViewDetail,
 }) => {
   const [selectedRequest, setSelectedRequest] =
     useState<MedicationRequest | null>(null);
@@ -127,14 +129,19 @@ const MedicationRequestList: React.FC<MedicationRequestListProps> = ({
                         alignItems: "center",
                       }}
                     >
-                      <Tooltip title="Xem chi tiết">
-                        <IconButton
-                          size="small"
-                          color="info"
-                          onClick={() => handleOpenDetail(request)}
-                        >
-                          <InfoOutlinedIcon fontSize="small" />
-                        </IconButton>
+                      <Tooltip title="Xem nhật ký uống thuốc">
+                        <span>
+                          <IconButton
+                            size="small"
+                            color="primary"
+                            onClick={() =>
+                              onViewLogs(request.id, request.studentId)
+                            } // Truyền cả studentId
+                            disabled={request.status === "requested"}
+                          >
+                            <VisibilityIcon fontSize="small" />
+                          </IconButton>
+                        </span>
                       </Tooltip>
 
                       <Box
@@ -145,15 +152,14 @@ const MedicationRequestList: React.FC<MedicationRequestListProps> = ({
                         }}
                       ></Box>
 
-                      <Tooltip title="Xem nhật ký uống thuốc">
+                      <Tooltip title="Xem chi tiết">
                         <span>
                           <IconButton
                             size="small"
-                            color="primary"
-                            onClick={() => onViewLogs(request.id)}
-                            disabled={request.status === "requested"}
+                            color="default"
+                            onClick={() => onViewDetail(request.id)}
                           >
-                            <VisibilityIcon fontSize="small" />
+                            <InfoOutlinedIcon fontSize="small" />
                           </IconButton>
                         </span>
                       </Tooltip>

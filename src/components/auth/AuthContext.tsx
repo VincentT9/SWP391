@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
 import { jwtDecode } from "jwt-decode";
 
-
 export interface User {
   id: string;
   name: string;
@@ -77,12 +76,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       const loginResponse = await response.json();
       console.log("Login API Response:", loginResponse);
 
-
       // Lấy token từ response
       const token =
         loginResponse.Token || loginResponse.token || loginResponse.accessToken;
       const refreshToken = loginResponse.refreshToken;
-
 
       if (!token) {
         console.log("No token received from API");
@@ -131,7 +128,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         console.error("Token decode error:", decodeError);
         return false;
       }
-
     } catch (error) {
       console.error("Login error:", error);
       return false;

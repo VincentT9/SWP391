@@ -43,24 +43,21 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../auth/AuthContext';
 
-// Updated Student interface to match API response
+// Interface definitions (giữ nguyên)
 interface Student {
   id: string;
-  studentCode: string;
-  fullName: string;
-  dateOfBirth: string;
-  gender: number;
+  studentId: string;
+  name: string;
   class: string;
-  schoolYear: string;
-  image: string | null;
-  healthRecord: any | null;
-  // Add missing fields that we still need for UI compatibility
-  address?: string;
-  parentName?: string;
-  parentPhone?: string;
-  bloodType?: string;
-  describe?: string;
-  emergencyContact?: string;
+  dateOfBirth: string;
+  gender: string;
+  address: string;
+  parentName: string;
+  parentPhone: string;
+  avatar?: string;
+  bloodType: string;
+  describe: string;
+  emergencyContact: string;
 }
 
 interface HealthRecord {
@@ -81,7 +78,52 @@ interface HealthRecord {
   nurseName: string;
 }
 
-// Mock health records data (kept as is)
+// Mock data (giữ nguyên)
+const mockStudents: Student[] = [
+  {
+    id: '1',
+    studentId: 'HS001',
+    name: 'Nguyễn Văn An',
+    class: '10A1',
+    dateOfBirth: '2007-05-15',
+    gender: 'Nam',
+    address: '123 Đường ABC, Quận 1, TP.HCM',
+    parentName: 'Nguyễn Văn Bình',
+    parentPhone: '0901234567',
+    bloodType: 'O+',
+    describe: 'Dị ứng với Cua, Dị ứng với cơm',
+    emergencyContact: '0987654321',
+  },
+  {
+    id: '2',
+    studentId: 'HS002',
+    name: 'Trần Thị Bình',
+    class: '11B2',
+    dateOfBirth: '2006-08-22',
+    gender: 'Nữ',
+    address: '456 Đường XYZ, Quận 3, TP.HCM',
+    parentName: 'Trần Văn Cường',
+    parentPhone: '0902345678',
+    bloodType: 'A+',
+    describe: 'none',
+    emergencyContact: '0976543210',
+  },
+  {
+    id: '3',
+    studentId: 'HS003',
+    name: 'Lê Minh Châu',
+    class: '12C1',
+    dateOfBirth: '2005-12-10',
+    gender: 'Nam',
+    address: '789 Đường DEF, Quận 5, TP.HCM',
+    parentName: 'Lê Thị Dung',
+    parentPhone: '0903456789',
+    bloodType: 'B+',
+    describe: 'none',
+    emergencyContact: '0965432109',
+  },
+];
+
 const mockHealthRecords: HealthRecord[] = [
   {
     id: '1',
@@ -149,7 +191,7 @@ const StudentRecordsPage: React.FC = () => {
     );
   }
 
-  const handleSearch = async () => {
+  const handleSearch = () => {
     if (!searchStudentId.trim()) {
       setError('Vui lòng nhập mã số học sinh.');
       return;
@@ -158,32 +200,14 @@ const StudentRecordsPage: React.FC = () => {
     setLoading(true);
     setError(null);
 
-    try {
-      // Call the API to get student data
-      const response = await fetch(`${process.env.REACT_APP_BASE_URL}/api/Student/get-student-by-student-code/${searchStudentId.trim()}`);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      
-      const student = await response.json();
+    setTimeout(() => {
+      const student = mockStudents.find(s => 
+        s.studentId.toLowerCase() === searchStudentId.trim().toLowerCase()
+      );
       
       if (student) {
-        // Transform gender from number to string for display purposes
-        const studentWithDefaults: Student = {
-          ...student,
-          // Add default values for missing fields
-          address: 'Không có thông tin',
-          parentName: 'Không có thông tin',
-          parentPhone: 'Không có thông tin',
-          bloodType: 'Không có thông tin',
-          describe: 'Không có thông tin',
-          emergencyContact: 'Không có thông tin'
-        };
-        
-        setSelectedStudent(studentWithDefaults);
-        // Filter health records using studentCode instead of studentId
-        const records = mockHealthRecords.filter(r => r.studentId === student.studentCode);
+        setSelectedStudent(student);
+        const records = mockHealthRecords.filter(r => r.studentId === student.studentId);
         setHealthRecords(records);
         setError(null);
       } else {
@@ -191,14 +215,9 @@ const StudentRecordsPage: React.FC = () => {
         setHealthRecords([]);
         setError('Không tìm thấy học sinh với mã số này.');
       }
-    } catch (err) {
-      console.error('Error fetching student data:', err);
-      setSelectedStudent(null);
-      setHealthRecords([]);
-      setError('Đã xảy ra lỗi khi tìm kiếm học sinh. Vui lòng thử lại sau.');
-    } finally {
+      
       setLoading(false);
-    }
+    }, 1000);
   };
 
   const handleViewRecord = (record: HealthRecord) => {
@@ -250,10 +269,6 @@ const StudentRecordsPage: React.FC = () => {
     }
   };
 
-  const getGenderDisplay = (gender: number): string => {
-    return gender === 0 ? 'Nam' : 'Nữ';
-  };
-
   return (
     <Container maxWidth="lg">
       <Box sx={{ my: 4 }}>
@@ -274,7 +289,7 @@ const StudentRecordsPage: React.FC = () => {
               <TextField
                 fullWidth
                 label="Mã số học sinh"
-                placeholder="Nhập mã số học sinh (VD: STU001)"
+                placeholder="Nhập mã số học sinh (VD: HS001)"
                 value={searchStudentId}
                 onChange={(e) => setSearchStudentId(e.target.value)}
                 onKeyPress={handleKeyPress}
@@ -321,15 +336,15 @@ const StudentRecordsPage: React.FC = () => {
                 }}>
                   <Avatar
                     sx={{ width: 100, height: 100, mx: 'auto', mb: 2, bgcolor: '#0066b3' }}
-                    src={selectedStudent.image || undefined}
+                    src={selectedStudent.avatar}
                   >
                     <PersonIcon sx={{ fontSize: 50 }} />
                   </Avatar>
                   <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                    {selectedStudent.fullName}
+                    {selectedStudent.name}
                   </Typography>
                   <Typography variant="body2" color="textSecondary">
-                    {selectedStudent.studentCode}
+                    {selectedStudent.studentId}
                   </Typography>
                 </Box>
                 
@@ -345,16 +360,12 @@ const StudentRecordsPage: React.FC = () => {
                     <Typography variant="body1">{selectedStudent.class}</Typography>
                   </Box>
                   <Box>
-                    <Typography variant="subtitle2" color="textSecondary">Niên khóa</Typography>
-                    <Typography variant="body1">{selectedStudent.schoolYear}</Typography>
-                  </Box>
-                  <Box>
                     <Typography variant="subtitle2" color="textSecondary">Tuổi</Typography>
                     <Typography variant="body1">{calculateAge(selectedStudent.dateOfBirth)} tuổi</Typography>
                   </Box>
                   <Box>
                     <Typography variant="subtitle2" color="textSecondary">Giới tính</Typography>
-                    <Typography variant="body1">{getGenderDisplay(selectedStudent.gender)}</Typography>
+                    <Typography variant="body1">{selectedStudent.gender}</Typography>
                   </Box>
                   <Box>
                     <Typography variant="subtitle2" color="textSecondary">Nhóm máu</Typography>

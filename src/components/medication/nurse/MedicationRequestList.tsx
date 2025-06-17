@@ -50,8 +50,10 @@ interface MedicationRequestItem {
   startDate: string;
   endDate: string | null;
   status: number;
-  student: Student;
-  medicalStaff: any;
+  studentCode: string;
+  studentName: string;
+  medicalStaffId: string;
+  medicalStaffName: string | null;
 }
 
 interface MedicationRequestListProps {
@@ -123,7 +125,7 @@ const MedicationRequestList: React.FC<MedicationRequestListProps> = ({
       
       // Match the exact schema required by the API
       const updateData = {
-        studentId: requestData.student.id,
+        studentId: requestData.studentCode,
         medicationName: requestData.medicationName,
         dosage: requestData.dosage,
         numberOfDayToTake: requestData.numberOfDayToTake,
@@ -250,15 +252,16 @@ const MedicationRequestList: React.FC<MedicationRequestListProps> = ({
                 >
                   <TableCell component="th" scope="row">
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <Avatar 
+                      {/* <Avatar 
                         src={request.student.image} 
                         alt={request.student.fullName} 
                         sx={{ mr: 1, width: 32, height: 32 }}
-                      />
+                      /> */}
                       <Box>
-                        <Typography variant="body1">{request.student.fullName}</Typography>
+                        <Typography variant="body1">{request.studentName}</Typography>
                         <Typography variant="body2" color="text.secondary">
-                          {request.student.studentCode} | {request.student.class}
+                          {request.studentCode} 
+                          {/* | {request.student.class} */}
                         </Typography>
                       </Box>
                     </Box>

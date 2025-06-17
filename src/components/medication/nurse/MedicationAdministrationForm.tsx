@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import {
   Box,
   Button,
@@ -14,10 +15,11 @@ import {
   DialogActions,
   Avatar,
   Stack,
+  CircularProgress,
 } from "@mui/material";
 import { toast } from "react-toastify";
 import { format, addDays, parseISO } from "date-fns";
-
+import instance from "../../../utils/axiosConfig";
 interface Student {
   id: string;
   studentCode: string;
@@ -39,8 +41,10 @@ interface MedicationRequest {
   startDate: string;
   endDate: string | null;
   status: number;
-  student: Student;
-  medicalStaff: any;
+  studentCode: string;
+  studentName: string;
+  medicalStaffId: string;
+  medicalStaffName: string | null;
 }
 
 interface MedicationAdministrationFormProps {
@@ -62,6 +66,26 @@ const MedicationAdministrationForm: React.FC<MedicationAdministrationFormProps> 
   const [notGivenDialogOpen, setNotGivenDialogOpen] = useState(false);
   const [givenDialogOpen, setGivenDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [student, setStudent] = useState<Student | null>(null);
+  const [loadingStudent, setLoadingStudent] = useState(false);
+
+  useEffect(() => {
+    const fetchStudentData = async () => {
+      if (medicationRequest.studentCode) {
+        setLoadingStudent(true);
+        try {
+          const response = await instance.get(`/api/Student/get-student-by-student-code/${medicationRequest.studentCode}`);
+          setStudent(response.data);
+        } catch (error) {
+          console.error('Error fetching student data:', error);
+        } finally {
+          setLoadingStudent(false);
+        }
+      }
+    };
+
+    fetchStudentData();
+  }, [medicationRequest.studentCode]);
 
   const handleGiveMedicationClick = () => {
     setGivenDialogOpen(true);
@@ -146,21 +170,25 @@ const MedicationAdministrationForm: React.FC<MedicationAdministrationFormProps> 
             alignItems: 'center' 
           }}>
             <Stack direction="column" spacing={2} alignItems="center">
-              <Avatar
-                src={medicationRequest.student.image}
-                alt={medicationRequest.student.fullName}
-                sx={{ width: 80, height: 80 }}
-              />
+              {loadingStudent ? (
+                <CircularProgress size={80} />
+              ) : (
+                <Avatar
+                  src={student?.image || '/default-avatar.png'}
+                  alt={medicationRequest.studentName}
+                  sx={{ width: 80, height: 80 }}
+                />
+              )}
               <Typography variant="subtitle1" align="center">
-                {medicationRequest.student.fullName}
+                {medicationRequest.studentName}
               </Typography>
               <Typography
                 variant="body2"
                 color="text.secondary"
                 align="center"
               >
-                {medicationRequest.student.class} |{" "}
-                {medicationRequest.student.studentCode}
+                {student?.class && `${student.class} | `}
+                {medicationRequest.studentCode}
               </Typography>
             </Stack>
           </Box>
