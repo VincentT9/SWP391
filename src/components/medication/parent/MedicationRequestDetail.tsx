@@ -259,8 +259,8 @@ const MedicationRequestDetail: React.FC<MedicationRequestDetailProps> = ({
                   </Typography>
                   <Chip
                     size="small"
-                    label={diary.status === 0 ? "Đã uống thuốc" : "Đã bỏ lỡ"}
-                    color={diary.status === 0 ? "success" : "error"}
+                    label={diary.status === 0 ? "Đã bỏ lỡ" : "Đã uống thuốc"}
+                    color={diary.status === 0 ? "error" : "success"}
                   />
                 </Box>
 
