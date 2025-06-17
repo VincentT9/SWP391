@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react"; // Add useRef import
 import {
   Box,
   Container,
@@ -159,6 +159,9 @@ const HomePage = () => {
   const isMedium = useMediaQuery(theme.breakpoints.down("md"));
   const [isLoaded, setIsLoaded] = useState(false);
 
+  // Add ref for the "We are the best" section
+  const bestSectionRef = useRef<HTMLDivElement>(null);
+
   // Simulate page loading
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -184,6 +187,11 @@ const HomePage = () => {
 
   const handleOpenContactDialog = () => {
     setContactDialogOpen(true);
+  };
+
+  // Add scroll handler function
+  const handleLearnMoreClick = () => {
+    bestSectionRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
@@ -309,7 +317,7 @@ const HomePage = () => {
                 >
                   <Button
                     variant="contained"
-                    onClick={handleOpenContactDialog}
+                    onClick={handleLearnMoreClick} // Change from handleOpenContactDialog
                     startIcon={<MedicalServices />}
                     sx={{
                       bgcolor: "#51b848",
@@ -326,30 +334,7 @@ const HomePage = () => {
                       boxShadow: "0 4px 10px rgba(0,0,0,0.25)",
                     }}
                   >
-                    ĐẶT LỊCH KHÁM
-                  </Button>
-
-                  <Button
-                    variant="outlined"
-                    startIcon={<Phone />}
-                    sx={{
-                      borderColor: "#51b848",
-                      borderWidth: 2,
-                      color: "#51b848",
-                      px: 3,
-                      py: 1.5,
-                      "&:hover": {
-                        borderColor: "#f37021",
-                        color: "#f37021",
-                        bgcolor: "rgba(255,255,255,0.1)",
-                      },
-                      borderRadius: 5,
-                      fontSize: { xs: "0.9rem", md: "1rem" },
-                      textTransform: "none",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    LIÊN HỆ NGAY
+                    TÌM HIỂU THÊM
                   </Button>
                 </Box>
               </Box>
@@ -663,6 +648,8 @@ const HomePage = () => {
 
           {/* We Are Best Professional - Update to have symmetric margins instead of full width */}
           <Box
+            ref={bestSectionRef} // Add this ref
+            className="best-section" // Optional class for easier identification
             sx={{
               py: 6,
               bgcolor: "#f9f9f9",
@@ -857,20 +844,6 @@ const HomePage = () => {
                       </Typography>
                     </Box>
                   </Box>
-
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    sx={{
-                      mt: 3,
-                      px: 4,
-                      py: 1.5,
-                      borderRadius: 5,
-                      textTransform: "none",
-                    }}
-                  >
-                    Tìm hiểu thêm
-                  </Button>
                 </Box>
               </Box>
             </Box>

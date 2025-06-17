@@ -23,6 +23,7 @@ import LoginPage from "./components/user/LoginPage";
 import RegisterPage from "./components/user/RegisterPage";
 import NotificationsPage from "./components/notifications/NotificationsPage";
 import MedicalSupplier from "./components/admin/MedicalSupplier";
+import StudentManagementPage from "./components/admin/StudentManagementPage";
 
 function App() {
   return (
@@ -49,6 +50,10 @@ function App() {
               <Route path="profile" element={<UserProfilePage />} />
               <Route path="user-management" element={<AdminPage />} />
               <Route path="medical-supplier" element={<MedicalSupplier />} />
+              <Route
+                path="/admin/students"
+                element={<StudentManagementPage />}
+              />
             </Route>
           </Routes>
         </Router>

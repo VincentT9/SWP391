@@ -21,12 +21,12 @@ import {
   TextField,
   Card,
   CardMedia,
-  LinearProgress
+  LinearProgress,
 } from "@mui/material";
 import { format, addDays, parseISO } from "date-fns";
 import { toast } from "react-toastify";
 import axios from "axios";
-
+import instance from "../../../utils/axiosConfig";
 const BASE_API = process.env.REACT_APP_BASE_URL;
 
 interface Student {
@@ -86,10 +86,13 @@ const MedicationRequestList: React.FC<MedicationRequestListProps> = ({
 }) => {
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
-  const [currentRequest, setCurrentRequest] = useState<MedicationRequestItem | null>(null);
+  const [currentRequest, setCurrentRequest] =
+    useState<MedicationRequestItem | null>(null);
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
   const [currentImage, setCurrentImage] = useState("");
-  const [processingRequestId, setProcessingRequestId] = useState<string | null>(null);
+  const [processingRequestId, setProcessingRequestId] = useState<string | null>(
+    null
+  );
   // Add a ref to track ongoing requests and prevent duplicate calls
   const pendingRequests = useRef<Set<string>>(new Set());
 
@@ -97,54 +100,65 @@ const MedicationRequestList: React.FC<MedicationRequestListProps> = ({
     if (!dateString) return "N/A";
     return format(new Date(dateString), "dd/MM/yyyy");
   };
-  
+
   const calculateEndDate = (startDate: string, numberOfDays: number) => {
     const start = parseISO(startDate);
     const end = addDays(start, numberOfDays - 1);
-    return formatDate(format(end, 'yyyy-MM-dd'));
+    return formatDate(format(end, "yyyy-MM-dd"));
   };
-  
+
   // Filter to show only pending requests with status 0
-  const pendingRequestsList = requests.filter(req => req.status === 0);
-  
+  const pendingRequestsList = requests.filter((req) => req.status === 0);
+
   const handleAcceptRequest = async (requestId: string) => {
     // Prevent duplicate API calls
     if (pendingRequests.current.has(requestId)) {
       return;
     }
-    
+
     try {
       setProcessingRequestId(requestId);
       pendingRequests.current.add(requestId);
-      
+
       console.log("Attempting to accept request ID:", requestId);
-      const requestData = requests.find(req => req.id === requestId);
+      const requestData = requests.find((req) => req.id === requestId);
       if (!requestData) {
         throw new Error("Request not found");
       }
-      
+
+      // First get the actual student ID by student code
+      const studentResponse = await instance.get(
+        `${BASE_API}/api/Student/get-student-by-student-code/${requestData.studentCode}`
+      );
+
+      if (studentResponse.status !== 200) {
+        throw new Error("Failed to get student information");
+      }
+
+      const studentId = studentResponse.data.id;
+
       // Match the exact schema required by the API
       const updateData = {
-        studentId: requestData.studentCode,
+        studentId: studentId, // Using the actual student ID instead of the code
         medicationName: requestData.medicationName,
         dosage: requestData.dosage,
         numberOfDayToTake: requestData.numberOfDayToTake,
         instructions: requestData.instructions,
-        imagesMedicalInvoice: Array.isArray(requestData.imagesMedicalInvoice) 
-          ? requestData.imagesMedicalInvoice 
+        imagesMedicalInvoice: Array.isArray(requestData.imagesMedicalInvoice)
+          ? requestData.imagesMedicalInvoice
           : [],
         // Use full ISO string format as expected by the API
         startDate: new Date(requestData.startDate).toISOString(),
         status: 1, // Set status to 1 for accepted
-        medicalStaffId: nurseId
+        medicalStaffId: nurseId,
       };
-      
+
       console.log("Sending update data:", JSON.stringify(updateData));
-      
+      console.log("req id:", requestId);
       // Make the API call
       const apiUrl = `${BASE_API}/api/MedicationRequest/update-medication-request/${requestId}`;
-      const response = await axios.put(apiUrl, updateData);
-      
+      const response = await instance.put(apiUrl, updateData);
+
       if (response.status === 200) {
         toast.success("Yêu cầu đã được chấp nhận thành công");
         // Call the parent component's onAccept function to update UI
@@ -157,44 +171,46 @@ const MedicationRequestList: React.FC<MedicationRequestListProps> = ({
         console.error("Error response data:", error.response.data);
         console.error("Error response status:", error.response.status);
       }
-      toast.error(`Không thể chấp nhận yêu cầu: ${error.message || 'Lỗi không xác định'}`);
+      toast.error(
+        `Không thể chấp nhận yêu cầu: ${error.message || "Lỗi không xác định"}`
+      );
     } finally {
       setProcessingRequestId(null);
       pendingRequests.current.delete(requestId);
     }
   };
-  
+
   const handleOpenRejectDialog = (request: MedicationRequestItem) => {
     setCurrentRequest(request);
     setRejectDialogOpen(true);
   };
-  
+
   const handleCloseRejectDialog = () => {
     setRejectDialogOpen(false);
     setRejectionReason("");
   };
-  
+
   const handleSubmitReject = async () => {
     if (!currentRequest || !rejectionReason.trim()) {
       toast.error("Vui lòng nhập lý do từ chối");
       return;
     }
-    
+
     const requestId = currentRequest.id;
-    
+
     // Prevent duplicate API calls
     if (pendingRequests.current.has(requestId)) {
       return;
     }
-    
+
     try {
       setProcessingRequestId(requestId);
       pendingRequests.current.add(requestId);
-      
+
       // Make the API call
       const apiUrl = `${BASE_API}/api/MedicationRequest/delete-medication-request/${requestId}`;
-      const response = await axios.delete(apiUrl);
-      
+      const response = await instance.delete(apiUrl);
+
       if (response.status === 200) {
         toast.success("Yêu cầu đã bị từ chối");
         onReject(requestId, rejectionReason);
@@ -208,19 +224,19 @@ const MedicationRequestList: React.FC<MedicationRequestListProps> = ({
       pendingRequests.current.delete(requestId);
     }
   };
-  
+
   const handleViewInvoiceImage = (imageUrl: string) => {
     setCurrentImage(imageUrl);
     setImageDialogOpen(true);
   };
-  
+
   // Render the table with pending requests
   return (
     <Box>
       <Typography variant="h6" gutterBottom>
         Danh sách yêu cầu thuốc chờ xử lý
       </Typography>
-      
+
       {isLoading ? (
         <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
           <CircularProgress />
@@ -248,19 +264,21 @@ const MedicationRequestList: React.FC<MedicationRequestListProps> = ({
               {pendingRequestsList.map((request) => (
                 <TableRow
                   key={request.id}
-                  sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                  sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                 >
                   <TableCell component="th" scope="row">
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Box sx={{ display: "flex", alignItems: "center" }}>
                       {/* <Avatar 
                         src={request.student.image} 
                         alt={request.student.fullName} 
                         sx={{ mr: 1, width: 32, height: 32 }}
                       /> */}
                       <Box>
-                        <Typography variant="body1">{request.studentName}</Typography>
+                        <Typography variant="body1">
+                          {request.studentName}
+                        </Typography>
                         <Typography variant="body2" color="text.secondary">
-                          {request.studentCode} 
+                          {request.studentCode}
                           {/* | {request.student.class} */}
                         </Typography>
                       </Box>
@@ -278,27 +296,40 @@ const MedicationRequestList: React.FC<MedicationRequestListProps> = ({
                     </Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="body2">{request.instructions}</Typography>
+                    <Typography variant="body2">
+                      {request.instructions}
+                    </Typography>
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2">
                       Bắt đầu: {formatDate(request.startDate)}
                     </Typography>
                     <Typography variant="body2">
-                      Kết thúc: {calculateEndDate(request.startDate, request.numberOfDayToTake)}
+                      Kết thúc:{" "}
+                      {calculateEndDate(
+                        request.startDate,
+                        request.numberOfDayToTake
+                      )}
                     </Typography>
                   </TableCell>
                   <TableCell>
-                    {request.imagesMedicalInvoice && request.imagesMedicalInvoice.length > 0 ? (
-                      <Button 
-                        variant="outlined" 
-                        size="small" 
-                        onClick={() => handleViewInvoiceImage(request.imagesMedicalInvoice[0])}
+                    {request.imagesMedicalInvoice &&
+                    request.imagesMedicalInvoice.length > 0 ? (
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        onClick={() =>
+                          handleViewInvoiceImage(
+                            request.imagesMedicalInvoice[0]
+                          )
+                        }
                       >
                         Xem đơn
                       </Button>
                     ) : (
-                      <Typography variant="body2" color="text.secondary">Không có đơn</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Không có đơn
+                      </Typography>
                     )}
                   </TableCell>
                   <TableCell>{getStatusLabel(request.status)}</TableCell>
@@ -356,13 +387,15 @@ const MedicationRequestList: React.FC<MedicationRequestListProps> = ({
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseRejectDialog}>Hủy</Button>
-          <Button onClick={handleSubmitReject} color="error">Xác nhận từ chối</Button>
+          <Button onClick={handleSubmitReject} color="error">
+            Xác nhận từ chối
+          </Button>
         </DialogActions>
       </Dialog>
 
       {/* Image Preview Dialog */}
-      <Dialog 
-        open={imageDialogOpen} 
+      <Dialog
+        open={imageDialogOpen}
         onClose={() => setImageDialogOpen(false)}
         maxWidth="md"
         fullWidth
@@ -375,7 +408,7 @@ const MedicationRequestList: React.FC<MedicationRequestListProps> = ({
                 component="img"
                 alt="Medical Invoice"
                 image={currentImage}
-                sx={{ maxHeight: '80vh', objectFit: 'contain' }}
+                sx={{ maxHeight: "80vh", objectFit: "contain" }}
               />
             </Card>
           )}
@@ -387,6 +420,5 @@ const MedicationRequestList: React.FC<MedicationRequestListProps> = ({
     </Box>
   );
 };
-
 
 export default MedicationRequestList;
