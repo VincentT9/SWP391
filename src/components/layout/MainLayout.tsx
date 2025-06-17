@@ -30,6 +30,7 @@ import {
   Notifications as NotificationsIcon,
   ChevronLeft,
 } from "@mui/icons-material";
+import SchoolIcon from "@mui/icons-material/School";
 import { useAuth } from "../auth/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -167,6 +168,12 @@ const menuItems: MenuItemType[] = [
     text: "Quản lý người dùng",
     path: "/user-management",
     icon: <SettingsIcon />,
+    role: ["Admin"],
+  },
+  {
+    text: "Quản lý học sinh",
+    path: "/admin/students",
+    icon: <SchoolIcon />,
     role: ["Admin"],
   },
   { text: "Thông báo", path: "/notifications", icon: <NotificationsIcon /> },

@@ -25,9 +25,9 @@ const MedicationDiaryView: React.FC<MedicationDiaryViewProps> = ({
   const getStatusDisplay = (status: number) => {
     switch (status) {
       case 0:
-        return { label: "Đã uống thuốc", color: "success" as "success" };
+        return { label: "Chưa uống thuốc", color: "error" as "error" };
       case 1:
-        return { label: "Đã bỏ lỡ", color: "error" as "error" };
+        return { label: "Đã uống thuốc", color: "success" as "success" };
       case 2:
         return { label: "Đã hoãn", color: "warning" as "warning" };
       default:

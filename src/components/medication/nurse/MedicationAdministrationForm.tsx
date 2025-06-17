@@ -1,153 +1,351 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import {
   Box,
   Button,
   TextField,
   Typography,
-  // Paper,
-  // FormControl,
-  // InputLabel,
-  // Select,
-  // MenuItem,
   Snackbar,
   Alert,
   Card,
   CardContent,
-  Divider,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Avatar,
+  Stack,
+  CircularProgress,
 } from "@mui/material";
-// import { format } from "date-fns";
-import { MedicationRequest, MedicationLog } from "../../../models/types";
 import { toast } from "react-toastify";
+import { format, addDays, parseISO } from "date-fns";
+import instance from "../../../utils/axiosConfig";
+interface Student {
+  id: string;
+  studentCode: string;
+  fullName: string;
+  dateOfBirth: string;
+  gender: number;
+  class: string;
+  schoolYear: string;
+  image: string;
+}
 
-// Mock data import - would be replaced with API calls
-import { medicationLogs } from "../../../utils/mockData";
+interface MedicationRequest {
+  id: string;
+  medicationName: string;
+  dosage: number;
+  numberOfDayToTake: number;
+  instructions: string;
+  imagesMedicalInvoice: string[];
+  startDate: string;
+  endDate: string | null;
+  status: number;
+  studentCode: string;
+  studentName: string;
+  medicalStaffId: string;
+  medicalStaffName: string | null;
+}
 
 interface MedicationAdministrationFormProps {
   medicationRequest: MedicationRequest;
   nurseName: string;
-  onMedicationAdministered: () => void;
+  onMedicationAdministered: (
+    wasGiven: boolean,
+    description: string
+  ) => void;
 }
 
-const MedicationAdministrationForm: React.FC<
-  MedicationAdministrationFormProps
-> = ({ medicationRequest, nurseName, onMedicationAdministered }) => {
-  const [conditionBefore, setConditionBefore] = useState("");
-  const [conditionAfter, setConditionAfter] = useState("");
-  const [notes, setNotes] = useState("");
+const MedicationAdministrationForm: React.FC<MedicationAdministrationFormProps> = ({
+  medicationRequest,
+  nurseName,
+  onMedicationAdministered,
+}) => {
+  const [description, setDescription] = useState("");
   const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [notGivenDialogOpen, setNotGivenDialogOpen] = useState(false);
+  const [givenDialogOpen, setGivenDialogOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [student, setStudent] = useState<Student | null>(null);
+  const [loadingStudent, setLoadingStudent] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // Create a new medication log
-    const newLog: MedicationLog = {
-      id: (medicationLogs.length + 1).toString(),
-      medicationRequestId: medicationRequest.id,
-      studentId: medicationRequest.studentId,
-      medicationName: medicationRequest.medicationName,
-      administeredAt: new Date(),
-      administeredBy: nurseName,
-      dosage: medicationRequest.dosage,
-      studentConditionBefore: conditionBefore,
-      studentConditionAfter: conditionAfter,
-      notes,
+  useEffect(() => {
+    const fetchStudentData = async () => {
+      if (medicationRequest.studentCode) {
+        setLoadingStudent(true);
+        try {
+          const response = await instance.get(`/api/Student/get-student-by-student-code/${medicationRequest.studentCode}`);
+          setStudent(response.data);
+        } catch (error) {
+          console.error('Error fetching student data:', error);
+        } finally {
+          setLoadingStudent(false);
+        }
+      }
     };
 
-    // In a real app, this would make an API call
-    medicationLogs.push(newLog);
+    fetchStudentData();
+  }, [medicationRequest.studentCode]);
 
-    // Show success message
-    setOpenSnackbar(true);
-    toast.success("Đã cập nhật thông tin dùng thuốc!");
+  const handleGiveMedicationClick = () => {
+    setGivenDialogOpen(true);
+  };
 
-    // Reset form
-    setConditionBefore("");
-    setConditionAfter("");
-    setNotes("");
+  const handleNotGiveMedicationClick = () => {
+    setNotGivenDialogOpen(true);
+  };
 
-    // Notify parent component
-    onMedicationAdministered();
+  const handleGivenSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!description.trim()) {
+      toast.error("Vui lòng nhập mô tả");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      await onMedicationAdministered(true, description);
+
+      // Reset form and close dialog
+      setDescription("");
+      setGivenDialogOpen(false);
+    } catch (error) {
+      console.error("Error administering medication:", error);
+      toast.error("Không thể cập nhật thông tin dùng thuốc. Vui lòng thử lại sau.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleNotGivenSubmit = async () => {
+    if (description.trim() === "") {
+      toast.error("Vui lòng nhập lý do không cho uống thuốc.");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      await onMedicationAdministered(false, description);
+
+      // Reset form and close dialog
+      setDescription("");
+      setNotGivenDialogOpen(false);
+    } catch (error) {
+      console.error("Error logging not given medication:", error);
+      toast.error("Không thể cập nhật thông tin hủy dùng thuốc. Vui lòng thử lại sau.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleCloseSnackbar = () => {
     setOpenSnackbar(false);
   };
 
+  // Calculate the end date based on startDate + numberOfDayToTake
+  const startDate = parseISO(medicationRequest.startDate);
+  const startDateOnly = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+  const endDate = addDays(startDateOnly, medicationRequest.numberOfDayToTake - 1);
+  const formattedEndDate = format(endDate, "dd/MM/yyyy");
+  const formattedStartDate = format(startDateOnly, "dd/MM/yyyy");
+  
+  // Check if today is in the valid date range
+  const today = new Date();
+  const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const isToday = todayDateOnly >= startDateOnly && todayDateOnly <= endDate;
+  
+  // Calculate days remaining
+  const daysRemaining = Math.ceil((endDate.getTime() - todayDateOnly.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+
   return (
-    <Card elevation={2} sx={{ mb: 3 }}>
+    <Card elevation={2} sx={{ mb: 3, border: isToday ? '1px solid #4caf50' : 'none' }}>
       <CardContent>
-        <Box sx={{ mb: 2 }}>
-          <Typography variant="subtitle1" gutterBottom>
-            Chi tiết thuốc
-          </Typography>
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
-            <Box sx={{ flex: "1 1 45%", minWidth: "200px" }}>
-              <Typography variant="body2">
-                <strong>Học sinh:</strong> {medicationRequest.studentName}
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2 }}>
+          {/* Student Information */}
+          <Box sx={{ 
+            width: { xs: '100%', md: '25%' }, 
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center' 
+          }}>
+            <Stack direction="column" spacing={2} alignItems="center">
+              {loadingStudent ? (
+                <CircularProgress size={80} />
+              ) : (
+                <Avatar
+                  src={student?.image || '/default-avatar.png'}
+                  alt={medicationRequest.studentName}
+                  sx={{ width: 80, height: 80 }}
+                />
+              )}
+              <Typography variant="subtitle1" align="center">
+                {medicationRequest.studentName}
               </Typography>
-            </Box>
-            <Box sx={{ flex: "1 1 45%", minWidth: "200px" }}>
-              <Typography variant="body2">
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                align="center"
+              >
+                {student?.class && `${student.class} | `}
+                {medicationRequest.studentCode}
+              </Typography>
+            </Stack>
+          </Box>
+
+          {/* Medication Information */}
+          <Box sx={{ 
+            width: { xs: '100%', md: '58.33%' }, 
+            pl: { md: 2 } 
+          }}>
+            <Typography variant="h6" gutterBottom>
+              Chi tiết thuốc
+            </Typography>
+
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+              <Typography variant="body1">
                 <strong>Tên thuốc:</strong> {medicationRequest.medicationName}
               </Typography>
-            </Box>
-            <Box sx={{ flex: "1 1 45%", minWidth: "200px" }}>
-              <Typography variant="body2">
+
+              <Typography variant="body1">
                 <strong>Liều lượng:</strong> {medicationRequest.dosage}
               </Typography>
-            </Box>
-            <Box sx={{ flex: "1 1 45%", minWidth: "200px" }}>
-              <Typography variant="body2">
+
+              <Typography variant="body1">
                 <strong>Hướng dẫn:</strong> {medicationRequest.instructions}
+              </Typography>
+
+              <Typography variant="body1">
+                <strong>Ngày uống:</strong> {formattedStartDate} - {formattedEndDate}
+              </Typography>
+
+              <Typography variant="body1">
+                <strong>Số ngày uống:</strong> {medicationRequest.numberOfDayToTake} 
+                {isToday && daysRemaining > 0 && (
+                  <span style={{ color: '#4caf50', marginLeft: '8px' }}>
+                    (Còn {daysRemaining} ngày)
+                  </span>
+                )}
               </Typography>
             </Box>
           </Box>
-        </Box>
 
-        <Divider sx={{ my: 2 }} />
+          {/* Action Buttons */}
+          <Box sx={{ 
+            width: { xs: '100%', md: '16.67%' },
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center'
+          }}>
+            <Stack
+              direction="column"
+              spacing={2}
+              justifyContent="center"
+              height="100%"
+            >
+              <Button
+                variant="contained"
+                color="primary"
+                fullWidth
+                onClick={handleGiveMedicationClick}
+              >
+                Đã cho uống thuốc
+              </Button>
 
-        <Typography variant="subtitle1" gutterBottom>
-          Nhật ký uống thuốc
-        </Typography>
-
-        <Box
-          component="form"
-          onSubmit={handleSubmit}
-          sx={{ display: "flex", flexDirection: "column", gap: 2 }}
-        >
-          <TextField
-            fullWidth
-            id="condition-before"
-            label="Tình trạng học sinh trước khi uống thuốc"
-            value={conditionBefore}
-            onChange={(e) => setConditionBefore(e.target.value)}
-          />
-
-          <TextField
-            fullWidth
-            id="condition-after"
-            label="Tình trạng học sinh sau khi uống thuốc"
-            value={conditionAfter}
-            onChange={(e) => setConditionAfter(e.target.value)}
-          />
-
-          <TextField
-            fullWidth
-            id="notes"
-            label="Ghi chú"
-            multiline
-            rows={2}
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-          />
-
-          <Box sx={{ mt: 1 }}>
-            <Button variant="contained" color="primary" type="submit">
-              Xác nhận đã cho uống thuốc
-            </Button>
+              <Button
+                variant="outlined"
+                color="error"
+                fullWidth
+                onClick={handleNotGiveMedicationClick}
+              >
+                Hủy lần uống thuốc
+              </Button>
+            </Stack>
           </Box>
         </Box>
       </CardContent>
+
+      {/* Given Medication Dialog */}
+      <Dialog
+        open={givenDialogOpen}
+        onClose={() => !isSubmitting && setGivenDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>Cập nhật thông tin uống thuốc</DialogTitle>
+        <DialogContent>
+          <Box
+            component="form"
+            onSubmit={handleGivenSubmit}
+            sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}
+          >
+            <TextField
+              fullWidth
+              id="description"
+              label="Mô tả"
+              multiline
+              rows={3}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              required
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button 
+            onClick={() => setGivenDialogOpen(false)}
+            disabled={isSubmitting}
+          >
+            Hủy
+          </Button>
+          <Button
+            onClick={handleGivenSubmit}
+            color="primary"
+            variant="contained"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Đang xử lý..." : "Xác nhận đã cho uống thuốc"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Not Given Medication Dialog */}
+      <Dialog
+        open={notGivenDialogOpen}
+        onClose={() => !isSubmitting && setNotGivenDialogOpen(false)}
+      >
+        <DialogTitle>Lý do hủy lần uống thuốc</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            id="description"
+            label="Lý do không cho uống thuốc"
+            type="text"
+            fullWidth
+            multiline
+            rows={4}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            required
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button 
+            onClick={() => setNotGivenDialogOpen(false)}
+            disabled={isSubmitting}
+          >
+            Hủy
+          </Button>
+          <Button 
+            onClick={handleNotGivenSubmit} 
+            color="error"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Đang xử lý..." : "Xác nhận hủy"}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Snackbar
         open={openSnackbar}
@@ -156,11 +354,13 @@ const MedicationAdministrationForm: React.FC<
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
         <Alert onClose={handleCloseSnackbar} severity="success">
-          Đã ghi nhận thông tin uống thuốc!
+          Đã cập nhật thông tin uống thuốc!
         </Alert>
       </Snackbar>
     </Card>
   );
 };
+
+
 
 export default MedicationAdministrationForm;
