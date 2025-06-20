@@ -844,23 +844,6 @@ const HomePage = () => {
                       </Typography>
                     </Box>
                   </Box>
-<<<<<<< HEAD
-
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    sx={{
-                      mt: 3,
-                      px: 4,
-                      py: 1.5,
-                      borderRadius: 5,
-                      textTransform: "none",
-                    }}
-                  >
-                    Tìm hiểu thêm
-                  </Button>
-=======
->>>>>>> FE-Tin
                 </Box>
               </Box>
             </Box>

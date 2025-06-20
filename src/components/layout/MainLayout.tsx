@@ -29,10 +29,7 @@ import {
   AccountCircle,
   Notifications as NotificationsIcon,
   ChevronLeft,
-<<<<<<< HEAD
   ChevronRight,
-=======
->>>>>>> FE-Tin
 } from "@mui/icons-material";
 import SchoolIcon from "@mui/icons-material/School";
 import { useAuth } from "../auth/AuthContext";
