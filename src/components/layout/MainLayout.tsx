@@ -181,7 +181,7 @@ const menuItems: MenuItemType[] = [
 
 const MainLayout = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false); // Default to closed
+  const [sidebarOpen, setSidebarOpen] = useState(true); // Default to opened
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const location = useLocation();
   const navigate = useNavigate();
@@ -194,21 +194,21 @@ const MainLayout = () => {
 
   // Handle click outside to close sidebar
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        sidebarRef.current &&
-        !sidebarRef.current.contains(event.target as Node) &&
-        !isMobile &&
-        sidebarOpen
-      ) {
-        setSidebarOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    // Remove this entire effect or comment it out to prevent auto-closing
+    // const handleClickOutside = (event: MouseEvent) => {
+    //   if (
+    //     sidebarRef.current &&
+    //     !sidebarRef.current.contains(event.target as Node) &&
+    //     !isMobile &&
+    //     sidebarOpen
+    //   ) {
+    //     setSidebarOpen(false);
+    //   }
+    // };
+    // document.addEventListener("mousedown", handleClickOutside);
+    // return () => {
+    //   document.removeEventListener("mousedown", handleClickOutside);
+    // };
   }, [sidebarOpen, isMobile]);
 
   // Redirect to login if not authenticated
@@ -255,7 +255,8 @@ const MainLayout = () => {
         overflow: "hidden",
       }}
     >
-      {/* Decorative elements with blue color scheme */}
+      {/* Remove the decorative element below */}
+      {/* 
       <Box
         component={motion.div}
         sx={{
@@ -273,6 +274,7 @@ const MainLayout = () => {
         animate={{ scale: 1 }}
         transition={{ duration: 0.5 }}
       />
+      */}
 
       <List sx={{ pt: 3, pb: 0, position: "relative", zIndex: 1 }}>
         <AnimatePresence>

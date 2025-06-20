@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link as RouterLink, useNavigate } from "react-router-dom";
+import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
 import {
   Button,
   TextField,
@@ -26,6 +26,7 @@ type FormData = {
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
+  const location = useLocation();
   const navigate = useNavigate();
   const { login, loading } = useAuth();
 
@@ -62,6 +63,10 @@ const LoginPage = () => {
     }
   }, [setValue]);
 
+  // Parse the return URL from query parameters
+  const searchParams = new URLSearchParams(location.search);
+  const returnUrl = searchParams.get("returnUrl") || "/";
+
   const onSubmit = async (data: FormData) => {
     try {
       setLoginError(null);
@@ -83,10 +88,14 @@ const LoginPage = () => {
       // AuthContext sẽ tự gọi API và cập nhật isAuthenticated = true
       if (await login(data.username, data.password)) {
         toast.success("Đăng nhập thành công!");
-        navigate("/");
+        navigate(returnUrl);
       } else {
-        setLoginError("Đăng nhập thất bại. Vui lòng kiểm tra tên đăng nhập và mật khẩu.");
-        toast.error("Đăng nhập thất bại. Vui lòng kiểm tra tên đăng nhập và mật khẩu.");
+        setLoginError(
+          "Đăng nhập thất bại. Vui lòng kiểm tra tên đăng nhập và mật khẩu."
+        );
+        toast.error(
+          "Đăng nhập thất bại. Vui lòng kiểm tra tên đăng nhập và mật khẩu."
+        );
       }
     } catch (error) {
       console.error("Login error:", error);
