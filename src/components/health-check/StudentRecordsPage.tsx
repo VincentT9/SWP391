@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Container,
   Typography,
@@ -27,7 +27,8 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-} from '@mui/material';
+  CircularProgress,
+} from "@mui/material";
 import {
   Search as SearchIcon,
   Person as PersonIcon,
@@ -38,33 +39,51 @@ import {
   Visibility as EyeIcon,
   Edit as EditIcon,
   Add as AddIcon,
+  Bloodtype as BloodtypeIcon,
   Warning as WarningIcon,
-  CheckCircle as CheckIcon,
-} from '@mui/icons-material';
-import { useAuth } from '../auth/AuthContext';
+  LocalHospital as HospitalIcon,
+  Hearing as HearingIcon,
+  Event as EventIcon,
+  Notes as NotesIcon,
+  Close as CloseIcon,
+  ArrowForward as ArrowForwardIcon,
+} from "@mui/icons-material";
+import { useAuth } from "../auth/AuthContext";
+import instance from "../../utils/axiosConfig";
 
-// Interface definitions (giữ nguyên)
+// Updated interface to match API response
 interface Student {
   id: string;
-  studentId: string;
-  name: string;
-  class: string;
+  studentCode: string;
+  fullName: string;
   dateOfBirth: string;
-  gender: string;
-  address: string;
-  parentName: string;
-  parentPhone: string;
-  avatar?: string;
-  bloodType: string;
-  describe: string;
-  emergencyContact: string;
+  gender: number; // 0 = Male, 1 = Female
+  class: string;
+  schoolYear: string;
+  image: string;
+  healthRecord: {
+    id: string;
+    height: string;
+    weight: string;
+    bloodType: string;
+    allergies: string;
+    chronicDiseases: string;
+    pastMedicalHistory: string;
+    visionLeft: string;
+    visionRight: string;
+    hearingLeft: string;
+    hearingRight: string;
+    vaccinationHistory: string;
+    otherNotes: string;
+  };
 }
 
+// Keep existing HealthRecord interface for historical records
 interface HealthRecord {
   id: string;
   studentId: string;
   date: string;
-  type: 'checkup' | 'treatment' | 'vaccination' | 'medication';
+  type: "checkup" | "treatment" | "vaccination" | "medication";
   title: string;
   description: string;
   height?: number;
@@ -78,108 +97,25 @@ interface HealthRecord {
   nurseName: string;
 }
 
-// Mock data (giữ nguyên)
-const mockStudents: Student[] = [
-  {
-    id: '1',
-    studentId: 'HS001',
-    name: 'Nguyễn Văn An',
-    class: '10A1',
-    dateOfBirth: '2007-05-15',
-    gender: 'Nam',
-    address: '123 Đường ABC, Quận 1, TP.HCM',
-    parentName: 'Nguyễn Văn Bình',
-    parentPhone: '0901234567',
-    bloodType: 'O+',
-    describe: 'Dị ứng với Cua, Dị ứng với cơm',
-    emergencyContact: '0987654321',
-  },
-  {
-    id: '2',
-    studentId: 'HS002',
-    name: 'Trần Thị Bình',
-    class: '11B2',
-    dateOfBirth: '2006-08-22',
-    gender: 'Nữ',
-    address: '456 Đường XYZ, Quận 3, TP.HCM',
-    parentName: 'Trần Văn Cường',
-    parentPhone: '0902345678',
-    bloodType: 'A+',
-    describe: 'none',
-    emergencyContact: '0976543210',
-  },
-  {
-    id: '3',
-    studentId: 'HS003',
-    name: 'Lê Minh Châu',
-    class: '12C1',
-    dateOfBirth: '2005-12-10',
-    gender: 'Nam',
-    address: '789 Đường DEF, Quận 5, TP.HCM',
-    parentName: 'Lê Thị Dung',
-    parentPhone: '0903456789',
-    bloodType: 'B+',
-    describe: 'none',
-    emergencyContact: '0965432109',
-  },
-];
-
-const mockHealthRecords: HealthRecord[] = [
-  {
-    id: '1',
-    studentId: 'HS001',
-    date: '2024-05-20',
-    type: 'checkup',
-    title: 'Khám sức khỏe định kỳ',
-    description: 'Khám sức khỏe đầu năm học',
-    height: 165,
-    weight: 55,
-    bloodPressure: '120/80',
-    temperature: 36.5,
-    diagnosis: 'Sức khỏe tốt',
-    treatment: 'Không cần điều trị',
-    nurseId: '2',
-    nurseName: 'Nguyễn Thị Y Tá',
-  },
-  {
-    id: '2',
-    studentId: 'HS001',
-    date: '2024-05-15',
-    type: 'treatment',
-    title: 'Điều trị cảm cúm',
-    description: 'Học sinh có triệu chứng sốt, ho',
-    temperature: 38.2,
-    diagnosis: 'Cảm cúm thông thường',
-    treatment: 'Nghỉ ngơi, uống thuốc hạ sốt',
-    medications: ['Paracetamol 500mg', 'Vitamin C'],
-    nurseId: '2',
-    nurseName: 'Nguyễn Thị Y Tá',
-  },
-  {
-    id: '3',
-    studentId: 'HS002',
-    date: '2024-05-18',
-    type: 'vaccination',
-    title: 'Tiêm vắc xin HPV',
-    description: 'Tiêm vắc xin phòng chống ung thư cổ tử cung',
-    treatment: 'Tiêm thành công, theo dõi 30 phút',
-    nurseId: '2',
-    nurseName: 'Nguyễn Thị Y Tá',
-  },
-];
-
 const StudentRecordsPage: React.FC = () => {
   const { user } = useAuth();
-  const [searchStudentId, setSearchStudentId] = useState('');
+  const [searchStudentId, setSearchStudentId] = useState("");
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [healthRecords, setHealthRecords] = useState<HealthRecord[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingRecords, setLoadingRecords] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [recordsError, setRecordsError] = useState<string | null>(null);
   const [openDialog, setOpenDialog] = useState(false);
-  const [selectedRecord, setSelectedRecord] = useState<HealthRecord | null>(null);
+  const [selectedRecord, setSelectedRecord] = useState<HealthRecord | null>(
+    null
+  );
 
   // Check if user is nurse or admin
-  if (!user?.isAuthenticated || (user.role !== 'MedicalStaff' && user.role !== 'Admin')) {
+  if (
+    !user?.isAuthenticated ||
+    (user.role !== "MedicalStaff" && user.role !== "Admin")
+  ) {
     return (
       <Container maxWidth="lg">
         <Box sx={{ my: 4 }}>
@@ -191,33 +127,66 @@ const StudentRecordsPage: React.FC = () => {
     );
   }
 
-  const handleSearch = () => {
+  // Add a function to fetch health records by student ID
+  const fetchHealthRecords = async (studentId: string) => {
+    setLoadingRecords(true);
+    setRecordsError(null);
+
+    try {
+      // Assuming there's an API endpoint for health records
+      // Replace with the actual endpoint
+      const response = await instance.get(
+        `/api/HealthRecord/by-student/${studentId}`
+      );
+
+      if (response.data && Array.isArray(response.data)) {
+        setHealthRecords(response.data);
+      } else {
+        setHealthRecords([]);
+        setRecordsError("Không tìm thấy bản ghi sức khỏe cho học sinh này");
+      }
+    } catch (err) {
+      console.error("Error fetching health records:", err);
+      setHealthRecords([]);
+      setRecordsError("Đã xảy ra lỗi khi lấy dữ liệu bản ghi sức khỏe");
+    } finally {
+      setLoadingRecords(false);
+    }
+  };
+
+  // Update handleSearch to use the API for both student and health records
+  const handleSearch = async () => {
     if (!searchStudentId.trim()) {
-      setError('Vui lòng nhập mã số học sinh.');
+      setError("Vui lòng nhập mã số học sinh.");
       return;
     }
 
     setLoading(true);
     setError(null);
+    setHealthRecords([]);
 
-    setTimeout(() => {
-      const student = mockStudents.find(s => 
-        s.studentId.toLowerCase() === searchStudentId.trim().toLowerCase()
+    try {
+      const response = await instance.get(
+        `/api/Student/get-student-by-student-code/${searchStudentId.trim()}`
       );
-      
-      if (student) {
-        setSelectedStudent(student);
-        const records = mockHealthRecords.filter(r => r.studentId === student.studentId);
-        setHealthRecords(records);
-        setError(null);
+
+      if (response.data) {
+        setSelectedStudent(response.data);
+        // Fetch real health records instead of using mock data
+        await fetchHealthRecords(response.data.id);
       } else {
         setSelectedStudent(null);
         setHealthRecords([]);
-        setError('Không tìm thấy học sinh với mã số này.');
+        setError("Không tìm thấy học sinh với mã số này.");
       }
-      
+    } catch (err) {
+      console.error("Error fetching student:", err);
+      setSelectedStudent(null);
+      setHealthRecords([]);
+      setError("Đã xảy ra lỗi khi tìm kiếm. Vui lòng thử lại sau.");
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   const handleViewRecord = (record: HealthRecord) => {
@@ -232,22 +201,37 @@ const StudentRecordsPage: React.FC = () => {
 
   const getRecordTypeColor = (type: string) => {
     switch (type) {
-      case 'checkup': return '#2196f3';
-      case 'treatment': return '#f44336';
-      case 'vaccination': return '#4caf50';
-      case 'medication': return '#ff9800';
-      default: return '#757575';
+      case "checkup":
+        return "#2196f3";
+      case "treatment":
+        return "#f44336";
+      case "vaccination":
+        return "#4caf50";
+      case "medication":
+        return "#ff9800";
+      default:
+        return "#757575";
     }
   };
 
   const getRecordTypeLabel = (type: string) => {
     switch (type) {
-      case 'checkup': return 'Khám sức khỏe';
-      case 'treatment': return 'Điều trị';
-      case 'vaccination': return 'Tiêm chủng';
-      case 'medication': return 'Dùng thuốc';
-      default: return 'Khác';
+      case "checkup":
+        return "Khám sức khỏe";
+      case "treatment":
+        return "Điều trị";
+      case "vaccination":
+        return "Tiêm chủng";
+      case "medication":
+        return "Dùng thuốc";
+      default:
+        return "Khác";
     }
+  };
+
+  // Helper function to get gender text from number
+  const getGenderText = (gender: number) => {
+    return gender === 0 ? "Nam" : "Nữ";
   };
 
   const calculateAge = (dateOfBirth: string) => {
@@ -255,188 +239,948 @@ const StudentRecordsPage: React.FC = () => {
     const birthDate = new Date(dateOfBirth);
     let age = today.getFullYear() - birthDate.getFullYear();
     const monthDiff = today.getMonth() - birthDate.getMonth();
-    
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birthDate.getDate())
+    ) {
       age--;
     }
-    
+
     return age;
   };
 
   const handleKeyPress = (event: React.KeyboardEvent) => {
-    if (event.key === 'Enter') {
+    if (event.key === "Enter") {
       handleSearch();
     }
   };
 
+  // Calculate BMI if height and weight are available
+  const calculateBMI = (height: string, weight: string) => {
+    if (height && weight) {
+      const heightInMeters = Number(height) / 100;
+      const weightInKg = Number(weight);
+      if (heightInMeters > 0 && weightInKg > 0) {
+        return (weightInKg / (heightInMeters * heightInMeters)).toFixed(1);
+      }
+    }
+    return "--";
+  };
+
   return (
-    <Container maxWidth="lg">
-      <Box sx={{ my: 4 }}>
-        {/* Header */}
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#0066b3', mb: 1 }}>
+    <Container
+      maxWidth="lg"
+      sx={{
+        py: 4,
+        maxWidth: "1100px !important",
+      }}
+    >
+      <Box sx={{ my: 2 }}>
+        {/* Header with improved styling */}
+        <Box sx={{ mb: 5, pt: 1 }}>
+          <Typography
+            variant="h4"
+            sx={{
+              fontWeight: "600",
+              color: "#1565c0",
+              mb: 1.5,
+              fontSize: { xs: "1.8rem", md: "2.2rem" },
+            }}
+          >
             Tìm kiếm hồ sơ học sinh
           </Typography>
-          <Typography variant="body1" color="textSecondary">
+          <Typography
+            variant="body1"
+            color="text.secondary"
+            sx={{ fontSize: "1rem", maxWidth: "600px" }}
+          >
             Nhập mã số học sinh để tìm kiếm và xem hồ sơ sức khỏe
           </Typography>
         </Box>
 
-        {/* Search Section */}
-        <Card sx={{ mb: 4 }}>
-          <CardContent>
-            <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
+        {/* Search Section with improved styling */}
+        <Card
+          sx={{
+            mb: 4,
+            borderRadius: 3,
+            boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+            border: "1px solid #e0e0e0",
+          }}
+        >
+          <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+            <Box sx={{ display: "flex", gap: 2, alignItems: "flex-start" }}>
               <TextField
                 fullWidth
                 label="Mã số học sinh"
-                placeholder="Nhập mã số học sinh (VD: HS001)"
+                placeholder="Nhập mã số học sinh (VD: STU001)"
                 value={searchStudentId}
                 onChange={(e) => setSearchStudentId(e.target.value)}
                 onKeyPress={handleKeyPress}
                 error={!!error}
                 helperText={error}
                 disabled={loading}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: 2,
+                  },
+                }}
               />
               <Button
                 variant="contained"
                 onClick={handleSearch}
                 disabled={loading || !searchStudentId.trim()}
-                startIcon={<SearchIcon />}
-                sx={{ 
-                  bgcolor: '#0066b3', 
-                  '&:hover': { bgcolor: '#004d85' }, 
-                  minWidth: '120px',
-                  height: '56px'
+                startIcon={
+                  loading ? <CircularProgress size={20} /> : <SearchIcon />
+                }
+                sx={{
+                  bgcolor: "#0066b3",
+                  "&:hover": { bgcolor: "#004d85" },
+                  minWidth: "120px",
+                  height: "56px",
+                  borderRadius: 2,
                 }}
               >
-                {loading ? 'Đang tìm...' : 'Tìm kiếm'}
+                {loading ? "Đang tìm..." : "Tìm kiếm"}
               </Button>
             </Box>
           </CardContent>
         </Card>
 
-        {/* Student Information - Using Flexbox instead of Grid */}
+        {/* Student Information - Enhanced styling */}
         {selectedStudent && (
-          <Card sx={{ mb: 4 }}>
-            <CardContent>
-              <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 3, color: '#0066b3' }}>
+          <Card
+            sx={{
+              mb: 4,
+              borderRadius: 3,
+              boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+              border: "1px solid #e0e0e0",
+              overflow: "hidden",
+            }}
+          >
+            <CardContent sx={{ p: { xs: 2, sm: 4 } }}>
+              {/* Student info header with styled title */}
+              <Typography
+                variant="h6"
+                sx={{
+                  fontWeight: "bold",
+                  mb: 3,
+                  color: "#0066b3",
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                <PersonIcon sx={{ mr: 1 }} />
                 Thông tin học sinh
               </Typography>
-              
-              <Box sx={{ 
-                display: 'flex', 
-                flexDirection: { xs: 'column', md: 'row' }, 
-                gap: 3 
-              }}>
+
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: { xs: "column", md: "row" },
+                  gap: 3,
+                }}
+              >
                 {/* Avatar Section */}
-                <Box sx={{ 
-                  textAlign: 'center', 
-                  minWidth: { md: '200px' },
-                  alignSelf: { md: 'flex-start' }
-                }}>
+                <Box
+                  sx={{
+                    textAlign: "center",
+                    minWidth: { md: "200px" },
+                    alignSelf: { md: "flex-start" },
+                  }}
+                >
                   <Avatar
-                    sx={{ width: 100, height: 100, mx: 'auto', mb: 2, bgcolor: '#0066b3' }}
-                    src={selectedStudent.avatar}
+                    sx={{
+                      width: 100,
+                      height: 100,
+                      mx: "auto",
+                      mb: 2,
+                      bgcolor: "#0066b3",
+                      boxShadow: "0 3px 10px rgba(25,118,210,0.2)",
+                    }}
+                    src={selectedStudent.image}
                   >
                     <PersonIcon sx={{ fontSize: 50 }} />
                   </Avatar>
-                  <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                    {selectedStudent.name}
+                  <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+                    {selectedStudent.fullName}
                   </Typography>
                   <Typography variant="body2" color="textSecondary">
-                    {selectedStudent.studentId}
+                    {selectedStudent.studentCode}
                   </Typography>
                 </Box>
-                
-                {/* Info Section - Using CSS Grid */}
-                <Box sx={{ 
-                  flex: 1,
-                  display: 'grid',
-                  gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
-                  gap: 2
-                }}>
-                  <Box>
-                    <Typography variant="subtitle2" color="textSecondary">Lớp</Typography>
-                    <Typography variant="body1">{selectedStudent.class}</Typography>
-                  </Box>
-                  <Box>
-                    <Typography variant="subtitle2" color="textSecondary">Tuổi</Typography>
-                    <Typography variant="body1">{calculateAge(selectedStudent.dateOfBirth)} tuổi</Typography>
-                  </Box>
-                  <Box>
-                    <Typography variant="subtitle2" color="textSecondary">Giới tính</Typography>
-                    <Typography variant="body1">{selectedStudent.gender}</Typography>
-                  </Box>
-                  <Box>
-                    <Typography variant="subtitle2" color="textSecondary">Nhóm máu</Typography>
-                    <Typography variant="body1">{selectedStudent.bloodType}</Typography>
-                  </Box>
-                  <Box sx={{ gridColumn: { sm: '1 / -1' } }}>
-                    <Typography variant="subtitle2" color="textSecondary">Địa chỉ</Typography>
-                    <Typography variant="body1">{selectedStudent.address}</Typography>
-                  </Box>
-                  <Box>
-                    <Typography variant="subtitle2" color="textSecondary">Phụ huynh</Typography>
-                    <Typography variant="body1">{selectedStudent.parentName}</Typography>
-                  </Box>
-                  <Box>
-                    <Typography variant="subtitle2" color="textSecondary">Số điện thoại</Typography>
-                    <Typography variant="body1">{selectedStudent.parentPhone}</Typography>
-                  </Box>
-                  <Box sx={{ gridColumn: { sm: '1 / -1' } }}>
-                    <Typography variant="subtitle2" color="textSecondary">Mô tả</Typography>
-                    <Typography variant="body1">{selectedStudent.describe}</Typography>
+
+                {/* Basic Info - Using Grid */}
+                <Box sx={{ flex: 1 }}>
+                  {/* Basic information cards */}
+                  <Box sx={{ mb: 3 }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        margin: -1, // Negative margin to counteract padding on items
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          width: { xs: "100%", sm: "50%", md: "25%" },
+                          p: 1,
+                        }}
+                      >
+                        <Paper
+                          elevation={0}
+                          sx={{
+                            p: 2,
+                            bgcolor: "#f5f9ff",
+                            border: "1px solid #e3f2fd",
+                            borderRadius: 2,
+                            height: "100%",
+                          }}
+                        >
+                          <Typography variant="subtitle2" color="textSecondary">
+                            Lớp
+                          </Typography>
+                          <Typography
+                            variant="body1"
+                            fontWeight="medium"
+                            sx={{ fontSize: "1.1rem" }}
+                          >
+                            {selectedStudent.class}
+                          </Typography>
+                        </Paper>
+                      </Box>
+
+                      <Box
+                        sx={{
+                          width: { xs: "100%", sm: "50%", md: "25%" },
+                          p: 1,
+                        }}
+                      >
+                        <Paper
+                          elevation={0}
+                          sx={{
+                            p: 2,
+                            bgcolor: "#f5f9ff",
+                            border: "1px solid #e3f2fd",
+                            borderRadius: 2,
+                            height: "100%",
+                          }}
+                        >
+                          <Typography variant="subtitle2" color="textSecondary">
+                            Niên khóa
+                          </Typography>
+                          <Typography
+                            variant="body1"
+                            fontWeight="medium"
+                            sx={{ fontSize: "1.1rem" }}
+                          >
+                            {selectedStudent.schoolYear}
+                          </Typography>
+                        </Paper>
+                      </Box>
+
+                      <Box
+                        sx={{
+                          width: { xs: "100%", sm: "50%", md: "25%" },
+                          p: 1,
+                        }}
+                      >
+                        <Paper
+                          elevation={0}
+                          sx={{
+                            p: 2,
+                            bgcolor: "#f5f9ff",
+                            border: "1px solid #e3f2fd",
+                            borderRadius: 2,
+                            height: "100%",
+                          }}
+                        >
+                          <Typography variant="subtitle2" color="textSecondary">
+                            Tuổi
+                          </Typography>
+                          <Typography
+                            variant="body1"
+                            fontWeight="medium"
+                            sx={{ fontSize: "1.1rem" }}
+                          >
+                            {calculateAge(selectedStudent.dateOfBirth)} tuổi
+                          </Typography>
+                        </Paper>
+                      </Box>
+
+                      <Box
+                        sx={{
+                          width: { xs: "100%", sm: "50%", md: "25%" },
+                          p: 1,
+                        }}
+                      >
+                        <Paper
+                          elevation={0}
+                          sx={{
+                            p: 2,
+                            bgcolor: "#f5f9ff",
+                            border: "1px solid #e3f2fd",
+                            borderRadius: 2,
+                            height: "100%",
+                          }}
+                        >
+                          <Typography variant="subtitle2" color="textSecondary">
+                            Giới tính
+                          </Typography>
+                          <Typography
+                            variant="body1"
+                            fontWeight="medium"
+                            sx={{ fontSize: "1.1rem" }}
+                          >
+                            {getGenderText(selectedStudent.gender)}
+                          </Typography>
+                        </Paper>
+                      </Box>
+                    </Box>
                   </Box>
                 </Box>
+              </Box>
+
+              <Divider sx={{ my: 4, borderColor: "#e0e0e0" }} />
+
+              {/* Health Information - Enhanced styling */}
+              <Box>
+                <Typography
+                  variant="subtitle1"
+                  sx={{
+                    fontWeight: "bold",
+                    mb: 3,
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
+                  <MedicalIcon sx={{ mr: 1, color: "#1976d2" }} />
+                  Thông tin sức khỏe
+                </Typography>
+
+                {/* Health metrics cards */}
+                <Box sx={{ mb: 3 }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      margin: -1, // Negative margin to counteract padding on items
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        width: { xs: "100%", sm: "50%", md: "25%" },
+                        p: 1,
+                      }}
+                    >
+                      <Paper
+                        elevation={0}
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          p: 2,
+                          bgcolor: "#f5f9ff",
+                          borderRadius: 2,
+                          border: "1px solid #e3f2fd",
+                          height: "100%",
+                          transition: "transform 0.2s",
+                          "&:hover": {
+                            transform: "translateY(-3px)",
+                            boxShadow: "0 5px 15px rgba(0,0,0,0.05)",
+                          },
+                        }}
+                      >
+                        <Avatar sx={{ bgcolor: "#1976d2", mr: 1.5 }}>
+                          <HeightIcon />
+                        </Avatar>
+                        <Box>
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            fontWeight={500}
+                          >
+                            Chiều cao
+                          </Typography>
+                          <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+                            {selectedStudent.healthRecord?.height || "--"} cm
+                          </Typography>
+                        </Box>
+                      </Paper>
+                    </Box>
+
+                    <Box
+                      sx={{
+                        width: { xs: "100%", sm: "50%", md: "25%" },
+                        p: 1,
+                      }}
+                    >
+                      <Paper
+                        elevation={0}
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          p: 2,
+                          bgcolor: "#f9f9ff",
+                          borderRadius: 2,
+                          border: "1px solid #e8eaf6",
+                          height: "100%",
+                          transition: "transform 0.2s",
+                          "&:hover": {
+                            transform: "translateY(-3px)",
+                            boxShadow: "0 5px 15px rgba(0,0,0,0.05)",
+                          },
+                        }}
+                      >
+                        <Avatar sx={{ bgcolor: "#3f51b5", mr: 1.5 }}>
+                          <WeightIcon />
+                        </Avatar>
+                        <Box>
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            fontWeight={500}
+                          >
+                            Cân nặng
+                          </Typography>
+                          <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+                            {selectedStudent.healthRecord?.weight || "--"} kg
+                          </Typography>
+                        </Box>
+                      </Paper>
+                    </Box>
+
+                    <Box
+                      sx={{
+                        width: { xs: "100%", sm: "50%", md: "25%" },
+                        p: 1,
+                      }}
+                    >
+                      <Paper
+                        elevation={0}
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          p: 2,
+                          bgcolor: "#fff5f5",
+                          borderRadius: 2,
+                          border: "1px solid #ffebee",
+                          height: "100%",
+                          transition: "transform 0.2s",
+                          "&:hover": {
+                            transform: "translateY(-3px)",
+                            boxShadow: "0 5px 15px rgba(0,0,0,0.05)",
+                          },
+                        }}
+                      >
+                        <Avatar sx={{ bgcolor: "#d32f2f", mr: 1.5 }}>
+                          <BloodtypeIcon />
+                        </Avatar>
+                        <Box>
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            fontWeight={500}
+                          >
+                            Nhóm máu
+                          </Typography>
+                          <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+                            {selectedStudent.healthRecord?.bloodType ||
+                              "Chưa xác định"}
+                          </Typography>
+                        </Box>
+                      </Paper>
+                    </Box>
+
+                    <Box
+                      sx={{
+                        width: { xs: "100%", sm: "50%", md: "25%" },
+                        p: 1,
+                      }}
+                    >
+                      <Paper
+                        elevation={0}
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          p: 2,
+                          bgcolor: "#f4fcf7",
+                          borderRadius: 2,
+                          border: "1px solid #e8f5e9",
+                          height: "100%",
+                          transition: "transform 0.2s",
+                          "&:hover": {
+                            transform: "translateY(-3px)",
+                            boxShadow: "0 5px 15px rgba(0,0,0,0.05)",
+                          },
+                        }}
+                      >
+                        <Avatar sx={{ bgcolor: "#4caf50", mr: 1.5 }}>
+                          <HospitalIcon />
+                        </Avatar>
+                        <Box>
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            fontWeight={500}
+                          >
+                            BMI
+                          </Typography>
+                          <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+                            {calculateBMI(
+                              selectedStudent.healthRecord?.height || "",
+                              selectedStudent.healthRecord?.weight || ""
+                            )}
+                          </Typography>
+                        </Box>
+                      </Paper>
+                    </Box>
+                  </Box>
+                </Box>
+
+                {/* Allergies Section */}
+                <Box sx={{ mb: 4 }}>
+                  <Typography
+                    variant="subtitle1"
+                    sx={{
+                      mb: 2,
+                      fontSize: "1.1rem",
+                      color: "#333",
+                      display: "flex",
+                      alignItems: "center",
+                      fontWeight: 600,
+                    }}
+                  >
+                    <WarningIcon sx={{ mr: 1, color: "#ff9800" }} />
+                    Dị ứng
+                  </Typography>
+
+                  {selectedStudent.healthRecord?.allergies ? (
+                    <Paper
+                      elevation={0}
+                      sx={{
+                        p: 3,
+                        bgcolor: "#fff8e1",
+                        borderRadius: 2,
+                        border: "1px solid #ffecb3",
+                      }}
+                    >
+                      <Typography variant="body1" sx={{ lineHeight: 1.7 }}>
+                        {selectedStudent.healthRecord.allergies}
+                      </Typography>
+                    </Paper>
+                  ) : (
+                    <Paper
+                      elevation={0}
+                      sx={{
+                        p: 3,
+                        bgcolor: "#fafafa",
+                        borderRadius: 2,
+                        border: "1px solid #f0f0f0",
+                      }}
+                    >
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        align="center"
+                        sx={{ fontStyle: "italic" }}
+                      >
+                        Không có dị ứng nào được ghi nhận
+                      </Typography>
+                    </Paper>
+                  )}
+                </Box>
+
+                {/* Chronic Diseases Section */}
+                <Box sx={{ mb: 4 }}>
+                  <Typography
+                    variant="subtitle1"
+                    sx={{
+                      mb: 2,
+                      fontSize: "1.1rem",
+                      color: "#333",
+                      display: "flex",
+                      alignItems: "center",
+                      fontWeight: 600,
+                    }}
+                  >
+                    <HospitalIcon sx={{ mr: 1, color: "#f44336" }} />
+                    Bệnh mãn tính
+                  </Typography>
+
+                  {selectedStudent.healthRecord?.chronicDiseases ? (
+                    <Paper
+                      elevation={0}
+                      sx={{
+                        p: 3,
+                        bgcolor: "#ffebee",
+                        borderRadius: 2,
+                        border: "1px solid #ffcdd2",
+                      }}
+                    >
+                      <Typography variant="body1" sx={{ lineHeight: 1.7 }}>
+                        {selectedStudent.healthRecord.chronicDiseases}
+                      </Typography>
+                    </Paper>
+                  ) : (
+                    <Paper
+                      elevation={0}
+                      sx={{
+                        p: 3,
+                        bgcolor: "#fafafa",
+                        borderRadius: 2,
+                        border: "1px solid #f0f0f0",
+                      }}
+                    >
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        align="center"
+                        sx={{ fontStyle: "italic" }}
+                      >
+                        Không có bệnh mãn tính nào được ghi nhận
+                      </Typography>
+                    </Paper>
+                  )}
+                </Box>
+
+                {/* Vision and Hearing */}
+                <Box sx={{ mb: 4 }}>
+                  <Typography
+                    variant="subtitle1"
+                    sx={{
+                      mb: 2,
+                      fontSize: "1.1rem",
+                      color: "#333",
+                      display: "flex",
+                      alignItems: "center",
+                      fontWeight: 600,
+                    }}
+                  >
+                    <EyeIcon sx={{ mr: 1, color: "#2196f3" }} />
+                    Thị lực và thính lực
+                  </Typography>
+
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: 2,
+                      "& > *": {
+                        flex: {
+                          xs: "1 1 100%",
+                          sm: "1 1 calc(50% - 8px)",
+                        },
+                      },
+                    }}
+                  >
+                    {/* Vision */}
+                    <Paper
+                      elevation={0}
+                      sx={{
+                        bgcolor: "#e3f2fd",
+                        p: 2,
+                        borderRadius: 2,
+                        border: "1px solid #bbdefb",
+                      }}
+                    >
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", mb: 1 }}
+                      >
+                        <EyeIcon sx={{ color: "#1976d2", mr: 1 }} />
+                        <Typography variant="subtitle2" fontWeight="medium">
+                          Thị lực
+                        </Typography>
+                      </Box>
+                      <Box sx={{ ml: 4 }}>
+                        <Typography variant="body2">
+                          <strong>Mắt trái:</strong>{" "}
+                          {selectedStudent.healthRecord?.visionLeft ||
+                            "Chưa có thông tin"}
+                        </Typography>
+                        <Typography variant="body2">
+                          <strong>Mắt phải:</strong>{" "}
+                          {selectedStudent.healthRecord?.visionRight ||
+                            "Chưa có thông tin"}
+                        </Typography>
+                      </Box>
+                    </Paper>
+
+                    {/* Hearing */}
+                    <Paper
+                      elevation={0}
+                      sx={{
+                        bgcolor: "#e8f5e9",
+                        p: 2,
+                        borderRadius: 2,
+                        border: "1px solid #c8e6c9",
+                      }}
+                    >
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", mb: 1 }}
+                      >
+                        <HearingIcon sx={{ color: "#4caf50", mr: 1 }} />
+                        <Typography variant="subtitle2" fontWeight="medium">
+                          Thính lực
+                        </Typography>
+                      </Box>
+                      <Box sx={{ ml: 4 }}>
+                        <Typography variant="body2">
+                          <strong>Tai trái:</strong>{" "}
+                          {selectedStudent.healthRecord?.hearingLeft ||
+                            "Chưa có thông tin"}
+                        </Typography>
+                        <Typography variant="body2">
+                          <strong>Tai phải:</strong>{" "}
+                          {selectedStudent.healthRecord?.hearingRight ||
+                            "Chưa có thông tin"}
+                        </Typography>
+                      </Box>
+                    </Paper>
+                  </Box>
+                </Box>
+
+                {/* Medical History */}
+                <Box sx={{ mb: 4 }}>
+                  <Typography
+                    variant="subtitle1"
+                    sx={{
+                      mb: 2,
+                      fontSize: "1.1rem",
+                      color: "#333",
+                      display: "flex",
+                      alignItems: "center",
+                      fontWeight: 600,
+                    }}
+                  >
+                    <EventIcon sx={{ mr: 1, color: "#9c27b0" }} />
+                    Lịch sử y tế
+                  </Typography>
+
+                  <Box sx={{ mb: 2 }}>
+                    <Typography
+                      variant="subtitle2"
+                      gutterBottom
+                      fontWeight="medium"
+                    >
+                      Tiền sử bệnh
+                    </Typography>
+                    <Paper
+                      elevation={0}
+                      sx={{
+                        p: 2,
+                        bgcolor: "#f3e5f5",
+                        borderRadius: 2,
+                        border: "1px solid #e1bee7",
+                      }}
+                    >
+                      <Typography variant="body2">
+                        {selectedStudent.healthRecord?.pastMedicalHistory ||
+                          "Không có thông tin"}
+                      </Typography>
+                    </Paper>
+                  </Box>
+
+                  <Box>
+                    <Typography
+                      variant="subtitle2"
+                      gutterBottom
+                      fontWeight="medium"
+                    >
+                      Lịch sử tiêm chủng
+                    </Typography>
+                    <Paper
+                      elevation={0}
+                      sx={{
+                        p: 2,
+                        bgcolor: "#f3e5f5",
+                        borderRadius: 2,
+                        border: "1px solid #e1bee7",
+                      }}
+                    >
+                      <Typography variant="body2">
+                        {selectedStudent.healthRecord?.vaccinationHistory ||
+                          "Không có thông tin"}
+                      </Typography>
+                    </Paper>
+                  </Box>
+                </Box>
+
+                {/* Additional Notes */}
+                {selectedStudent.healthRecord?.otherNotes && (
+                  <Box>
+                    <Typography
+                      variant="subtitle1"
+                      sx={{
+                        mb: 2,
+                        fontSize: "1.1rem",
+                        color: "#333",
+                        display: "flex",
+                        alignItems: "center",
+                        fontWeight: 600,
+                      }}
+                    >
+                      <NotesIcon sx={{ mr: 1, color: "#4caf50" }} />
+                      Ghi chú bổ sung
+                    </Typography>
+
+                    <Paper
+                      elevation={0}
+                      sx={{
+                        p: 2,
+                        bgcolor: "#f1f8e9",
+                        borderRadius: 2,
+                        border: "1px solid #dcedc8",
+                      }}
+                    >
+                      <Typography variant="body2">
+                        {selectedStudent.healthRecord.otherNotes}
+                      </Typography>
+                    </Paper>
+                  </Box>
+                )}
               </Box>
             </CardContent>
           </Card>
         )}
 
-        {/* Health Records */}
+        {/* Health Records - Enhanced styling */}
         {selectedStudent && (
-          <Card>
-            <CardContent>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#0066b3' }}>
+          <Card
+            sx={{
+              borderRadius: 3,
+              boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+              border: "1px solid #e0e0e0",
+              overflow: "hidden",
+            }}
+          >
+            <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  mb: 3,
+                }}
+              >
+                <Typography
+                  variant="h6"
+                  sx={{
+                    fontWeight: "bold",
+                    color: "#0066b3",
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
+                  <MedicalIcon sx={{ mr: 1 }} />
                   Lịch sử khám chữa bệnh ({healthRecords.length} bản ghi)
                 </Typography>
                 <Button
                   variant="contained"
                   startIcon={<AddIcon />}
-                  sx={{ bgcolor: '#4caf50', '&:hover': { bgcolor: '#45a049' } }}
+                  sx={{
+                    bgcolor: "#4caf50",
+                    "&:hover": { bgcolor: "#45a049" },
+                    borderRadius: 2,
+                    boxShadow: "0 3px 10px rgba(76,175,80,0.2)",
+                  }}
                 >
                   Thêm bản ghi mới
                 </Button>
               </Box>
 
-              {healthRecords.length === 0 ? (
-                <Box sx={{ textAlign: 'center', py: 4 }}>
-                  <MedicalIcon sx={{ fontSize: 64, color: '#ccc', mb: 2 }} />
+              {loadingRecords ? (
+                <Box sx={{ textAlign: "center", py: 4 }}>
+                  <CircularProgress
+                    size={40}
+                    sx={{ color: "#1976d2", mb: 2 }}
+                  />
+                  <Typography>Đang tải dữ liệu bản ghi...</Typography>
+                </Box>
+              ) : recordsError ? (
+                <Box sx={{ textAlign: "center", py: 4 }}>
+                  <Alert
+                    severity="info"
+                    sx={{
+                      maxWidth: "500px",
+                      mx: "auto",
+                      borderRadius: 2,
+                      "& .MuiAlert-icon": {
+                        fontSize: "1.5rem",
+                      },
+                    }}
+                  >
+                    {recordsError}
+                  </Alert>
+                </Box>
+              ) : healthRecords.length === 0 ? (
+                <Box sx={{ textAlign: "center", py: 6 }}>
+                  <MedicalIcon sx={{ fontSize: 64, color: "#ccc", mb: 2 }} />
                   <Typography variant="h6" color="textSecondary">
                     Chưa có bản ghi sức khỏe nào
                   </Typography>
-                  <Typography variant="body2" color="textSecondary">
-                    Nhấn "Thêm bản ghi mới" để tạo bản ghi đầu tiên
+                  <Typography
+                    variant="body2"
+                    color="textSecondary"
+                    sx={{
+                      mb: 3,
+                      maxWidth: "500px",
+                      mx: "auto",
+                    }}
+                  >
+                    Nhấn "Thêm bản ghi mới" để tạo bản ghi đầu tiên cho học sinh
+                    này
                   </Typography>
+                  <Button
+                    variant="outlined"
+                    startIcon={<AddIcon />}
+                    sx={{
+                      borderRadius: 2,
+                      borderWidth: "1.5px",
+                      borderColor: "#4caf50",
+                      color: "#4caf50",
+                      "&:hover": {
+                        borderWidth: "1.5px",
+                        borderColor: "#45a049",
+                      },
+                    }}
+                  >
+                    Thêm bản ghi mới
+                  </Button>
                 </Box>
               ) : (
-                <TableContainer component={Paper} variant="outlined">
+                <TableContainer
+                  component={Paper}
+                  variant="outlined"
+                  sx={{
+                    borderRadius: 2,
+                    overflow: "hidden",
+                    "& .MuiTable-root": {
+                      borderCollapse: "separate",
+                      borderSpacing: 0,
+                    },
+                  }}
+                >
                   <Table>
                     <TableHead>
-                      <TableRow sx={{ bgcolor: '#f5f5f5' }}>
-                        <TableCell><strong>Ngày</strong></TableCell>
-                        <TableCell><strong>Loại</strong></TableCell>
-                        <TableCell><strong>Tiêu đề</strong></TableCell>
-                        <TableCell><strong>Y tá</strong></TableCell>
-                        <TableCell><strong>Thao tác</strong></TableCell>
+                      <TableRow sx={{ bgcolor: "#f5f9ff" }}>
+                        <TableCell sx={{ fontWeight: 600 }}>Ngày</TableCell>
+                        <TableCell sx={{ fontWeight: 600 }}>Loại</TableCell>
+                        <TableCell sx={{ fontWeight: 600 }}>Tiêu đề</TableCell>
+                        <TableCell sx={{ fontWeight: 600 }}>Y tá</TableCell>
+                        <TableCell sx={{ fontWeight: 600 }}>Thao tác</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
                       {healthRecords.map((record) => (
-                        <TableRow key={record.id} hover>
+                        <TableRow
+                          key={record.id}
+                          hover
+                          sx={{
+                            "&:last-child td, &:last-child th": { border: 0 },
+                          }}
+                        >
                           <TableCell>
-                            {new Date(record.date).toLocaleDateString('vi-VN')}
+                            {new Date(record.date).toLocaleDateString("vi-VN")}
                           </TableCell>
                           <TableCell>
                             <Chip
@@ -444,7 +1188,9 @@ const StudentRecordsPage: React.FC = () => {
                               size="small"
                               sx={{
                                 bgcolor: getRecordTypeColor(record.type),
-                                color: 'white',
+                                color: "white",
+                                fontWeight: 500,
+                                px: 1,
                               }}
                             />
                           </TableCell>
@@ -454,14 +1200,14 @@ const StudentRecordsPage: React.FC = () => {
                             <IconButton
                               size="small"
                               onClick={() => handleViewRecord(record)}
-                              sx={{ color: '#0066b3' }}
+                              sx={{ color: "#0066b3" }}
                               title="Xem chi tiết"
                             >
                               <EyeIcon />
                             </IconButton>
                             <IconButton
                               size="small"
-                              sx={{ color: '#ff9800' }}
+                              sx={{ color: "#ff9800" }}
                               title="Chỉnh sửa"
                             >
                               <EditIcon />
@@ -477,100 +1223,257 @@ const StudentRecordsPage: React.FC = () => {
           </Card>
         )}
 
-        {/* Record Detail Dialog - Using Flexbox instead of Grid */}
-        <Dialog 
-          open={openDialog} 
-          onClose={handleCloseDialog} 
-          maxWidth="md" 
+        {/* Record Detail Dialog - Enhanced styling */}
+        <Dialog
+          open={openDialog}
+          onClose={handleCloseDialog}
+          maxWidth="md"
           fullWidth
           PaperProps={{
-            sx: { minHeight: '400px' }
+            sx: {
+              borderRadius: 2,
+              overflow: "hidden",
+              minHeight: "400px",
+            },
           }}
         >
-          <DialogTitle>
-            Chi tiết bản ghi sức khỏe
+          <DialogTitle
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              px: 3,
+              py: 2,
+              bgcolor: "#f5f9ff",
+              borderBottom: "1px solid #e3f2fd",
+            }}
+          >
+            <Typography
+              variant="h6"
+              sx={{ fontWeight: 600, display: "flex", alignItems: "center" }}
+            >
+              <MedicalIcon sx={{ mr: 1, color: "#1976d2" }} />
+              Chi tiết bản ghi sức khỏe
+            </Typography>
+            <IconButton onClick={handleCloseDialog} size="small">
+              <CloseIcon />
+            </IconButton>
           </DialogTitle>
-          <DialogContent>
+
+          <DialogContent dividers>
             {selectedRecord && (
               <Box sx={{ pt: 2 }}>
                 {/* Basic Info */}
-                <Box sx={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, 
-                  gap: 2, 
-                  mb: 2 
-                }}>
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+                    gap: 2,
+                    mb: 2,
+                  }}
+                >
                   <Box>
-                    <Typography variant="subtitle2" color="textSecondary">Ngày khám</Typography>
-                    <Typography variant="body1">
-                      {new Date(selectedRecord.date).toLocaleDateString('vi-VN')}
+                    <Typography variant="subtitle2" color="textSecondary">
+                      Ngày khám
+                    </Typography>
+                    <Typography variant="body1" fontWeight="medium">
+                      {new Date(selectedRecord.date).toLocaleDateString(
+                        "vi-VN"
+                      )}
                     </Typography>
                   </Box>
                   <Box>
-                    <Typography variant="subtitle2" color="textSecondary">Loại</Typography>
+                    <Typography variant="subtitle2" color="textSecondary">
+                      Loại
+                    </Typography>
                     <Box sx={{ mt: 1 }}>
                       <Chip
                         label={getRecordTypeLabel(selectedRecord.type)}
                         size="small"
                         sx={{
                           bgcolor: getRecordTypeColor(selectedRecord.type),
-                          color: 'white',
+                          color: "white",
+                          fontWeight: 500,
                         }}
                       />
                     </Box>
                   </Box>
                 </Box>
 
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="subtitle2" color="textSecondary">Tiêu đề</Typography>
-                  <Typography variant="body1">{selectedRecord.title}</Typography>
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant="subtitle2" color="textSecondary">
+                    Tiêu đề
+                  </Typography>
+                  <Typography variant="body1" fontWeight="medium">
+                    {selectedRecord.title}
+                  </Typography>
                 </Box>
 
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="subtitle2" color="textSecondary">Mô tả</Typography>
-                  <Typography variant="body1">{selectedRecord.description}</Typography>
-                </Box>
-                
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 2,
+                    mb: 3,
+                    bgcolor: "#f5f5f5",
+                    borderRadius: 2,
+                  }}
+                >
+                  <Typography
+                    variant="subtitle2"
+                    color="textSecondary"
+                    gutterBottom
+                  >
+                    Mô tả
+                  </Typography>
+                  <Typography variant="body1">
+                    {selectedRecord.description}
+                  </Typography>
+                </Paper>
+
                 {/* Health Metrics */}
-                {(selectedRecord.height || selectedRecord.weight || selectedRecord.bloodPressure || selectedRecord.temperature) && (
-                  <Box sx={{ mb: 2 }}>
+                {(selectedRecord.height ||
+                  selectedRecord.weight ||
+                  selectedRecord.bloodPressure ||
+                  selectedRecord.temperature) && (
+                  <Box sx={{ mb: 3 }}>
                     <Divider sx={{ my: 2 }} />
-                    <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 2 }}>
+                    <Typography
+                      variant="subtitle1"
+                      sx={{
+                        fontWeight: "bold",
+                        mb: 2,
+                        display: "flex",
+                        alignItems: "center",
+                      }}
+                    >
+                      <MedicalIcon sx={{ mr: 1, color: "#1976d2" }} />
                       Chỉ số sức khỏe
                     </Typography>
-                    <Box sx={{ 
-                      display: 'grid', 
-                      gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(4, 1fr)' }, 
-                      gap: 2 
-                    }}>
+
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        margin: -0.5,
+                      }}
+                    >
                       {selectedRecord.height && (
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <HeightIcon sx={{ mr: 1, color: '#0066b3' }} />
-                          <Box>
-                            <Typography variant="caption" color="textSecondary">Chiều cao</Typography>
-                            <Typography variant="body1">{selectedRecord.height} cm</Typography>
-                          </Box>
+                        <Box sx={{ width: { xs: "50%", sm: "25%" }, p: 0.5 }}>
+                          <Paper
+                            elevation={0}
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              p: 1.5,
+                              bgcolor: "#f5f9ff",
+                              borderRadius: 2,
+                              border: "1px solid #e3f2fd",
+                              height: "100%",
+                            }}
+                          >
+                            <HeightIcon sx={{ mr: 1, color: "#1976d2" }} />
+                            <Box>
+                              <Typography
+                                variant="caption"
+                                color="textSecondary"
+                              >
+                                Chiều cao
+                              </Typography>
+                              <Typography variant="body1" fontWeight="medium">
+                                {selectedRecord.height} cm
+                              </Typography>
+                            </Box>
+                          </Paper>
                         </Box>
                       )}
+
                       {selectedRecord.weight && (
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <WeightIcon sx={{ mr: 1, color: '#0066b3' }} />
-                          <Box>
-                            <Typography variant="caption" color="textSecondary">Cân nặng</Typography>
-                            <Typography variant="body1">{selectedRecord.weight} kg</Typography>
-                          </Box>
+                        <Box sx={{ width: { xs: "50%", sm: "25%" }, p: 0.5 }}>
+                          <Paper
+                            elevation={0}
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              p: 1.5,
+                              bgcolor: "#f9f9ff",
+                              borderRadius: 2,
+                              border: "1px solid #e8eaf6",
+                              height: "100%",
+                            }}
+                          >
+                            <WeightIcon sx={{ mr: 1, color: "#3f51b5" }} />
+                            <Box>
+                              <Typography
+                                variant="caption"
+                                color="textSecondary"
+                              >
+                                Cân nặng
+                              </Typography>
+                              <Typography variant="body1" fontWeight="medium">
+                                {selectedRecord.weight} kg
+                              </Typography>
+                            </Box>
+                          </Paper>
                         </Box>
                       )}
+
                       {selectedRecord.bloodPressure && (
-                        <Box>
-                          <Typography variant="caption" color="textSecondary">Huyết áp</Typography>
-                          <Typography variant="body1">{selectedRecord.bloodPressure} mmHg</Typography>
+                        <Box sx={{ width: { xs: "50%", sm: "25%" }, p: 0.5 }}>
+                          <Paper
+                            elevation={0}
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              p: 1.5,
+                              bgcolor: "#fff5f5",
+                              borderRadius: 2,
+                              border: "1px solid #ffebee",
+                              height: "100%",
+                            }}
+                          >
+                            <BloodtypeIcon sx={{ mr: 1, color: "#f44336" }} />
+                            <Box>
+                              <Typography
+                                variant="caption"
+                                color="textSecondary"
+                              >
+                                Huyết áp
+                              </Typography>
+                              <Typography variant="body1" fontWeight="medium">
+                                {selectedRecord.bloodPressure} mmHg
+                              </Typography>
+                            </Box>
+                          </Paper>
                         </Box>
                       )}
+
                       {selectedRecord.temperature && (
-                        <Box>
-                          <Typography variant="caption" color="textSecondary">Nhiệt độ</Typography>
-                          <Typography variant="body1">{selectedRecord.temperature}°C</Typography>
+                        <Box sx={{ width: { xs: "50%", sm: "25%" }, p: 0.5 }}>
+                          <Paper
+                            elevation={0}
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              p: 1.5,
+                              bgcolor: "#fff8e1",
+                              borderRadius: 2,
+                              border: "1px solid #ffecb3",
+                              height: "100%",
+                            }}
+                          >
+                            <MedicalIcon sx={{ mr: 1, color: "#ff9800" }} />
+                            <Box>
+                              <Typography
+                                variant="caption"
+                                color="textSecondary"
+                              >
+                                Nhiệt độ
+                              </Typography>
+                              <Typography variant="body1" fontWeight="medium">
+                                {selectedRecord.temperature}°C
+                              </Typography>
+                            </Box>
+                          </Paper>
                         </Box>
                       )}
                     </Box>
@@ -578,46 +1481,145 @@ const StudentRecordsPage: React.FC = () => {
                 )}
 
                 {selectedRecord.diagnosis && (
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="subtitle2" color="textSecondary">Chẩn đoán</Typography>
-                    <Typography variant="body1">{selectedRecord.diagnosis}</Typography>
+                  <Box sx={{ mb: 3 }}>
+                    <Typography
+                      variant="subtitle2"
+                      color="textSecondary"
+                      gutterBottom
+                    >
+                      Chẩn đoán
+                    </Typography>
+                    <Paper
+                      elevation={0}
+                      sx={{
+                        p: 2,
+                        bgcolor: "#e8f5e9",
+                        borderRadius: 2,
+                        border: "1px solid #c8e6c9",
+                      }}
+                    >
+                      <Typography variant="body1">
+                        {selectedRecord.diagnosis}
+                      </Typography>
+                    </Paper>
                   </Box>
                 )}
 
                 {selectedRecord.treatment && (
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="subtitle2" color="textSecondary">Điều trị</Typography>
-                    <Typography variant="body1">{selectedRecord.treatment}</Typography>
+                  <Box sx={{ mb: 3 }}>
+                    <Typography
+                      variant="subtitle2"
+                      color="textSecondary"
+                      gutterBottom
+                    >
+                      Điều trị
+                    </Typography>
+                    <Paper
+                      elevation={0}
+                      sx={{
+                        p: 2,
+                        bgcolor: "#e3f2fd",
+                        borderRadius: 2,
+                        border: "1px solid #bbdefb",
+                      }}
+                    >
+                      <Typography variant="body1">
+                        {selectedRecord.treatment}
+                      </Typography>
+                    </Paper>
                   </Box>
                 )}
 
-                {selectedRecord.medications && selectedRecord.medications.length > 0 && (
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="subtitle2" color="textSecondary">Thuốc đã sử dụng</Typography>
-                    <List dense>
-                      {selectedRecord.medications.map((medication, index) => (
-                        <ListItem key={index} sx={{ pl: 0 }}>
-                          <ListItemIcon>
-                            <MedicationIcon sx={{ color: '#ff9800' }} />
-                          </ListItemIcon>
-                          <ListItemText primary={medication} />
-                        </ListItem>
-                      ))}
-                    </List>
-                  </Box>
-                )}
+                {selectedRecord.medications &&
+                  selectedRecord.medications.length > 0 && (
+                    <Box sx={{ mb: 3 }}>
+                      <Typography
+                        variant="subtitle2"
+                        color="textSecondary"
+                        gutterBottom
+                      >
+                        Thuốc đã sử dụng
+                      </Typography>
+                      <Paper
+                        elevation={0}
+                        sx={{
+                          py: 1,
+                          px: 2,
+                          bgcolor: "#fff8e1",
+                          borderRadius: 2,
+                          border: "1px solid #ffecb3",
+                        }}
+                      >
+                        <List dense disablePadding>
+                          {selectedRecord.medications.map(
+                            (medication, index) => (
+                              <ListItem key={index} sx={{ py: 0.5 }}>
+                                <ListItemIcon sx={{ minWidth: 36 }}>
+                                  <MedicationIcon sx={{ color: "#ff9800" }} />
+                                </ListItemIcon>
+                                <ListItemText primary={medication} />
+                              </ListItem>
+                            )
+                          )}
+                        </List>
+                      </Paper>
+                    </Box>
+                  )}
 
                 <Box>
-                  <Typography variant="subtitle2" color="textSecondary">Y tá phụ trách</Typography>
-                  <Typography variant="body1">{selectedRecord.nurseName}</Typography>
+                  <Typography
+                    variant="subtitle2"
+                    color="textSecondary"
+                    gutterBottom
+                  >
+                    Y tá phụ trách
+                  </Typography>
+                  <Box sx={{ display: "flex", alignItems: "center" }}>
+                    <Avatar
+                      sx={{
+                        bgcolor: "#1976d2",
+                        width: 36,
+                        height: 36,
+                        mr: 1.5,
+                      }}
+                    >
+                      <PersonIcon fontSize="small" />
+                    </Avatar>
+                    <Typography variant="body1" fontWeight="medium">
+                      {selectedRecord.nurseName}
+                    </Typography>
+                  </Box>
                 </Box>
               </Box>
             )}
           </DialogContent>
-          <DialogActions>
-            <Button onClick={handleCloseDialog}>Đóng</Button>
-            <Button variant="contained" startIcon={<EditIcon />}>
-              Chỉnh sửa
+
+          <DialogActions sx={{ px: 3, py: 2 }}>
+            <Button
+              variant="outlined"
+              onClick={handleCloseDialog}
+              sx={{
+                borderRadius: 2,
+                textTransform: "none",
+                borderWidth: "1.5px",
+                "&:hover": {
+                  borderWidth: "1.5px",
+                },
+              }}
+            >
+              Đóng
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<EditIcon />}
+              sx={{
+                borderRadius: 2,
+                bgcolor: "#0066b3",
+                "&:hover": { bgcolor: "#004d85" },
+                textTransform: "none",
+              }}
+            >
+              Chỉnh sửa bản ghi
             </Button>
           </DialogActions>
         </Dialog>
