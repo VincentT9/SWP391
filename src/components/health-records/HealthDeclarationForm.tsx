@@ -33,6 +33,7 @@ import { useForm, Controller } from "react-hook-form";
 import { toast } from "react-toastify";
 import { HealthRecord } from "../../models/types";
 import axios from "axios";
+import instance from "../../utils/axiosConfig";
 
 // Định nghĩa kiểu dữ liệu Student từ API
 interface Student {
@@ -122,8 +123,8 @@ const HealthDeclarationForm = () => {
     setStudentData(null);
 
     try {
-      const response = await axios.get(
-        `${process.env.REACT_APP_BASE_URL}/api/Student/get-student-by-student-code/${studentCode}`
+      const response = await instance.get(
+        `/api/Student/get-student-by-student-code/${studentCode}`
       );
       setStudentData(response.data);
 
@@ -188,15 +189,9 @@ const HealthDeclarationForm = () => {
       }
 
       // Gọi API để tạo mới hồ sơ sức khỏe
-      const response = await axios.post(
-        `${process.env.REACT_APP_BASE_URL}/api/HealthRecord/create-health-record`,
-        healthRecordData,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
+      const response = await instance.post(
+        `/api/HealthRecord/create-health-record`,
+        healthRecordData
       );
 
       console.log("Create health record response:", response.data);
@@ -218,15 +213,9 @@ const HealthDeclarationForm = () => {
         console.log("Updating student with parent ID:", studentUpdateData);
 
         // Gọi API để cập nhật thông tin học sinh - sử dụng update-student endpoint
-        const studentResponse = await axios.put(
-          `${process.env.REACT_APP_BASE_URL}/api/Student/update-student/${studentData.id}`,
-          studentUpdateData,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
+        const studentResponse = await instance.put(
+          `/api/Student/update-student/${studentData.id}`,
+          studentUpdateData
         );
 
         console.log("Update student response:", studentResponse.data);

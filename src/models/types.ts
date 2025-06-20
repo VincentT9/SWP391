@@ -270,3 +270,12 @@ export interface MedicationLog {
   studentConditionAfter?: string;
   notes?: string;
 }
+
+export interface MedicationDiaryEntry {
+  id: string;
+  studentName: string;
+  status: number;
+  description: string;
+  createAt: string;
+  createdBy: string;
+}

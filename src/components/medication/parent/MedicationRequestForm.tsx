@@ -12,38 +12,75 @@ import {
   Snackbar,
   Alert,
   Divider,
+  CircularProgress,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { addDays } from "date-fns";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-
-// For demo purposes - would be replaced with actual API calls
-import { medicationRequests } from "../../../utils/mockData";
+import axios from "axios";
+import instance from "../../../utils/axiosConfig";
 
 interface MedicationRequestFormProps {
   parentId: string;
   onRequestSubmitted: () => void;
   studentOptions: { id: string; name: string }[];
+  loading: boolean;
 }
 
 const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
   parentId,
   onRequestSubmitted,
   studentOptions,
+  loading,
 }) => {
   const [studentId, setStudentId] = useState("");
-  const [medicationName, setMedicationName] = useState("");
   const [dosesPerDay, setDosesPerDay] = useState<number>(1);
   const [daysRequired, setDaysRequired] = useState<number>(1);
   const [startDate, setStartDate] = useState<Date | null>(new Date());
   const [notes, setNotes] = useState("");
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [receiptImage, setReceiptImage] = useState<File | null>(null);
+  const [receiptImageUrl, setReceiptImageUrl] = useState<string | null>(null);
   const [components, setComponents] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Cập nhật hàm xử lý tải lên file
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setReceiptImage(file);
+      setUploadingImage(true);
+
+      // Tạo FormData để gửi ảnh
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        // Gọi API tải lên ảnh
+        const response = await instance.post("/image", formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+
+        // Lưu URL ảnh từ response
+        console.log("Image uploaded successfully:", response.data);
+        setReceiptImageUrl(response.data);
+        setError(null);
+      } catch (error) {
+        console.error("Error uploading image:", error);
+        setError("Không thể tải lên hình ảnh hóa đơn. Vui lòng thử lại.");
+        setReceiptImage(null);
+      } finally {
+        setUploadingImage(false);
+      }
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Validate các trường bắt buộc
@@ -58,56 +95,53 @@ const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
       return;
     }
 
-    // Create a new medication request
-    const newRequest = {
-      id: (medicationRequests.length + 1).toString(),
-      studentId,
-      studentName: studentOptions.find((s) => s.id === studentId)?.name || "",
-      parentId,
-      medicationName,
-      dosesPerDay,
-      // Thêm thuộc tính dosage để khớp với interface MedicationRequest
-      dosage: `${dosesPerDay} lần/ngày`,
-      instructions: notes, // Gộp instructions vào notes
-      daysRequired,
-      startDate: startDate as Date,
-      endDate: addDays(startDate as Date, daysRequired),
-      status: "requested" as const,
-      notes,
-      hasReceipt: receiptImage !== null,
-      components,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+    setIsSubmitting(true);
+    setError(null);
 
-    // In a real app, this would make an API call
-    medicationRequests.push(newRequest);
+    try {
+      // Prepare the request payload with image URL
+      const requestData = {
+        studentId: studentId,
+        medicationName: components,
+        dosage: dosesPerDay,
+        numberOfDayToTake: daysRequired,
+        instructions: notes,
+        // Sử dụng URL ảnh thay vì mảng base64
+        imagesMedicalInvoice: receiptImageUrl ? [receiptImageUrl] : [],
+        startDate: startDate?.toISOString(),
+      };
 
-    // Show success message
-    setOpenSnackbar(true);
+      // Make the API call
+      await instance.post(
+        `/api/MedicationRequest/create-medication-request`,
+        requestData
+      );
 
-    // Reset form
-    setStudentId("");
-    setMedicationName("");
-    setDosesPerDay(1);
-    setDaysRequired(1);
-    setStartDate(new Date());
-    setNotes("");
-    setReceiptImage(null);
-    setComponents("");
+      // Show success message
+      setOpenSnackbar(true);
 
-    // Notify parent component
-    onRequestSubmitted();
+      // Reset form
+      setStudentId("");
+      setDosesPerDay(1);
+      setDaysRequired(1);
+      setStartDate(new Date());
+      setNotes("");
+      setReceiptImage(null);
+      setReceiptImageUrl(null);
+      setComponents("");
+
+      // Notify parent component
+      onRequestSubmitted();
+    } catch (error) {
+      console.error("Error creating medication request:", error);
+      setError("Có lỗi xảy ra khi gửi yêu cầu. Vui lòng thử lại.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleCloseSnackbar = () => {
     setOpenSnackbar(false);
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setReceiptImage(e.target.files[0]);
-    }
   };
 
   return (
@@ -120,16 +154,25 @@ const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
         Vui lòng nhập thành phần thuốc để nhà trường có thể kiểm tra.
       </Alert>
 
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+
       <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
-        <Box sx={{ mb: 2 }}>
-          <FormControl fullWidth required>
-            <InputLabel id="student-select-label">Tên học sinh</InputLabel>
+        {loading ? (
+          <CircularProgress />
+        ) : (
+          <FormControl fullWidth sx={{ mb: 2 }}>
+            <InputLabel id="student-select-label">Tên học sinh *</InputLabel>
             <Select
               labelId="student-select-label"
               id="student-select"
               value={studentId}
-              label="Tên học sinh"
+              label="Tên học sinh *"
               onChange={(e) => setStudentId(e.target.value)}
+              required
             >
               {studentOptions.map((student) => (
                 <MenuItem key={student.id} value={student.id}>
@@ -138,7 +181,7 @@ const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
               ))}
             </Select>
           </FormControl>
-        </Box>
+        )}
 
         {/* Phần thông tin thuốc */}
         <Box sx={{ mb: 3 }}>
@@ -206,6 +249,7 @@ const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
                 id="receipt-upload-button"
                 type="file"
                 onChange={handleFileChange}
+                disabled={uploadingImage}
               />
               <label htmlFor="receipt-upload-button">
                 <Button
@@ -213,19 +257,26 @@ const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
                   variant="outlined"
                   startIcon={<CloudUploadIcon />}
                   sx={{ mb: 2 }}
+                  disabled={uploadingImage}
                 >
-                  Tải lên hóa đơn thuốc
+                  {uploadingImage ? "Đang tải lên..." : "Tải lên hóa đơn thuốc"}
                 </Button>
               </label>
 
-              {receiptImage && (
+              {uploadingImage && (
+                <Box sx={{ mt: 2, display: "flex", justifyContent: "center" }}>
+                  <CircularProgress size={24} />
+                </Box>
+              )}
+
+              {receiptImage && receiptImageUrl && (
                 <Box sx={{ mt: 2 }}>
                   <Typography variant="body2" color="textSecondary">
-                    Đã chọn: {receiptImage.name}
+                    Đã tải lên: {receiptImage.name}
                   </Typography>
                   <Box sx={{ mt: 1 }}>
                     <img
-                      src={URL.createObjectURL(receiptImage)}
+                      src={receiptImageUrl}
                       alt="Hóa đơn thuốc"
                       style={{ maxWidth: "100%", maxHeight: "200px" }}
                     />
@@ -233,7 +284,7 @@ const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
                 </Box>
               )}
 
-              {!receiptImage && (
+              {!receiptImage && !uploadingImage && (
                 <Typography variant="body2" color="textSecondary">
                   Bạn có thể chụp thêm hóa đơn thuốc để nhà trường tham khảo
                 </Typography>
@@ -288,8 +339,14 @@ const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
         </Box>
 
         <Box>
-          <Button variant="contained" color="primary" type="submit" fullWidth>
-            Gửi yêu cầu
+          <Button
+            variant="contained"
+            color="primary"
+            type="submit"
+            fullWidth
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? <CircularProgress size={24} /> : "Gửi yêu cầu"}
           </Button>
         </Box>
       </Box>
