@@ -28,6 +28,11 @@ import {
   DialogContent,
   DialogActions,
   CircularProgress,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+  Snackbar,
 } from "@mui/material";
 import {
   Search as SearchIcon,
@@ -47,6 +52,7 @@ import {
   Notes as NotesIcon,
   Close as CloseIcon,
   ArrowForward as ArrowForwardIcon,
+  Save as SaveIcon,
 } from "@mui/icons-material";
 import { useAuth } from "../auth/AuthContext";
 import instance from "../../utils/axiosConfig";
@@ -76,6 +82,23 @@ interface Student {
     vaccinationHistory: string;
     otherNotes: string;
   };
+}
+
+// Interface for health record update
+interface HealthRecordUpdate {
+  studentId: string;
+  height: string;
+  weight: string;
+  bloodType: string;
+  allergies: string;
+  chronicDiseases: string;
+  pastMedicalHistory: string;
+  visionLeft: string;
+  visionRight: string;
+  hearingLeft: string;
+  hearingRight: string;
+  vaccinationHistory: string;
+  otherNotes: string;
 }
 
 // Keep existing HealthRecord interface for historical records
@@ -110,6 +133,30 @@ const StudentRecordsPage: React.FC = () => {
   const [selectedRecord, setSelectedRecord] = useState<HealthRecord | null>(
     null
   );
+
+  // State for health record update
+  const [openEditDialog, setOpenEditDialog] = useState(false);
+  const [updatingHealthRecord, setUpdatingHealthRecord] = useState(false);
+  const [healthRecordForm, setHealthRecordForm] =
+    useState<HealthRecordUpdate | null>(null);
+  const [updateMessage, setUpdateMessage] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
+  const [showSnackbar, setShowSnackbar] = useState(false);
+
+  // Blood type options
+  const bloodTypeOptions = [
+    "A+",
+    "A-",
+    "B+",
+    "B-",
+    "AB+",
+    "AB-",
+    "O+",
+    "O-",
+    "Chưa xác định",
+  ];
 
   // Check if user is nurse or admin
   if (
@@ -197,6 +244,91 @@ const StudentRecordsPage: React.FC = () => {
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setSelectedRecord(null);
+  };
+
+  // Handle opening edit health record dialog
+  const handleOpenEditDialog = () => {
+    if (!selectedStudent || !selectedStudent.healthRecord) return;
+
+    const { healthRecord, id } = selectedStudent;
+
+    setHealthRecordForm({
+      studentId: id,
+      height: healthRecord.height || "",
+      weight: healthRecord.weight || "",
+      bloodType: healthRecord.bloodType || "",
+      allergies: healthRecord.allergies || "",
+      chronicDiseases: healthRecord.chronicDiseases || "",
+      pastMedicalHistory: healthRecord.pastMedicalHistory || "",
+      visionLeft: healthRecord.visionLeft || "",
+      visionRight: healthRecord.visionRight || "",
+      hearingLeft: healthRecord.hearingLeft || "",
+      hearingRight: healthRecord.hearingRight || "",
+      vaccinationHistory: healthRecord.vaccinationHistory || "",
+      otherNotes: healthRecord.otherNotes || "",
+    });
+
+    setOpenEditDialog(true);
+  };
+
+  // Handle closing edit health record dialog
+  const handleCloseEditDialog = () => {
+    setOpenEditDialog(false);
+    setHealthRecordForm(null);
+  };
+
+  // Handle form input changes
+  const handleFormChange = (field: keyof HealthRecordUpdate, value: string) => {
+    if (!healthRecordForm) return;
+    setHealthRecordForm({
+      ...healthRecordForm,
+      [field]: value,
+    });
+  };
+
+  // Handle health record update submission
+  const handleUpdateHealthRecord = async () => {
+    if (!selectedStudent || !healthRecordForm) return;
+
+    setUpdatingHealthRecord(true);
+
+    try {
+      await instance.put(
+        `/api/HealthRecord/update-health-record/${selectedStudent.healthRecord.id}`,
+        healthRecordForm
+      );
+
+      // Update the local student data with the new health record info
+      setSelectedStudent({
+        ...selectedStudent,
+        healthRecord: {
+          ...selectedStudent.healthRecord,
+          ...healthRecordForm,
+        },
+      });
+
+      setUpdateMessage({
+        type: "success",
+        message: "Cập nhật hồ sơ sức khỏe thành công",
+      });
+
+      setShowSnackbar(true);
+      setOpenEditDialog(false);
+    } catch (err) {
+      console.error("Error updating health record:", err);
+      setUpdateMessage({
+        type: "error",
+        message: "Đã xảy ra lỗi khi cập nhật hồ sơ sức khỏe",
+      });
+      setShowSnackbar(true);
+    } finally {
+      setUpdatingHealthRecord(false);
+    }
+  };
+
+  // Close the snackbar
+  const handleCloseSnackbar = () => {
+    setShowSnackbar(false);
   };
 
   const getRecordTypeColor = (type: string) => {
@@ -360,19 +492,42 @@ const StudentRecordsPage: React.FC = () => {
           >
             <CardContent sx={{ p: { xs: 2, sm: 4 } }}>
               {/* Student info header with styled title */}
-              <Typography
-                variant="h6"
+              <Box
                 sx={{
-                  fontWeight: "bold",
-                  mb: 3,
-                  color: "#0066b3",
                   display: "flex",
+                  justifyContent: "space-between",
                   alignItems: "center",
+                  mb: 3,
                 }}
               >
-                <PersonIcon sx={{ mr: 1 }} />
-                Thông tin học sinh
-              </Typography>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    fontWeight: "bold",
+                    color: "#0066b3",
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
+                  <PersonIcon sx={{ mr: 1 }} />
+                  Thông tin học sinh
+                </Typography>
+
+                {/* Add Edit Button */}
+                <Button
+                  variant="contained"
+                  onClick={handleOpenEditDialog}
+                  startIcon={<EditIcon />}
+                  sx={{
+                    bgcolor: "#ff9800",
+                    "&:hover": { bgcolor: "#f57c00" },
+                    borderRadius: 2,
+                    boxShadow: "0 2px 8px rgba(255,152,0,0.3)",
+                  }}
+                >
+                  Cập nhật hồ sơ sức khỏe
+                </Button>
+              </Box>
 
               <Box
                 sx={{
@@ -1043,7 +1198,7 @@ const StudentRecordsPage: React.FC = () => {
           </Card>
         )}
 
-        {/* Health Records - Enhanced styling */}
+        {/* Health Records Section */}
         {selectedStudent && (
           <Card
             sx={{
@@ -1620,6 +1775,328 @@ const StudentRecordsPage: React.FC = () => {
               }}
             >
               Chỉnh sửa bản ghi
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Edit Health Record Dialog */}
+        <Dialog
+          open={openEditDialog}
+          onClose={handleCloseEditDialog}
+          maxWidth="md"
+          fullWidth
+          PaperProps={{
+            sx: {
+              borderRadius: 2,
+              overflow: "hidden",
+            },
+          }}
+        >
+          <DialogTitle
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              px: 3,
+              py: 2,
+              bgcolor: "#fff8e1",
+              borderBottom: "1px solid #ffecb3",
+            }}
+          >
+            <Typography
+              variant="h6"
+              sx={{ fontWeight: 600, display: "flex", alignItems: "center" }}
+            >
+              <EditIcon sx={{ mr: 1, color: "#ff9800" }} />
+              Cập nhật hồ sơ sức khỏe
+            </Typography>
+            <IconButton onClick={handleCloseEditDialog} size="small">
+              <CloseIcon />
+            </IconButton>
+          </DialogTitle>
+
+          <DialogContent dividers>
+            {healthRecordForm && (
+              <Box sx={{ pt: 1, pb: 2 }}>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mb: 3 }}
+                >
+                  Cập nhật thông tin sức khỏe cho học sinh{" "}
+                  <strong>{selectedStudent?.fullName}</strong>
+                </Typography>
+
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                  {/* Physical metrics */}
+                  <Box>
+                    <Typography
+                      variant="subtitle1"
+                      sx={{ mb: 2, fontWeight: "medium" }}
+                    >
+                      Thông số cơ bản
+                    </Typography>
+                    <Box
+                      sx={{
+                        display: "grid",
+                        gridTemplateColumns: {
+                          xs: "1fr",
+                          sm: "1fr 1fr",
+                          md: "1fr 1fr 1fr",
+                        },
+                        gap: 2,
+                      }}
+                    >
+                      <TextField
+                        label="Chiều cao (cm)"
+                        value={healthRecordForm.height}
+                        onChange={(e) =>
+                          handleFormChange("height", e.target.value)
+                        }
+                        fullWidth
+                        type="number"
+                        InputProps={{
+                          startAdornment: (
+                            <HeightIcon
+                              color="primary"
+                              sx={{ mr: 1, opacity: 0.7 }}
+                            />
+                          ),
+                        }}
+                      />
+
+                      <TextField
+                        label="Cân nặng (kg)"
+                        value={healthRecordForm.weight}
+                        onChange={(e) =>
+                          handleFormChange("weight", e.target.value)
+                        }
+                        fullWidth
+                        type="number"
+                        InputProps={{
+                          startAdornment: (
+                            <WeightIcon
+                              color="primary"
+                              sx={{ mr: 1, opacity: 0.7 }}
+                            />
+                          ),
+                        }}
+                      />
+
+                      <FormControl fullWidth>
+                        <InputLabel>Nhóm máu</InputLabel>
+                        <Select
+                          value={healthRecordForm.bloodType || ""}
+                          onChange={(e) =>
+                            handleFormChange("bloodType", e.target.value)
+                          }
+                          label="Nhóm máu"
+                          startAdornment={
+                            <BloodtypeIcon
+                              color="error"
+                              sx={{ mr: 1, ml: -0.5, opacity: 0.7 }}
+                            />
+                          }
+                        >
+                          {bloodTypeOptions.map((type) => (
+                            <MenuItem key={type} value={type}>
+                              {type}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Box>
+                  </Box>
+
+                  {/* Vision and hearing */}
+                  <Box>
+                    <Typography
+                      variant="subtitle1"
+                      sx={{ mb: 2, fontWeight: "medium" }}
+                    >
+                      Thị lực và thính lực
+                    </Typography>
+                    <Box
+                      sx={{
+                        display: "grid",
+                        gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+                        gap: 2,
+                      }}
+                    >
+                      <TextField
+                        label="Thị lực mắt trái"
+                        value={healthRecordForm.visionLeft}
+                        onChange={(e) =>
+                          handleFormChange("visionLeft", e.target.value)
+                        }
+                        fullWidth
+                      />
+
+                      <TextField
+                        label="Thị lực mắt phải"
+                        value={healthRecordForm.visionRight}
+                        onChange={(e) =>
+                          handleFormChange("visionRight", e.target.value)
+                        }
+                        fullWidth
+                      />
+
+                      <TextField
+                        label="Thính lực tai trái"
+                        value={healthRecordForm.hearingLeft}
+                        onChange={(e) =>
+                          handleFormChange("hearingLeft", e.target.value)
+                        }
+                        fullWidth
+                      />
+
+                      <TextField
+                        label="Thính lực tai phải"
+                        value={healthRecordForm.hearingRight}
+                        onChange={(e) =>
+                          handleFormChange("hearingRight", e.target.value)
+                        }
+                        fullWidth
+                      />
+                    </Box>
+                  </Box>
+
+                  {/* Allergies and chronic diseases */}
+                  <Box>
+                    <Typography
+                      variant="subtitle1"
+                      sx={{ mb: 2, fontWeight: "medium" }}
+                    >
+                      Dị ứng và bệnh mãn tính
+                    </Typography>
+                    <Box
+                      sx={{
+                        display: "grid",
+                        gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+                        gap: 2,
+                      }}
+                    >
+                      <TextField
+                        label="Dị ứng"
+                        value={healthRecordForm.allergies}
+                        onChange={(e) =>
+                          handleFormChange("allergies", e.target.value)
+                        }
+                        fullWidth
+                        multiline
+                        rows={2}
+                      />
+
+                      <TextField
+                        label="Bệnh mãn tính"
+                        value={healthRecordForm.chronicDiseases}
+                        onChange={(e) =>
+                          handleFormChange("chronicDiseases", e.target.value)
+                        }
+                        fullWidth
+                        multiline
+                        rows={2}
+                      />
+                    </Box>
+                  </Box>
+
+                  {/* Past medical history and vaccination history */}
+                  <Box>
+                    <Typography
+                      variant="subtitle1"
+                      sx={{ mb: 2, fontWeight: "medium" }}
+                    >
+                      Tiền sử bệnh và lịch sử tiêm chủng
+                    </Typography>
+                    <Box
+                      sx={{
+                        display: "grid",
+                        gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+                        gap: 2,
+                      }}
+                    >
+                      <TextField
+                        label="Tiền sử bệnh"
+                        value={healthRecordForm.pastMedicalHistory}
+                        onChange={(e) =>
+                          handleFormChange("pastMedicalHistory", e.target.value)
+                        }
+                        fullWidth
+                        multiline
+                        rows={2}
+                      />
+
+                      <TextField
+                        label="Lịch sử tiêm chủng"
+                        value={healthRecordForm.vaccinationHistory}
+                        onChange={(e) =>
+                          handleFormChange("vaccinationHistory", e.target.value)
+                        }
+                        fullWidth
+                        multiline
+                        rows={2}
+                      />
+                    </Box>
+                  </Box>
+
+                  {/* Other notes */}
+                  <Box>
+                    <Typography
+                      variant="subtitle1"
+                      sx={{ mb: 2, fontWeight: "medium" }}
+                    >
+                      Ghi chú bổ sung
+                    </Typography>
+                    <TextField
+                      label="Ghi chú khác"
+                      value={healthRecordForm.otherNotes}
+                      onChange={(e) =>
+                        handleFormChange("otherNotes", e.target.value)
+                      }
+                      fullWidth
+                      multiline
+                      rows={3}
+                    />
+                  </Box>
+                </Box>
+              </Box>
+            )}
+          </DialogContent>
+
+          <DialogActions sx={{ px: 3, py: 2 }}>
+            <Button
+              variant="outlined"
+              onClick={handleCloseEditDialog}
+              sx={{
+                borderRadius: 2,
+                textTransform: "none",
+                borderWidth: "1.5px",
+                "&:hover": {
+                  borderWidth: "1.5px",
+                },
+              }}
+            >
+              Hủy
+            </Button>
+            <Button
+              variant="contained"
+              onClick={handleUpdateHealthRecord}
+              disabled={updatingHealthRecord}
+              startIcon={
+                updatingHealthRecord ? (
+                  <CircularProgress size={20} sx={{ color: "white" }} />
+                ) : (
+                  <SaveIcon />
+                )
+              }
+              sx={{
+                borderRadius: 2,
+                bgcolor: "#0066b3",
+                "&:hover": { bgcolor: "#004d85" },
+                textTransform: "none",
+              }}
+            >
+              {updatingHealthRecord ? "Đang lưu..." : "Lưu thay đổi"}
             </Button>
           </DialogActions>
         </Dialog>
