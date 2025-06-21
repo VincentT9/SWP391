@@ -85,23 +85,20 @@ const AdminPage = () => {
   };
 
   const BASE_API = process.env.REACT_APP_BASE_URL;
-  
+
   // Fetch users from API
   const fetchUsers = async () => {
     setLoading(true);
     setError("");
     try {
       const token = localStorage.getItem("authToken");
-      const response = await fetch(
-        `${BASE_API}/api/User/get-all-users`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}` // Thêm token vào header
-          },
-        }
-      );
+      const response = await fetch(`${BASE_API}/api/User/get-all-users`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // Thêm token vào header
+        },
+      });
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -264,7 +261,10 @@ const AdminPage = () => {
       const token = localStorage.getItem("authToken");
 
       // Make sure we don't allow changing to admin role (0)
-      if (formData.userRole === 0 && (!selectedUser || selectedUser.userRole !== 0)) {
+      if (
+        formData.userRole === 0 &&
+        (!selectedUser || selectedUser.userRole !== 0)
+      ) {
         toast.error("Không thể cấp quyền quản trị viên!");
         return;
       }
@@ -283,7 +283,7 @@ const AdminPage = () => {
 
       // Use different endpoints for create vs update
       let url, method, requestData;
-      
+
       if (selectedUser) {
         // UPDATE existing user
         url = `${BASE_API}/api/User/update-user/${selectedUser.id}`;
@@ -296,21 +296,21 @@ const AdminPage = () => {
           address: formData.address,
           userRole: parseInt(formData.userRole),
           username: formData.username,
-          isActive: true
+          isActive: true,
         };
       } else {
-        // CREATE new user
-        url = `${BASE_API}/api/Auth/register`; // Use register endpoint for creation
+        // CREATE new user - using new User creation API
+        url = `${BASE_API}/api/User`; // New endpoint for user creation
         method = "POST";
         requestData = {
           username: formData.username,
           password: formData.password,
           email: formData.email,
-          fullName: formData.fullName,
-          phoneNumber: formData.phoneNumber,
-          address: formData.address,
+          fullName: formData.fullName || "",
+          phoneNumber: formData.phoneNumber || "",
+          address: formData.address || "",
           userRole: parseInt(formData.userRole),
-          isActive: true
+          image: "", // Adding empty image field as required by the new API
         };
       }
 
@@ -322,7 +322,7 @@ const AdminPage = () => {
         method: method,
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(requestData),
       });
@@ -363,7 +363,7 @@ const AdminPage = () => {
             method: "DELETE",
             headers: {
               "Content-Type": "application/json",
-              "Authorization": `Bearer ${token}`
+              Authorization: `Bearer ${token}`,
             },
           }
         );
@@ -539,7 +539,9 @@ const AdminPage = () => {
                         </TableCell>
                         <TableCell>{userData.fullName || "Chưa có"}</TableCell>
                         <TableCell>{userData.email || "Chưa có"}</TableCell>
-                        <TableCell>{userData.phoneNumber || "Chưa có"}</TableCell>
+                        <TableCell>
+                          {userData.phoneNumber || "Chưa có"}
+                        </TableCell>
                         <TableCell>
                           <Chip
                             label={getUserRoleText(userData.userRole)}
@@ -606,7 +608,7 @@ const AdminPage = () => {
               sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 2 }}
             >
               <TextField
-                label="Tên đăng nhập"
+                label="Tên đăng nhập *"
                 value={formData.username || ""}
                 onChange={(e) =>
                   setFormData({ ...formData, username: e.target.value })
@@ -615,42 +617,40 @@ const AdminPage = () => {
                 required
                 disabled={!!selectedUser} // Disable username field during update
               />
-              
-              {/* Only show fullName, phone, address when editing */}
-              {selectedUser && (
-                <>
-                  <TextField
-                    label="Họ và tên"
-                    value={formData.fullName || ""}
-                    onChange={(e) =>
-                      setFormData({ ...formData, fullName: e.target.value })
-                    }
-                    fullWidth
-                    required
-                  />
-                  <TextField
-                    label="Số điện thoại"
-                    value={formData.phoneNumber || ""}
-                    onChange={(e) =>
-                      setFormData({ ...formData, phoneNumber: e.target.value })
-                    }
-                    fullWidth
-                  />
-                  <TextField
-                    label="Địa chỉ"
-                    value={formData.address || ""}
-                    onChange={(e) =>
-                      setFormData({ ...formData, address: e.target.value })
-                    }
-                    multiline
-                    rows={2}
-                    fullWidth
-                  />
-                </>
-              )}
+
+              {/* Add these fields for both new and existing users */}
+              <TextField
+                label="Họ và tên *"
+                value={formData.fullName || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, fullName: e.target.value })
+                }
+                fullWidth
+                required
+              />
 
               <TextField
-                label="Email"
+                label="Số điện thoại"
+                value={formData.phoneNumber || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, phoneNumber: e.target.value })
+                }
+                fullWidth
+              />
+
+              <TextField
+                label="Địa chỉ"
+                value={formData.address || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, address: e.target.value })
+                }
+                multiline
+                rows={2}
+                fullWidth
+              />
+
+              <TextField
+                label="Email *"
                 type="email"
                 value={formData.email || ""}
                 onChange={(e) =>
@@ -660,12 +660,30 @@ const AdminPage = () => {
                 required
                 disabled={!!selectedUser} // Disable email field during update
               />
-              
+
+              {/* Add role selection for new users too */}
+              <FormControl fullWidth required>
+                <InputLabel>Vai trò *</InputLabel>
+                <Select
+                  value={formData.userRole || 1}
+                  onChange={(e) =>
+                    setFormData({ ...formData, userRole: e.target.value })
+                  }
+                  label="Vai trò"
+                >
+                  {selectedUser?.userRole === 0 && (
+                    <MenuItem value={0}>Quản trị viên</MenuItem>
+                  )}
+                  <MenuItem value={1}>Phụ huynh</MenuItem>
+                  <MenuItem value={2}>Y tá</MenuItem>
+                </Select>
+              </FormControl>
+
               {/* Add Password fields only for new user creation */}
               {!selectedUser && (
                 <>
                   <TextField
-                    label="Mật khẩu"
+                    label="Mật khẩu *"
                     type="password"
                     value={formData.password || ""}
                     onChange={(e) =>
@@ -675,46 +693,29 @@ const AdminPage = () => {
                     required
                   />
                   <TextField
-                    label="Xác nhận mật khẩu"
+                    label="Xác nhận mật khẩu *"
                     type="password"
                     value={formData.confirmPassword || ""}
                     onChange={(e) =>
-                      setFormData({ ...formData, confirmPassword: e.target.value })
+                      setFormData({
+                        ...formData,
+                        confirmPassword: e.target.value,
+                      })
                     }
                     fullWidth
                     required
-                    error={formData.password !== formData.confirmPassword && formData.confirmPassword !== ""}
+                    error={
+                      formData.password !== formData.confirmPassword &&
+                      formData.confirmPassword !== ""
+                    }
                     helperText={
-                      formData.password !== formData.confirmPassword && formData.confirmPassword !== ""
+                      formData.password !== formData.confirmPassword &&
+                      formData.confirmPassword !== ""
                         ? "Mật khẩu xác nhận không khớp"
                         : ""
                     }
                   />
                 </>
-              )}
-              
-              {/* Only show role selector for editing or if specifically needed */}
-              {selectedUser && (
-                <FormControl
-                  fullWidth
-                  required
-                >
-                  <InputLabel>Vai trò</InputLabel>
-                  <Select
-                    value={formData.userRole || 1}
-                    onChange={(e) =>
-                      setFormData({ ...formData, userRole: e.target.value })
-                    }
-                    label="Vai trò"
-                  >
-                    {/* Remove admin role option (0) for updates or if user is not already admin */}
-                    {(selectedUser?.userRole === 0) && (
-                      <MenuItem value={0}>Quản trị viên</MenuItem>
-                    )}
-                    <MenuItem value={1}>Phụ huynh</MenuItem>
-                    <MenuItem value={2}>Y tá</MenuItem>
-                  </Select>
-                </FormControl>
               )}
 
               {/* Keep existing alerts */}
@@ -725,7 +726,8 @@ const AdminPage = () => {
               )}
               {selectedUser && (
                 <Alert severity="info" sx={{ mt: 1 }}>
-                  Tên đăng nhập và email không thể thay đổi sau khi tạo tài khoản.
+                  Tên đăng nhập và email không thể thay đổi sau khi tạo tài
+                  khoản.
                 </Alert>
               )}
             </Box>
