@@ -14,7 +14,6 @@ import HealthRecordsPage from "./components/health-records/HealthRecordsPage";
 import HealthDeclarationFormPage from "./components/health-records/HealthDeclarationForm";
 import MedicationPage from "./components/medication/MedicationPage";
 import MedicalEventsPage from "./components/medical-events/MedicalEventsPage";
-import VaccinationPage from "./components/vaccination/VaccinationPage";
 import HealthCheckPage from "./components/health-check/StudentRecordsPage";
 import DashboardPage from "./components/dashboard/DashboardPage";
 import UserProfilePage from "./components/user/UserProfilePage";
@@ -24,6 +23,7 @@ import RegisterPage from "./components/user/RegisterPage";
 import NotificationsPage from "./components/notifications/NotificationsPage";
 import MedicalSupplier from "./components/admin/MedicalSupplier";
 import StudentManagementPage from "./components/admin/StudentManagementPage";
+import VaccinationPage from "./components/vaccination/VaccinationPage";
 
 function App() {
   return (
@@ -51,7 +51,7 @@ function App() {
               <Route path="user-management" element={<AdminPage />} />
               <Route path="medical-supplier" element={<MedicalSupplier />} />
               <Route
-                path="/admin/students"
+                path="admin/students"
                 element={<StudentManagementPage />}
               />
             </Route>

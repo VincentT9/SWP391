@@ -32,6 +32,7 @@ import {
   ChevronRight,
 } from "@mui/icons-material";
 import SchoolIcon from "@mui/icons-material/School";
+import VaccinesIcon from "@mui/icons-material/Vaccines";
 import { useAuth } from "../auth/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -157,12 +158,18 @@ const menuItems: MenuItemType[] = [
     text: "Gửi thuốc đến trường",
     path: "/medication",
     icon: <MedicationIcon />,
-    role: ["MedicalStaff"],
+    role: ["Parent"],
   },
   {
     text: "Vật tư y tế",
     path: "/medical-supplier",
     icon: <MedicalServicesIcon />,
+    role: ["MedicalStaff", "Admin"],
+  },
+  {
+    text: "Tiêm chủng",
+    path: "/vaccination",
+    icon: <VaccinesIcon />,
     role: ["MedicalStaff", "Admin"],
   },
   {

@@ -279,3 +279,21 @@ export interface MedicationDiaryEntry {
   createAt: string;
   createdBy: string;
 }
+
+export interface VaccinationCampaign {
+  id: string;
+  campaignName: string;
+  vaccineType: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  status: number;
+  schedules: any[]; // Có thể định nghĩa chi tiết hơn sau
+}
+
+export enum VaccinationStatus {
+  Planned = 0,
+  InProgress = 1,
+  Completed = 2,
+  Cancelled = 3,
+}
