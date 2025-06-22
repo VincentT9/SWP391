@@ -28,12 +28,9 @@ interface EditVaccinationProgramDialogProps {
   onSuccess: () => void;
 }
 
-const EditVaccinationProgramDialog: React.FC<EditVaccinationProgramDialogProps> = ({
-  open,
-  campaign,
-  onClose,
-  onSuccess,
-}) => {
+const EditVaccinationProgramDialog: React.FC<
+  EditVaccinationProgramDialogProps
+> = ({ open, campaign, onClose, onSuccess }) => {
   const [editFormData, setEditFormData] = useState({
     campaignName: "",
     vaccineType: "",
@@ -68,7 +65,9 @@ const EditVaccinationProgramDialog: React.FC<EditVaccinationProgramDialogProps> 
   };
 
   // Handle form input changes
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
     setEditFormData((prev) => ({
       ...prev,
@@ -106,19 +105,19 @@ const EditVaccinationProgramDialog: React.FC<EditVaccinationProgramDialogProps> 
   // Validate form
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
-    
+
     if (!editFormData.campaignName.trim()) {
       newErrors.campaignName = "Tên chương trình là bắt buộc";
     }
-    
+
     if (!editFormData.vaccineType.trim()) {
       newErrors.vaccineType = "Loại vaccine là bắt buộc";
     }
-    
+
     if (!editFormData.description.trim()) {
       newErrors.description = "Mô tả là bắt buộc";
     }
-    
+
     if (!editFormData.startDate) {
       newErrors.startDate = "Ngày bắt đầu là bắt buộc";
     } else {
@@ -128,7 +127,7 @@ const EditVaccinationProgramDialog: React.FC<EditVaccinationProgramDialogProps> 
         newErrors.startDate = "Ngày bắt đầu phải từ ngày hiện tại trở đi";
       }
     }
-    
+
     if (!editFormData.endDate) {
       newErrors.endDate = "Ngày kết thúc là bắt buộc";
     } else if (
@@ -138,7 +137,7 @@ const EditVaccinationProgramDialog: React.FC<EditVaccinationProgramDialogProps> 
     ) {
       newErrors.endDate = "Ngày kết thúc phải sau ngày bắt đầu";
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -148,9 +147,9 @@ const EditVaccinationProgramDialog: React.FC<EditVaccinationProgramDialogProps> 
     if (!validateForm()) {
       return;
     }
-    
+
     setIsSubmitting(true);
-    
+
     try {
       const updateData = {
         campaignName: editFormData.campaignName,
@@ -160,14 +159,14 @@ const EditVaccinationProgramDialog: React.FC<EditVaccinationProgramDialogProps> 
         endDate: editFormData.endDate.toISOString(),
         status: editFormData.status,
       };
-      
+
       await instance.put(
         `/api/VaccCampaign/update-vacc-campaign/${campaign.id}`,
         updateData
       );
-      
+
       toast.success("Cập nhật chương trình tiêm chủng thành công!");
-      
+
       // Update campaign object with new values (for immediate UI update)
       campaign.campaignName = editFormData.campaignName;
       campaign.vaccineType = editFormData.vaccineType;
@@ -175,13 +174,15 @@ const EditVaccinationProgramDialog: React.FC<EditVaccinationProgramDialogProps> 
       campaign.startDate = editFormData.startDate.toISOString();
       campaign.endDate = editFormData.endDate.toISOString();
       campaign.status = editFormData.status;
-      
+
       // Close dialog and notify parent component
       onSuccess();
       handleCloseDialog();
     } catch (error) {
       console.error("Error updating campaign:", error);
-      toast.error("Không thể cập nhật chương trình tiêm chủng. Vui lòng thử lại.");
+      toast.error(
+        "Không thể cập nhật chương trình tiêm chủng. Vui lòng thử lại."
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -193,15 +194,13 @@ const EditVaccinationProgramDialog: React.FC<EditVaccinationProgramDialogProps> 
   };
 
   return (
-    <Dialog 
-      open={open} 
-      onClose={handleCloseDialog}
-      maxWidth="md"
-      fullWidth
-    >
+    <Dialog open={open} onClose={handleCloseDialog} maxWidth="md" fullWidth>
       <DialogTitle>Chỉnh sửa chương trình tiêm chủng</DialogTitle>
       <DialogContent>
-        <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={viLocale}>
+        <LocalizationProvider
+          dateAdapter={AdapterDateFns}
+          adapterLocale={viLocale}
+        >
           <Box sx={{ pt: 1 }}>
             <Box sx={{ mb: 3 }}>
               <TextField
@@ -216,8 +215,15 @@ const EditVaccinationProgramDialog: React.FC<EditVaccinationProgramDialogProps> 
                 required
               />
             </Box>
-            
-            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, mb: 3 }}>
+
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: { xs: "column", sm: "row" },
+                gap: 2,
+                mb: 3,
+              }}
+            >
               <TextField
                 fullWidth
                 label="Loại vaccine"
@@ -241,11 +247,20 @@ const EditVaccinationProgramDialog: React.FC<EditVaccinationProgramDialogProps> 
                   <MenuItem value={2}>Đã hoàn thành</MenuItem>
                   <MenuItem value={3}>Đã hủy</MenuItem>
                 </Select>
-                {errors.status && <FormHelperText>{errors.status}</FormHelperText>}
+                {errors.status && (
+                  <FormHelperText>{errors.status}</FormHelperText>
+                )}
               </FormControl>
             </Box>
-            
-            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, mb: 3 }}>
+
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: { xs: "column", sm: "row" },
+                gap: 2,
+                mb: 3,
+              }}
+            >
               <DatePicker
                 label="Ngày bắt đầu *"
                 value={editFormData.startDate}
@@ -273,7 +288,7 @@ const EditVaccinationProgramDialog: React.FC<EditVaccinationProgramDialogProps> 
                 }}
               />
             </Box>
-            
+
             <Box sx={{ mb: 3 }}>
               <TextField
                 fullWidth
@@ -292,10 +307,12 @@ const EditVaccinationProgramDialog: React.FC<EditVaccinationProgramDialogProps> 
         </LocalizationProvider>
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleCloseDialog} disabled={isSubmitting}>Hủy</Button>
-        <Button 
-          onClick={handleSubmit} 
-          variant="contained" 
+        <Button onClick={handleCloseDialog} disabled={isSubmitting}>
+          Hủy
+        </Button>
+        <Button
+          onClick={handleSubmit}
+          variant="contained"
           color="primary"
           disabled={isSubmitting}
         >

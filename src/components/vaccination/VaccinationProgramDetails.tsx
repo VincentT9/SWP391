@@ -230,9 +230,9 @@ const VaccinationProgramDetails: React.FC<VaccinationProgramDetailsProps> = ({
             </Box>
           </Box>
 
-          <Button 
-            variant="outlined" 
-            color="primary" 
+          <Button
+            variant="outlined"
+            color="primary"
             startIcon={<EditIcon />}
             onClick={handleEditClick}
           >
