@@ -18,6 +18,7 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { vi as viLocale } from "date-fns/locale";
+import { startOfDay, isBefore } from "date-fns"; // Thêm imports cần thiết
 
 interface VaccinationProgramFormProps {
   onSave: (campaignData: any) => void;
@@ -36,6 +37,14 @@ const VaccinationProgramForm: React.FC<VaccinationProgramFormProps> = ({
   const [status, setStatus] = useState<number>(0); // Default: Planned
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
+  // Lấy ngày hiện tại và reset về đầu ngày để so sánh chính xác
+  const today = startOfDay(new Date());
+
+  // Function to check if date should be disabled (any date before today)
+  const shouldDisableDate = (date: Date) => {
+    return isBefore(date, today);
+  };
+
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
 
@@ -53,6 +62,12 @@ const VaccinationProgramForm: React.FC<VaccinationProgramFormProps> = ({
 
     if (!startDate) {
       newErrors.startDate = "Ngày bắt đầu là bắt buộc";
+    } else {
+      // Kiểm tra ngày bắt đầu phải từ ngày hiện tại trở đi
+      const startDateStart = startOfDay(new Date(startDate));
+      if (isBefore(startDateStart, today)) {
+        newErrors.startDate = "Ngày bắt đầu phải từ ngày hiện tại trở đi";
+      }
     }
 
     if (!endDate) {
@@ -151,6 +166,7 @@ const VaccinationProgramForm: React.FC<VaccinationProgramFormProps> = ({
               label="Ngày bắt đầu *"
               value={startDate}
               onChange={(newDate) => setStartDate(newDate)}
+              shouldDisableDate={shouldDisableDate} // Vô hiệu hóa ngày trong quá khứ
               slotProps={{
                 textField: {
                   fullWidth: true,
@@ -164,6 +180,7 @@ const VaccinationProgramForm: React.FC<VaccinationProgramFormProps> = ({
               label="Ngày kết thúc *"
               value={endDate}
               onChange={(newDate) => setEndDate(newDate)}
+              shouldDisableDate={shouldDisableDate} // Vô hiệu hóa ngày trong quá khứ
               slotProps={{
                 textField: {
                   fullWidth: true,

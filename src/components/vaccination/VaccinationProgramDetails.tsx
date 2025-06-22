@@ -35,6 +35,7 @@ import {
   CheckCircle as CheckCircleIcon,
 } from "@mui/icons-material";
 import { format } from "date-fns";
+import EditVaccinationProgramDialog from "./EditVaccinationProgramDialog";
 
 // Fake data for student list
 const mockStudents = [
@@ -99,14 +100,17 @@ interface VaccinationProgramDetailsProps {
   campaign: any;
   onBack: () => void;
   getStatusLabel: (status: number) => string;
+  onRefresh?: () => void; // Add this prop to refresh parent component
 }
 
 const VaccinationProgramDetails: React.FC<VaccinationProgramDetailsProps> = ({
   campaign,
   onBack,
   getStatusLabel,
+  onRefresh,
 }) => {
   const [tabValue, setTabValue] = useState(0);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
@@ -119,6 +123,24 @@ const VaccinationProgramDetails: React.FC<VaccinationProgramDetailsProps> = ({
     } catch (error) {
       return "Ngày không hợp lệ";
     }
+  };
+
+  // Open edit dialog
+  const handleEditClick = () => {
+    setIsEditDialogOpen(true);
+  };
+
+  // Close edit dialog
+  const handleCloseEditDialog = () => {
+    setIsEditDialogOpen(false);
+  };
+
+  // Handle successful update
+  const handleUpdateSuccess = () => {
+    if (onRefresh) {
+      onRefresh();
+    }
+    setIsEditDialogOpen(false);
   };
 
   const getStatusColor = (status: number) => {
@@ -208,7 +230,12 @@ const VaccinationProgramDetails: React.FC<VaccinationProgramDetailsProps> = ({
             </Box>
           </Box>
 
-          <Button variant="outlined" color="primary" startIcon={<EditIcon />}>
+          <Button 
+            variant="outlined" 
+            color="primary" 
+            startIcon={<EditIcon />}
+            onClick={handleEditClick}
+          >
             Chỉnh sửa
           </Button>
         </Box>
@@ -542,6 +569,14 @@ const VaccinationProgramDetails: React.FC<VaccinationProgramDetailsProps> = ({
           )}
         </Box>
       </Paper>
+
+      {/* Edit Dialog Component */}
+      <EditVaccinationProgramDialog
+        open={isEditDialogOpen}
+        campaign={campaign}
+        onClose={handleCloseEditDialog}
+        onSuccess={handleUpdateSuccess}
+      />
     </Box>
   );
 };
