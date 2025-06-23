@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Typography, Box, Tabs, Tab, Button, Paper } from "@mui/material";
+import { Typography, Box, Tabs, Tab, Button, Paper, CircularProgress } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import { MedicalEventForm, MedicalEventsList, MedicalEventDetails } from ".";
-import { mockMedicalEvents } from "../../../utils/mockData";
-import { MedicalEvent } from "../../../models/types";
+import { MedicalIncident } from "../../../models/types";
+import axios from "../../../utils/axiosConfig";
+import { toast } from "react-toastify";
 
 interface NurseMedicalEventsDashboardProps {
   nurseId: string;
@@ -14,14 +15,30 @@ const NurseMedicalEventsDashboard: React.FC<
   NurseMedicalEventsDashboardProps
 > = ({ nurseId, nurseName }) => {
   const [tabValue, setTabValue] = useState(0);
-  const [events, setEvents] = useState<MedicalEvent[]>([]);
-  const [selectedEvent, setSelectedEvent] = useState<MedicalEvent | null>(null);
+  const [events, setEvents] = useState<MedicalIncident[]>([]);
+  const [selectedEvent, setSelectedEvent] = useState<MedicalIncident | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [isViewingDetails, setIsViewingDetails] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchIncidents = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axios.get('/api/medical-incident/all');
+      setEvents(response.data);
+    } catch (err) {
+      console.error("Error fetching incidents:", err);
+      setError("Có lỗi khi tải dữ liệu sự kiện y tế");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    // In a real app, we would fetch from an API
-    setEvents(mockMedicalEvents);
+    fetchIncidents();
   }, []);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
@@ -34,34 +51,112 @@ const NurseMedicalEventsDashboard: React.FC<
     setSelectedEvent(null);
   };
 
-  const handleEventSelect = (event: MedicalEvent) => {
+  const handleEventSelect = (event: MedicalIncident) => {
     setSelectedEvent(event);
     setIsViewingDetails(true);
     setIsCreating(false);
   };
 
-  const handleSaveEvent = (event: MedicalEvent) => {
-    // In a real app, we would save to the database via API
-    if (selectedEvent) {
-      // Updating existing event
-      setEvents(events.map((e) => (e.id === event.id ? event : e)));
-    } else {
-      // Adding new event
-      const newEvent = {
-        ...event,
-        id: `event${events.length + 1}`,
-        attendedBy: nurseName,
-      };
-      setEvents([newEvent, ...events]);
-    }
-
-    setIsCreating(false);
+  const handleEditEvent = (event: MedicalIncident) => {
+    setSelectedEvent(event);
+    setIsEditing(true);
     setIsViewingDetails(false);
-    setSelectedEvent(null);
+    setIsCreating(false);
+  };
+
+  const handleSaveEvent = async (incidentData: any) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      await axios.post('/api/medical-incident/create', incidentData);
+      // Refresh incidents list after creating a new one
+      await fetchIncidents();
+      
+      setIsCreating(false);
+      setIsViewingDetails(false);
+      setSelectedEvent(null);
+    } catch (err) {
+      console.error("Error creating incident:", err);
+      setError("Có lỗi khi tạo mới sự kiện y tế");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateEvent = async (incidentData: any) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      if (!selectedEvent?.id) {
+        throw new Error("Không tìm thấy ID sự kiện");
+      }
+      
+      // Format the data according to the API schema
+      const updateData = {
+        incidentType: incidentData.incidentType,
+        incidentDate: incidentData.incidentDate,
+        description: incidentData.description,
+        actionsTaken: incidentData.actionsTaken,
+        outcome: incidentData.outcome,
+        status: incidentData.status,
+        parentNotified: incidentData.parentNotified || false,
+        parentNotificationDate: incidentData.parentNotificationDate || null
+      };
+      
+      // Update the incident
+      await axios.post(`/api/medical-incident/update/${selectedEvent.id}`, updateData);
+      
+      // If there are new medical supplies to add, process them
+      if (incidentData.medicalSupplyUsage && incidentData.medicalSupplyUsage.length > 0) {
+        // Get only the new supplies (those not in the original event)
+        const originalSupplies = selectedEvent.medicalSupplyUsages || [];
+        const newSupplies = incidentData.medicalSupplyUsage.filter(
+          (newSupply: any) => !originalSupplies.some(
+            (origSupply: any) => origSupply.supplyId === newSupply.supplyId && origSupply.quantity === newSupply.quantity
+          )
+        );
+        
+        // Update supplier quantities for any new supplies added
+        for (const supply of newSupplies) {
+          // Get current supplier details
+          const supplierResponse = await axios.get(`/api/MedicalSupplier/get-supplier-by-id/${supply.supplyId}`);
+          const supplierData = supplierResponse.data;
+          
+          // Calculate new quantity
+          const newQuantity = Math.max(0, supplierData.quantity - supply.quantity);
+          
+          // Update the supplier inventory
+          await axios.put(`/api/MedicalSupplier/update-supplier/${supply.supplyId}`, {
+            ...supplierData,
+            quantity: newQuantity
+          });
+        }
+      }
+      
+      // Refresh incidents list after updating
+      await fetchIncidents();
+      
+      setIsEditing(false);
+      setIsViewingDetails(false);
+      setSelectedEvent(null);
+      toast.success("Đã cập nhật sự kiện y tế thành công!");
+    } catch (err) {
+      console.error("Error updating incident:", err);
+      setError("Có lỗi khi cập nhật sự kiện y tế");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCancelCreate = () => {
     setIsCreating(false);
+    setSelectedEvent(null);
+  };
+  
+  const handleCancelEdit = () => {
+    setIsEditing(false);
     setSelectedEvent(null);
   };
 
@@ -79,12 +174,19 @@ const NurseMedicalEventsDashboard: React.FC<
           color="primary"
           startIcon={<AddIcon />}
           onClick={handleCreateEvent}
+          disabled={loading}
         >
           Ghi nhận sự kiện mới
         </Button>
       </Box>
 
-      {!isCreating && !isViewingDetails && (
+      {error && (
+        <Paper sx={{ p: 2, mb: 2, bgcolor: "#ffebee" }}>
+          <Typography color="error">{error}</Typography>
+        </Paper>
+      )}
+
+      {!isCreating && !isViewingDetails && !isEditing && (
         <>
           <Paper sx={{ mb: 3 }}>
             <Tabs value={tabValue} onChange={handleTabChange} centered>
@@ -94,15 +196,21 @@ const NurseMedicalEventsDashboard: React.FC<
             </Tabs>
           </Paper>
 
-          <MedicalEventsList
-            events={events.filter((event) => {
-              if (tabValue === 0) return true;
-              if (tabValue === 1) return event.outcome === "referred";
-              if (tabValue === 2) return event.outcome === "resolved";
-              return true;
-            })}
-            onEventSelect={handleEventSelect}
-          />
+          {loading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+              <CircularProgress />
+            </Box>
+          ) : (
+            <MedicalEventsList
+              events={events.filter((event) => {
+                if (tabValue === 0) return true;
+                if (tabValue === 1) return event.status === 0; // Ongoing
+                if (tabValue === 2) return event.status === 1; // Resolved
+                return true;
+              })}
+              onEventSelect={handleEventSelect}
+            />
+          )}
         </>
       )}
 
@@ -115,8 +223,24 @@ const NurseMedicalEventsDashboard: React.FC<
         />
       )}
 
+      {isEditing && selectedEvent && (
+        <MedicalEventForm
+          nurseId={nurseId}
+          nurseName={nurseName}
+          initialEvent={selectedEvent}
+          onSave={handleUpdateEvent}
+          onCancel={handleCancelEdit}
+          isEditMode={true}
+        />
+      )}
+
       {isViewingDetails && selectedEvent && (
-        <MedicalEventDetails event={selectedEvent} onBack={handleBackToList} />
+        <MedicalEventDetails 
+          event={selectedEvent} 
+          onBack={handleBackToList} 
+          onEdit={handleEditEvent}
+          isNurse={true}
+        />
       )}
     </Box>
   );

@@ -1,11 +1,9 @@
-import React, { useState, useEffect, useRef } from "react"; // Add useRef import
+import React, { useState, useEffect, useRef } from "react";
 import {
   Box,
   Container,
   Typography,
   Button,
-  Tab,
-  Tabs,
   Card,
   CardMedia,
   CardContent,
@@ -16,24 +14,27 @@ import {
   useMediaQuery,
   useTheme,
   Divider,
-  GlobalStyles, // Add this import
+  GlobalStyles,
+  alpha,
+  Chip,
 } from "@mui/material";
 import {
-  ShoppingCart,
   ArrowForward,
-  NavigateBefore,
-  NavigateNext,
-  East,
   MedicalServices,
   VaccinesOutlined,
   HealthAndSafety,
   School,
-  FamilyRestroom,
   Email,
   Phone,
   LocationOn,
+  AccessTime,
+  CalendarMonth,
+  KeyboardArrowRight,
+  Check,
+  NotificationsActive,
 } from "@mui/icons-material";
 import { motion, AnimatePresence } from "framer-motion";
+import { Link } from "react-router-dom";
 
 // Animation variants
 const fadeInUp = {
@@ -56,111 +57,93 @@ const staggerContainer = {
   },
 };
 
-// School data
-const schoolInfo = {
-  name: "Trường THPT Fschool",
-  address: "123 Đường Lê Lợi, Quận 1, TP. Hồ Chí Minh",
-  phone: "(028) 3822 XXXX",
-  email: "info@fpt.edu.vn",
-  description:
-    "Trường Fschool là một trong những trường có chất lượng giáo dục hàng đầu tại Việt Nam. Trường luôn đặt sự phát triển toàn diện của học sinh lên hàng đầu với chương trình học hiện đại, đội ngũ giáo viên tận tâm, và cơ sở vật chất tiên tiến.",
-  features: [
-    {
-      title: "Phòng y tế hiện đại",
-      description:
-        "Được trang bị đầy đủ thiết bị y tế để xử lý các tình huống khẩn cấp.",
-      icon: <MedicalServices fontSize="large" color="primary" />,
-    },
-    {
-      title: "Chương trình tiêm chủng",
-      description:
-        "Thực hiện các chương trình tiêm chủng theo quy định của Bộ Y tế.",
-      icon: <VaccinesOutlined fontSize="large" color="primary" />,
-    },
-    {
-      title: "Kiểm tra sức khỏe định kỳ",
-      description: "Tổ chức kiểm tra sức khỏe định kỳ cho học sinh mỗi học kỳ.",
-      icon: <HealthAndSafety fontSize="large" color="primary" />,
-    },
-    {
-      title: "Đội ngũ y tế chuyên nghiệp",
-      description: "Đội ngũ y bác sĩ và y tá có chuyên môn cao, tận tâm.",
-      icon: <School fontSize="large" color="primary" />,
-    },
-  ],
-  healthDocuments: [
-    { title: "Hướng dẫn phòng chống dịch COVID-19", link: "#" },
-    { title: "Dinh dưỡng học đường", link: "#" },
-    { title: "Chăm sóc răng miệng", link: "#" },
-    { title: "Phòng chống các bệnh mùa hè", link: "#" },
-  ],
-  recentPosts: [
-    {
-      title: "Kết quả kiểm tra sức khỏe học kỳ 1",
-      date: "15/10/2023",
-      excerpt:
-        "Kết quả kiểm tra sức khỏe định kỳ của học sinh trong học kỳ 1 năm học 2023-2024...",
-      image: "https://qtnh.edu.vn/vnt_upload/news/10_2022/IMG_2677.jpg",
-    },
-    {
-      title: "Chương trình tiêm chủng vắc-xin sắp tới",
-      date: "05/09/2023",
-      excerpt:
-        "Nhà trường sẽ tổ chức tiêm chủng vắc-xin phòng bệnh cho học sinh vào ngày...",
-      image:
-        "https://www.fvhospital.com/wp-content/uploads/2021/07/vaccination-french-2.jpg",
-    },
-    {
-      title: "Hướng dẫn phòng chống bệnh mùa đông",
-      date: "01/11/2023",
-      excerpt:
-        "Với thời tiết chuyển lạnh, phụ huynh cần lưu ý một số biện pháp để bảo vệ sức khỏe học sinh...",
-      image:
-        "https://benhviennhitrunguong.gov.vn/wp-content/uploads/2022/03/web-canh-bao-dich-benh-mua-dong-xuan-1.png",
-    },
-  ],
+// Modern healthcare-focused color palette matching MainLayout
+const colors = {
+  primary: "#1e88e5", // Vibrant blue
+  primaryLight: "#6ab7ff",
+  primaryDark: "#005cb2",
+  secondary: "#00b0ff", // Light blue accent
+  secondaryLight: "#69e2ff",
+  secondaryDark: "#0081cb",
+  success: "#4caf50", // Green for success states
+  warning: "#ff9800", // Orange for warnings
+  error: "#f44336", // Red for errors
+  text: "#263238", // Dark text for readability
+  textSecondary: "#546e7a", // Secondary text
+  background: "#f8fafd", // Light background with a slight blue tint
+  backgroundDark: "#ffffff", // Card backgrounds
+  divider: "#e0e0e0", // Divider color
+  badge: "#ff1744", // Bright red for notification badges
 };
 
-// Hero carousel images
-const carouselImages = [
-  "https://musical-indigo-mongoose.myfilebase.com/ipfs/QmXrkzMSPWbRuxhYPkQadTWRuHfGdzA6ezMPrgs3kZYvF7",
-  "https://musical-indigo-mongoose.myfilebase.com/ipfs/QmRActe6qXHmyn9FJ4A5p6tCj3KotYk4FmBoyoMYZ8ZUx7",
-  "https://musical-indigo-mongoose.myfilebase.com/ipfs/QmdjQwgY2pLnDZSwnA7mb2oATnk1rogYUgGLXGivCTiSb6",
-];
-
-// Add a consistent margin size that will be used throughout the page
-const pageMargins = { xs: "16px", sm: "24px", md: "40px", lg: "64px" };
-
-const globalStylesContent = {
-  html: {
-    overflowX: "hidden",
-  },
-  body: {
-    overflowX: "hidden",
-    margin: 0,
-    padding: 0,
-  },
-  "::-webkit-scrollbar": {
-    display: "none",
-  },
-  "*": {
-    msOverflowStyle: "none" /* IE and Edge */,
-    scrollbarWidth: "none" /* Firefox */,
-    boxSizing: "border-box",
-  },
+// School data
+const schoolInfo = {
+  name: "FPTMED",
+  address: "Lô E2a-7, Đường D1 Khu Công nghệ cao, TP. Thủ Đức, TP. Hồ Chí Minh",
+  phone: "(+84) 28 7300 2222",
+  email: "info@fpt.edu.vn",
+  description:
+    "FPTMED là hệ thống quản lý y tế học đường hiện đại, cho phép giám sát sức khỏe học sinh toàn diện. Hệ thống giúp nhà trường, y tá và phụ huynh theo dõi tình hình sức khỏe, đảm bảo môi trường học tập an toàn và phát triển toàn diện cho học sinh.",
+  features: [
+    {
+      title: "Phòng y tế tiên tiến",
+      description:
+        "Được trang bị thiết bị y tế hiện đại để xử lý mọi tình huống khẩn cấp.",
+      icon: <MedicalServices />,
+    },
+    {
+      title: "Quản lý tiêm chủng",
+      description:
+        "Theo dõi và quản lý lịch tiêm chủng của từng học sinh theo quy định.",
+      icon: <VaccinesOutlined />,
+    },
+    {
+      title: "Khám sức khỏe định kỳ",
+      description: "Tổ chức kiểm tra sức khỏe định kỳ và theo dõi phát triển.",
+      icon: <HealthAndSafety />,
+    },
+    {
+      title: "Y tá chuyên trách",
+      description: "Đội ngũ y tá và cán bộ y tế có chuyên môn cao, luôn sẵn sàng hỗ trợ.",
+      icon: <School />,
+    },
+  ],
+  events: [
+    {
+      title: "Khám sức khỏe đầu năm học",
+      date: "25/06/2025",
+      location: "Phòng Y tế",
+      description: "Khám sức khỏe tổng quát cho học sinh các lớp 10.",
+      image: "https://images.unsplash.com/photo-1579684385127-1ef15d508118?q=80&w=580&auto=format",
+    },
+    {
+      title: "Tiêm vắc xin phòng bệnh",
+      date: "30/06/2025",
+      location: "Phòng Y tế",
+      description: "Tiêm vắc xin phòng bệnh theo kế hoạch của Bộ Y tế.",
+      image: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?q=80&w=580&auto=format",
+    },
+    {
+      title: "Tư vấn dinh dưỡng học đường",
+      date: "02/07/2025",
+      location: "Hội trường",
+      description: "Chuyên gia dinh dưỡng tư vấn về chế độ ăn uống hợp lý cho học sinh.",
+      image: "https://images.unsplash.com/photo-1505253716362-afaea1d3d1af?q=80&w=580&auto=format",
+    },
+  ],
+  stats: [
+    { number: "2,500+", label: "Học sinh" },
+    { number: "99%", label: "Hài lòng" },
+    { number: "24/7", label: "Hỗ trợ" },
+    { number: "100%", label: "An toàn" },
+  ],
 };
 
 const HomePage = () => {
-  const [tabValue, setTabValue] = useState(0);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [contactDialogOpen, setContactDialogOpen] = useState(false);
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const isMedium = useMediaQuery(theme.breakpoints.down("md"));
   const [isLoaded, setIsLoaded] = useState(false);
-
-  // Add ref for the "We are the best" section
-  const bestSectionRef = useRef<HTMLDivElement>(null);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const featuresRef = useRef<HTMLDivElement>(null);
 
   // Simulate page loading
   useEffect(() => {
@@ -170,1023 +153,989 @@ const HomePage = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Automatic image carousel - changed from 5000ms to 3000ms (3 seconds)
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      setCurrentImageIndex((prevIndex) =>
-        prevIndex === carouselImages.length - 1 ? 0 : prevIndex + 1
-      );
-    }, 3000);
-
-    return () => clearInterval(intervalId);
-  }, []);
-
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setTabValue(newValue);
-  };
-
-  const handleOpenContactDialog = () => {
-    setContactDialogOpen(true);
-  };
-
-  // Add scroll handler function
-  const handleLearnMoreClick = () => {
-    bestSectionRef.current?.scrollIntoView({ behavior: "smooth" });
+  const handleExploreClick = () => {
+    featuresRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
-    <>
-      <GlobalStyles styles={globalStylesContent} />
-
+    <Box sx={{ bgcolor: colors.background, minHeight: "100vh" }}>
+      {/* Hero Section */}
       <Box
         sx={{
-          background: "white",
-          color: "#333",
-          pb: 4,
+          position: "relative",
           overflow: "hidden",
-          width: "100%",
-          maxWidth: "100%",
-          margin: 0,
-          padding: 0,
+          pt: { xs: 4, md: 8 },
+          pb: { xs: 10, md: 12 },
         }}
       >
-        <Container
-          maxWidth={false}
-          disableGutters
+        {/* Background gradient */}
+        <Box
           sx={{
-            px: { xs: 0, sm: 0, md: 0, lg: 0 },
-            mx: "auto",
-            width: "100%",
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: "100%",
+            background: `linear-gradient(135deg, ${alpha(colors.primary, 0.05)} 0%, ${alpha(colors.secondaryLight, 0.07)} 100%)`,
+            zIndex: -1,
           }}
-        >
-          {/* Hero Section - Ensure symmetric margins */}
-          <Box
-            sx={{
-              position: "relative",
-              bgcolor: "#002866",
-              color: "white",
-              borderRadius: { xs: 0, md: "0 0 0 100px" },
-              overflow: "hidden",
-              mb: 4,
-              minHeight: { xs: "80vh", md: "90vh" },
-              display: "flex",
-              flexDirection: "column",
-              mx: {
-                xs: pageMargins.xs,
-                sm: pageMargins.sm,
-                md: pageMargins.md,
-                lg: pageMargins.lg,
-              },
-              width: {
-                xs: `calc(100% - ${2 * parseInt(pageMargins.xs)}px)`,
-                sm: `calc(100% - ${2 * parseInt(pageMargins.sm)}px)`,
-                md: `calc(100% - ${2 * parseInt(pageMargins.md)}px)`,
-                lg: `calc(100% - ${2 * parseInt(pageMargins.lg)}px)`,
-              },
-            }}
-          >
-            {/* Content Container */}
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: { xs: "column", md: "row" },
-                flexGrow: 1, // Takes available space
-                position: "relative",
-                zIndex: 2,
-              }}
-            >
-              {/* Left Content */}
-              <Box
-                sx={{
-                  width: { xs: "100%", md: "40%" },
-                  py: 6,
-                  px: { xs: 4, md: 6 },
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "center",
-                }}
+        />
+
+        {/* Decorative circles */}
+        <Box
+          sx={{
+            position: "absolute",
+            top: -100,
+            right: -100,
+            width: 400,
+            height: 400,
+            borderRadius: "50%",
+            background: `linear-gradient(135deg, ${alpha(colors.primary, 0.07)} 0%, ${alpha(colors.secondaryLight, 0.07)} 100%)`,
+            zIndex: -1,
+          }}
+        />
+        <Box
+          sx={{
+            position: "absolute",
+            bottom: -80,
+            left: -80,
+            width: 300,
+            height: 300,
+            borderRadius: "50%",
+            background: `linear-gradient(135deg, ${alpha(colors.secondaryLight, 0.05)} 0%, ${alpha(colors.primary, 0.07)} 100%)`,
+            zIndex: -1,
+          }}
+        />
+
+        <Container maxWidth="lg">
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: { xs: 'column', md: 'row' }, 
+            alignItems: 'center',
+            gap: 4
+          }}>
+            {/* Left side content */}
+            <Box sx={{ flex: 1, width: { xs: '100%', md: '50%' } }}>
+              <motion.div
+                initial={{ opacity: 0, x: -30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.7 }}
               >
+                <Chip 
+                  label="Y TẾ HỌC ĐƯỜNG CHẤT LƯỢNG CAO" 
+                  color="primary" 
+                  size="small"
+                  sx={{ mb: 2, fontWeight: 600, borderRadius: 1 }}
+                />
                 <Typography
-                  variant="h3"
-                  gutterBottom
+                  variant="h2"
                   component="h1"
                   sx={{
                     fontWeight: 700,
-                    fontSize: { xs: "2.5rem", md: "4rem" },
-                    mb: 3,
+                    fontSize: { xs: "2.5rem", md: "3.5rem" },
+                    mb: 2,
+                    color: colors.text,
                     lineHeight: 1.2,
                   }}
                 >
-                  Best Caring,
-                  <br />
-                  <Typography
+                  Chăm sóc{" "}
+                  <Box
                     component="span"
-                    variant="h3"
-                    color="primary"
                     sx={{
-                      fontWeight: 700,
-                      fontSize: { xs: "2.5rem", md: "4rem" },
+                      position: "relative",
+                      color: colors.primary,
+                      "&::after": {
+                        content: '""',
+                        position: "absolute",
+                        bottom: -2,
+                        left: 0,
+                        width: "100%",
+                        height: "30%",
+                        background: `linear-gradient(transparent 40%, ${alpha(colors.primary, 0.2)} 40%)`,
+                        zIndex: -1,
+                      },
                     }}
                   >
-                    Better Doctors
-                  </Typography>
+                    sức khỏe
+                  </Box>{" "}
+                  học đường toàn diện
                 </Typography>
 
                 <Typography
                   variant="body1"
                   sx={{
+                    fontSize: { xs: "1rem", md: "1.1rem" },
                     mb: 4,
-                    opacity: 0.8,
-                    fontSize: { xs: "1rem", md: "1.2rem" },
+                    color: colors.textSecondary,
+                    maxWidth: "90%",
                   }}
                 >
-                  Chăm sóc sức khỏe học sinh toàn diện, giúp phát triển thể chất
-                  và tinh thần để đạt thành tích học tập tốt nhất.
+                  Hệ thống quản lý y tế học đường thông minh, giúp theo dõi sức khỏe và
+                  phòng ngừa dịch bệnh cho học sinh một cách hiệu quả.
                 </Typography>
 
-                {/* Call to action buttons - Moved to below the description */}
-                <Box
-                  sx={{
-                    display: "flex",
-                    flexDirection: { xs: "column", sm: "row" },
-                    justifyContent: { xs: "center", sm: "flex-start" },
-                    gap: 2,
-                    mt: 0,
-                    zIndex: 10,
-                  }}
+                <Stack
+                  direction={{ xs: "column", sm: "row" }}
+                  spacing={2}
+                  sx={{ mt: 3 }}
                 >
                   <Button
                     variant="contained"
-                    onClick={handleLearnMoreClick} // Change from handleOpenContactDialog
-                    startIcon={<MedicalServices />}
+                    size="large"
+                    onClick={handleExploreClick}
                     sx={{
-                      bgcolor: "#51b848",
-                      color: "#002866",
-                      px: 3,
+                      px: 4,
                       py: 1.5,
-                      "&:hover": {
-                        bgcolor: "#f37021",
-                      },
-                      borderRadius: 5,
-                      fontSize: { xs: "0.9rem", md: "1rem" },
+                      borderRadius: 2,
+                      bgcolor: colors.primary,
+                      boxShadow: `0 8px 25px ${alpha(colors.primary, 0.3)}`,
                       textTransform: "none",
-                      fontWeight: "bold",
-                      boxShadow: "0 4px 10px rgba(0,0,0,0.25)",
+                      fontSize: "1rem",
+                      fontWeight: 600,
+                      "&:hover": {
+                        bgcolor: colors.primaryDark,
+                        boxShadow: `0 10px 30px ${alpha(colors.primary, 0.4)}`,
+                      },
                     }}
                   >
-                    TÌM HIỂU THÊM
+                    Khám phá ngay
                   </Button>
-                </Box>
-              </Box>
-
-              {/* Right Content - Featured Image */}
-              <Box
-                sx={{
-                  width: { xs: "100%", md: "60%" },
-                  position: "relative",
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  overflow: "hidden",
-                  flexGrow: 1, // Takes available space
-                }}
-              >
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={currentImageIndex}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 1 }}
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      display: "flex",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      position: "absolute",
-                      top: 0,
-                      left: 0,
-                    }}
-                  >
-                    <Box
-                      component="img"
-                      src={carouselImages[currentImageIndex]}
-                      alt={`Medical professional ${currentImageIndex + 1}`}
-                      sx={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                        objectPosition: "center", // Center the image
-                        zIndex: 2,
-                      }}
-                    />
-                  </motion.div>
-                </AnimatePresence>
-
-                {/* Overlay gradient for better text visibility */}
-                <Box
-                  sx={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    width: "100%",
-                    height: "100%",
-                    background:
-                      "linear-gradient(90deg, #002866 0%, rgba(0,40,102,0.7) 50%, rgba(0,40,102,0) 100%)",
-                    zIndex: 3,
-                  }}
-                />
-
-                {/* Blue circle background */}
-                <Box
-                  sx={{
-                    position: "absolute",
-                    bottom: -150,
-                    right: -150,
-                    width: 600,
-                    height: 600,
-                    borderRadius: "50%",
-                    bgcolor: "#034EA2",
-                    opacity: 0.3,
-                    zIndex: 1,
-                  }}
-                />
-              </Box>
-            </Box>
-
-            {/* Remove the old buttons container that was previously here */}
-
-            {/* Image carousel indicators */}
-            <Box
-              sx={{
-                position: "absolute",
-                bottom: 15,
-                right: 20,
-                display: "flex",
-                gap: 1,
-                zIndex: 10,
-              }}
-            >
-              {carouselImages.map((_, index) => (
-                <Box
-                  key={index}
-                  component={motion.div}
-                  animate={{
-                    scale: currentImageIndex === index ? 1.2 : 1,
-                    opacity: currentImageIndex === index ? 1 : 0.6,
-                  }}
-                  sx={{
-                    width: 12,
-                    height: 12,
-                    borderRadius: "50%",
-                    bgcolor: currentImageIndex === index ? "#7ECFB8" : "white",
-                    cursor: "pointer",
-                  }}
-                  onClick={() => setCurrentImageIndex(index)}
-                />
-              ))}
-            </Box>
-          </Box>
-
-          {/* Blue Service Boxes - Symmetric margins */}
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: { xs: "column", md: "row" },
-              gap: 2,
-              mb: 6,
-              mx: {
-                xs: pageMargins.xs,
-                sm: pageMargins.sm,
-                md: pageMargins.md,
-                lg: pageMargins.lg,
-              },
-            }}
-          >
-            <Box
-              sx={{
-                flex: 1,
-                bgcolor: "#034EA2",
-                borderRadius: 3,
-                p: 3,
-                color: "white",
-                display: "flex",
-                alignItems: "center",
-                gap: 2,
-              }}
-            >
-              <Box
-                sx={{
-                  bgcolor: "white",
-                  borderRadius: "50%",
-                  width: 50,
-                  height: 50,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "#034EA2",
-                }}
-              >
-                <MedicalServices />
-              </Box>
-              <Box>
-                <Typography variant="subtitle1" fontWeight={600}>
-                  Tư vấn Sức Khỏe
-                </Typography>
-                <Typography variant="body2" sx={{ opacity: 0.8 }}>
-                  Tư vấn với bác sĩ chuyên khoa
-                </Typography>
-              </Box>
-            </Box>
-
-            <Box
-              sx={{
-                flex: 1,
-                bgcolor: "#034EA2",
-                borderRadius: 3,
-                p: 3,
-                color: "white",
-                display: "flex",
-                alignItems: "center",
-                gap: 2,
-              }}
-            >
-              <Box
-                sx={{
-                  bgcolor: "white",
-                  borderRadius: "50%",
-                  width: 50,
-                  height: 50,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "#034EA2",
-                }}
-              >
-                <HealthAndSafety />
-              </Box>
-              <Box>
-                <Typography variant="subtitle1" fontWeight={600}>
-                  Đội ngũ chuyên môn
-                </Typography>
-                <Typography variant="body2" sx={{ opacity: 0.8 }}>
-                  Y bác sĩ nhiều kinh nghiệm
-                </Typography>
-              </Box>
-            </Box>
-          </Box>
-
-          {/* Services Section */}
-          <Box
-            sx={{
-              py: 6,
-              px: {
-                xs: pageMargins.xs,
-                sm: pageMargins.sm,
-                md: pageMargins.md,
-                lg: pageMargins.lg,
-              },
-            }}
-          >
-            <Box sx={{ textAlign: "center", mb: 5 }}>
-              <Typography variant="subtitle1" color="primary" fontWeight={500}>
-                TRƯỜNG HỌC FSCHOOL
-              </Typography>
-              <Typography
-                variant="h4"
-                component="h2"
-                sx={{ fontWeight: 700, mb: 1 }}
-              >
-                Extra Ordinary Health Solutions
-              </Typography>
-              <Typography
-                variant="body1"
-                sx={{ maxWidth: 600, mx: "auto", color: "text.secondary" }}
-              >
-                Chăm sóc sức khỏe học sinh toàn diện, giúp phát triển thể chất
-                và tinh thần để đạt thành tích học tập tốt nhất.
-              </Typography>
-            </Box>
-
-            <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: {
-                  xs: "1fr",
-                  sm: "repeat(2, 1fr)",
-                  lg: "repeat(4, 1fr)",
-                },
-                gap: 3,
-                mt: 6,
-              }}
-            >
-              {schoolInfo.features.map((feature, index) => (
-                <Box
-                  key={index}
-                  component={motion.div}
-                  whileHover={{ y: -10 }}
-                  sx={{
-                    p: 3,
-                    textAlign: "center",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    borderRadius: 3,
-                    border: "1px solid #eee",
-                    boxShadow: "0 5px 20px rgba(0,0,0,0.05)",
-                    bgcolor: "white",
-                  }}
-                >
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      width: 80,
-                      height: 80,
-                      borderRadius: "50%",
-                      bgcolor: "#f0f6ff", // Light blue background
-                      color: "#034EA2",
-                      mb: 2,
-                    }}
-                  >
-                    {React.cloneElement(feature.icon, { fontSize: "large" })}
-                  </Box>
-
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      fontWeight: 700,
-                      mb: 1,
-                      color: "#333",
-                      fontSize: "1.1rem",
-                    }}
-                  >
-                    {feature.title}
-                  </Typography>
-
-                  <Typography
-                    variant="body2"
-                    sx={{ color: "text.secondary", mb: 2 }}
-                  >
-                    {feature.description}
-                  </Typography>
-
                   <Button
-                    variant="text"
-                    color="primary"
-                    endIcon={<ArrowForward />}
-                    sx={{ mt: "auto", textTransform: "none" }}
+                    variant="outlined"
+                    component={Link}
+                    to="/login"
+                    size="large"
+                    sx={{
+                      px: 4,
+                      py: 1.5,
+                      borderRadius: 2,
+                      borderColor: colors.primary,
+                      color: colors.primary,
+                      textTransform: "none",
+                      fontSize: "1rem",
+                      "&:hover": {
+                        borderColor: colors.primaryDark,
+                        bgcolor: alpha(colors.primary, 0.05),
+                      },
+                    }}
                   >
-                    Chi tiết
+                    Đăng nhập
                   </Button>
-                </Box>
-              ))}
-            </Box>
-          </Box>
+                </Stack>
 
-          {/* We Are Best Professional - Update to have symmetric margins instead of full width */}
-          <Box
-            ref={bestSectionRef} // Add this ref
-            className="best-section" // Optional class for easier identification
-            sx={{
-              py: 6,
-              bgcolor: "#f9f9f9",
-              my: 4,
-              mx: {
-                xs: pageMargins.xs,
-                sm: pageMargins.sm,
-                md: pageMargins.md,
-                lg: pageMargins.lg,
-              },
-              borderRadius: 2,
-              overflow: "hidden",
-            }}
-          >
-            {/* Content container with symmetric padding */}
-            <Box
-              sx={{
-                width: "100%",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-              }}
-            >
-              <Box sx={{ textAlign: "center", mb: 5 }}>
-                <Typography
-                  variant="h4"
-                  component="h2"
-                  sx={{ fontWeight: 700 }}
+                {/* Stats */}
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    mt: 8,
+                    mb: { xs: 4, md: 0 },
+                    gap: { xs: 3, md: 4 },
+                  }}
                 >
-                  We Are The Best Professionals
-                </Typography>
-                <Typography variant="h5" color="primary" sx={{ mb: 4 }}>
-                  In Medical Sectors
-                </Typography>
-              </Box>
+                  {schoolInfo.stats.map((stat, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.5 + index * 0.1, duration: 0.5 }}
+                    >
+                      <Box sx={{ textAlign: "center", minWidth: 100 }}>
+                        <Typography
+                          variant="h4"
+                          sx={{
+                            fontWeight: 700,
+                            color: colors.primary,
+                            mb: 0.5,
+                          }}
+                        >
+                          {stat.number}
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          sx={{ color: colors.textSecondary }}
+                        >
+                          {stat.label}
+                        </Typography>
+                      </Box>
+                    </motion.div>
+                  ))}
+                </Box>
+              </motion.div>
+            </Box>
 
-              <Box
-                sx={{
-                  display: "flex",
-                  flexDirection: { xs: "column", md: "row" },
-                  alignItems: "center",
-                  gap: { xs: 4, md: 8 },
-                  px: { xs: 2, md: 3 }, // Minimal padding
-                  maxWidth: "100%",
-                }}
+            {/* Hero image */}
+            <Box sx={{ flex: 1, width: { xs: '100%', md: '50%' } }}>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.7, delay: 0.2 }}
               >
                 <Box
                   sx={{
-                    width: { xs: "100%", md: "75%" }, // Increased width proportion
-                    maxHeight: { md: 650 }, // Taller image container
-                    overflow: "hidden",
+                    position: "relative",
+                    "&::before": {
+                      content: '""',
+                      position: "absolute",
+                      width: "90%",
+                      height: "90%",
+                      top: "10%",
+                      left: "10%",
+                      borderRadius: 4,
+                      bgcolor: alpha(colors.primary, 0.1),
+                      zIndex: -1,
+                    },
                   }}
                 >
                   <Box
                     component="img"
                     src="https://cdn.fpt-is.com/vi/asian-doctor-with-stethoscope-around-neck-sitting-office-working-computer-scaled.jpg"
-                    alt="Medical Team"
+                    alt="School Health Services"
                     sx={{
                       width: "100%",
-                      borderRadius: 3,
-                      boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
-                      objectFit: "cover",
-                      height: { md: "100%" },
+                      height: "auto",
+                      borderRadius: 4,
+                      boxShadow: "0 20px 50px rgba(0,0,0,0.1)",
                     }}
                   />
                 </Box>
-
-                <Box sx={{ width: { xs: "100%", md: "25%" } }}>
-                  <Typography variant="body1" sx={{ mb: 2 }}>
-                    {schoolInfo.description}
-                  </Typography>
-
-                  <Box sx={{ mt: 3 }}>
-                    {/* Replace problematic mapping with a direct approach */}
-                    {/* Bullet Point 1 */}
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 2,
-                        mb: 1.5,
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          width: 20,
-                          height: 20,
-                          borderRadius: "50%",
-                          bgcolor: "#034EA2",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          color: "white",
-                          fontSize: "0.8rem",
-                          fontWeight: "bold",
-                        }}
-                      >
-                        ✓
-                      </Box>
-                      <Typography variant="body1">
-                        Đội ngũ y bác sĩ giỏi chuyên môn
-                      </Typography>
-                    </Box>
-
-                    {/* Bullet Point 2 */}
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 2,
-                        mb: 1.5,
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          width: 20,
-                          height: 20,
-                          borderRadius: "50%",
-                          bgcolor: "#034EA2",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          color: "white",
-                          fontSize: "0.8rem",
-                          fontWeight: "bold",
-                        }}
-                      >
-                        ✓
-                      </Box>
-                      <Typography variant="body1">
-                        Chăm sóc sức khoẻ học sinh toàn diện
-                      </Typography>
-                    </Box>
-
-                    {/* Bullet Point 3 */}
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 2,
-                        mb: 1.5,
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          width: 20,
-                          height: 20,
-                          borderRadius: "50%",
-                          bgcolor: "#034EA2",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          color: "white",
-                          fontSize: "0.8rem",
-                          fontWeight: "bold",
-                        }}
-                      >
-                        ✓
-                      </Box>
-                      <Typography variant="body1">
-                        Trang thiết bị y tế hiện đại
-                      </Typography>
-                    </Box>
-
-                    {/* Bullet Point 4 */}
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 2,
-                        mb: 1.5,
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          width: 20,
-                          height: 20,
-                          borderRadius: "50%",
-                          bgcolor: "#034EA2",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          color: "white",
-                          fontSize: "0.8rem",
-                          fontWeight: "bold",
-                        }}
-                      >
-                        ✓
-                      </Box>
-                      <Typography variant="body1">
-                        Phương pháp khám chữa bệnh tiên tiến
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Box>
-              </Box>
+              </motion.div>
             </Box>
-          </Box>
-
-          {/* News Section */}
-          <Box
-            sx={{
-              py: 5,
-              px: {
-                xs: pageMargins.xs,
-                sm: pageMargins.sm,
-                md: pageMargins.md,
-                lg: pageMargins.lg,
-              },
-              bgcolor: "white",
-            }}
-          >
-            {/* Section Title */}
-            <Box
-              component="div"
-              sx={{
-                bgcolor: "#023b7a",
-                borderRadius: 0,
-                display: "inline-block",
-                px: 4,
-                py: 1.5,
-                mb: 5,
-                position: "relative",
-                zIndex: 1,
-              }}
-            >
-              <Typography
-                variant="h6"
-                sx={{
-                  color: "white",
-                  fontWeight: 700,
-                }}
-              >
-                TIN TỨC MỚI NHẤT
-              </Typography>
-            </Box>
-
-            {/* News Cards Container */}
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: { xs: "column", md: "row" },
-                gap: 4,
-                justifyContent: { xs: "center", md: "space-between" },
-                alignItems: "stretch",
-              }}
-            >
-              {schoolInfo.recentPosts.map((post, index) => (
-                <Card
-                  key={index}
-                  sx={{
-                    borderRadius: 1,
-                    overflow: "hidden",
-                    height: "100%",
-                    boxShadow: 3,
-                    flex: 1,
-                    maxWidth: { xs: "100%", md: "32%" },
-                    display: "flex",
-                    flexDirection: "column",
-                  }}
-                >
-                  <Box sx={{ position: "relative" }}>
-                    <CardMedia
-                      component="img"
-                      height="180"
-                      image={post.image}
-                      alt={post.title}
-                    />
-                    {/* Date label positioned over the image */}
-                    <Box
-                      sx={{
-                        position: "absolute",
-                        right: 10,
-                        top: 10,
-                        bgcolor: "#023b7a",
-                        color: "white",
-                        py: 0.5,
-                        px: 2,
-                        fontWeight: "bold",
-                        fontSize: "0.75rem",
-                        borderRadius: 0.5,
-                      }}
-                    >
-                      {post.date}
-                    </Box>
-                  </Box>
-                  <CardContent sx={{ flexGrow: 1 }}>
-                    <Typography
-                      variant="subtitle1"
-                      sx={{
-                        fontWeight: 700,
-                        color: "#034EA2",
-                        mb: 1,
-                      }}
-                    >
-                      {post.title}
-                    </Typography>
-
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        color: "#333",
-                        mt: 1,
-                        fontSize: "0.85rem",
-                      }}
-                    >
-                      {post.excerpt}
-                    </Typography>
-                  </CardContent>
-                </Card>
-              ))}
-            </Box>
-          </Box>
-
-          {/* Footer - Update padding to be symmetric */}
-          <Box
-            sx={{
-              borderTop: "1px solid rgba(255,255,255,0.1)",
-              pt: 6,
-              pb: 3,
-              px: { xs: 2, md: 4, lg: 6 },
-            }}
-          >
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: { xs: "column", md: "row" },
-                gap: 3,
-              }}
-            >
-              <Box sx={{ width: "100%" }}>
-                <Box
-                  sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "center",
-                    height: "100%",
-                    p: 4,
-                    bgcolor: "#023b7a",
-                    borderRadius: 2,
-                  }}
-                >
-                  <Typography
-                    variant="h5"
-                    gutterBottom
-                    sx={{ fontWeight: 700, color: "white" }}
-                  >
-                    THÔNG TIN LIÊN HỆ
-                  </Typography>
-
-                  <Stack spacing={3} sx={{ mt: 3, color: "white" }}>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 2,
-                      }}
-                    >
-                      <Box
-                        component={motion.div}
-                        whileHover={{ rotate: 10, scale: 1.1 }}
-                        sx={{
-                          bgcolor: "#51b848",
-                          p: 1,
-                          borderRadius: "50%",
-                          display: "flex",
-                        }}
-                      >
-                        <LocationOn sx={{ color: "white" }} />
-                      </Box>
-                      <Typography variant="body1">
-                        <strong>Địa chỉ:</strong> {schoolInfo.address}
-                      </Typography>
-                    </Box>
-
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 2,
-                      }}
-                    >
-                      <Box
-                        component={motion.div}
-                        whileHover={{ rotate: 10, scale: 1.1 }}
-                        sx={{
-                          bgcolor: "#51b848",
-                          p: 1,
-                          borderRadius: "50%",
-                          display: "flex",
-                        }}
-                      >
-                        <Phone sx={{ color: "white" }} />
-                      </Box>
-                      <Typography variant="body1">
-                        <strong>Điện thoại:</strong> {schoolInfo.phone}
-                      </Typography>
-                    </Box>
-
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 2,
-                      }}
-                    >
-                      <Box
-                        component={motion.div}
-                        whileHover={{ rotate: 10, scale: 1.1 }}
-                        sx={{
-                          bgcolor: "#51b848",
-                          p: 1,
-                          borderRadius: "50%",
-                          display: "flex",
-                        }}
-                      >
-                        <Email sx={{ color: "white" }} />
-                      </Box>
-                      <Typography variant="body1">
-                        <strong>Email:</strong> {schoolInfo.email}
-                      </Typography>
-                    </Box>
-                  </Stack>
-
-                  {/* Divider between contact info and bottom section */}
-                  <Box
-                    sx={{
-                      borderTop: "1px solid rgba(255,255,255,0.2)",
-                      my: 4,
-                      pt: 4,
-                      width: "100%",
-                    }}
-                  />
-
-                  {/* Logo and email signup section - moved into blue container */}
-                  <Box
-                    sx={{
-                      display: "flex",
-                      flexDirection: { xs: "column", md: "row" },
-                      alignItems: { xs: "center", md: "flex-start" },
-                      justifyContent: "space-between",
-                      gap: 3,
-                    }}
-                  >
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
-                      <Box
-                        component="img"
-                        src="https://musical-indigo-mongoose.myfilebase.com/ipfs/QmPfdMNtJhcNfztJtxK88SXCrqWm54KuSWHKBW4TNhPr3x"
-                        alt="Logo"
-                        sx={{
-                          height: 40,
-                        }}
-                      />
-                      <Typography
-                        variant="body2"
-                        sx={{ maxWidth: 300, color: "white", opacity: 0.8 }}
-                      >
-                        Hệ thống quản lý y tế học đường. Chăm sóc sức khỏe học
-                        sinh toàn diện, giúp phát triển thể chất và tinh thần.
-                      </Typography>
-                    </Box>
-
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 2,
-                      }}
-                    >
-                      <Typography variant="subtitle2" sx={{ color: "white" }}>
-                        ĐĂNG KÝ
-                      </Typography>
-                      <Box sx={{ position: "relative", width: 240 }}>
-                        <TextField
-                          placeholder="NHẬP EMAIL CỦA BẠN"
-                          fullWidth
-                          sx={{
-                            "& .MuiOutlinedInput-root": {
-                              bgcolor: "white",
-                              borderRadius: 0,
-                              pr: 5,
-                            },
-                          }}
-                        />
-                        <IconButton
-                          sx={{
-                            position: "absolute",
-                            right: 0,
-                            top: 0,
-                            height: "100%",
-                            bgcolor: "#51b848",
-                            borderRadius: 0,
-                            "&:hover": {
-                              bgcolor: "#f37021",
-                            },
-                          }}
-                        >
-                          <ArrowForward sx={{ color: "#034EA2" }} />
-                        </IconButton>
-                      </Box>
-                      <Typography
-                        variant="caption"
-                        sx={{ maxWidth: 200, color: "white", opacity: 0.8 }}
-                      >
-                        Đăng ký để nhận thông tin mới nhất về các sự kiện y tế
-                        và chương trình sức khỏe!
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Box>
-              </Box>
-            </Box>
-          </Box>
-
-          {/* Bottom Bar - Update padding to be symmetric */}
-          <Box
-            sx={{
-              borderTop: "1px solid rgba(255,255,255,0.1)",
-              py: 2,
-              px: { xs: 2, md: 4, lg: 6 },
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              flexDirection: { xs: "column", md: "row" },
-              gap: 1,
-              textTransform: "uppercase",
-              color: "#51b848",
-            }}
-          >
-            <Typography variant="subtitle2">FSCHOOL</Typography>
-            <Typography variant="subtitle2">Y TẾ HỌC ĐƯỜNG</Typography>
-            <Typography variant="subtitle2">CHĂM SÓC SỨC KHỎE</Typography>
-            <Typography variant="subtitle2">FTPMED</Typography>
           </Box>
         </Container>
       </Box>
-    </>
+
+      {/* Features Section */}
+      <Box
+        ref={featuresRef}
+        sx={{
+          py: { xs: 8, md: 12 },
+          background: "#fff",
+          position: "relative",
+        }}
+      >
+        <Container maxWidth="lg">
+          <Box sx={{ textAlign: "center", mb: { xs: 6, md: 8 } }}>
+            <Typography
+              variant="subtitle1"
+              component="p"
+              sx={{
+                textTransform: "uppercase",
+                fontWeight: 600,
+                color: colors.primary,
+                letterSpacing: 1,
+                mb: 1,
+              }}
+            >
+              Tính năng nổi bật
+            </Typography>
+            <Typography
+              variant="h3"
+              component="h2"
+              sx={{ fontWeight: 700, mb: 2, color: colors.text }}
+            >
+              Giải pháp Y tế học đường toàn diện
+            </Typography>
+            <Typography
+              variant="body1"
+              sx={{
+                maxWidth: 700,
+                mx: "auto",
+                color: colors.textSecondary,
+              }}
+            >
+              Hệ thống cung cấp đầy đủ các tính năng giúp quản lý sức khỏe học sinh
+              hiệu quả, đảm bảo môi trường học tập an toàn và lành mạnh.
+            </Typography>
+          </Box>
+
+          <Box 
+            sx={{ 
+              display: 'flex', 
+              flexDirection: { xs: 'column', sm: 'row' }, 
+              flexWrap: 'wrap', 
+              mx: -2 
+            }}
+          >
+            {schoolInfo.features.map((feature, index) => (
+              <Box 
+                key={index}
+                sx={{ 
+                  width: { xs: '100%', sm: '50%', md: '25%' }, 
+                  px: 2,
+                  mb: 4 
+                }}
+              >
+                <motion.div
+                  variants={fadeInUp}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true, amount: 0.2 }}
+                  transition={{ delay: index * 0.1 }}
+                  style={{ height: '100%' }}
+                >
+                  <Paper
+                    elevation={2}
+                    sx={{
+                      p: 3,
+                      borderRadius: 3,
+                      height: "100%",
+                      transition: "transform 0.3s, box-shadow 0.3s",
+                      "&:hover": {
+                        transform: "translateY(-8px)",
+                        boxShadow: "0 10px 40px rgba(0,0,0,0.08)",
+                      },
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "center",
+                        mb: 3,
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          width: 70,
+                          height: 70,
+                          borderRadius: 2,
+                          bgcolor: alpha(colors.primary, 0.1),
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          color: colors.primary,
+                        }}
+                      >
+                        {React.cloneElement(feature.icon, {
+                          sx: { fontSize: "2rem" },
+                        })}
+                      </Box>
+                    </Box>
+
+                    <Typography
+                      variant="h6"
+                      sx={{ mb: 1, fontWeight: 600, textAlign: "center" }}
+                    >
+                      {feature.title}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ textAlign: "center" }}
+                    >
+                      {feature.description}
+                    </Typography>
+                  </Paper>
+                </motion.div>
+              </Box>
+            ))}
+          </Box>
+        </Container>
+      </Box>
+
+      {/* About Section */}
+      <Box
+        sx={{
+          py: { xs: 8, md: 12 },
+          background: `linear-gradient(135deg, ${alpha(colors.primary, 0.04)} 0%, ${alpha(colors.secondaryLight, 0.05)} 100%)`,
+        }}
+      >
+        <Container maxWidth="lg">
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: { xs: 'column', md: 'row' },
+            alignItems: 'center',
+            gap: 6
+          }}>
+            {/* Text content */}
+            <Box sx={{ width: { xs: '100%', md: '50%' } }}>
+              <motion.div
+                initial={{ opacity: 0, x: -30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.7 }}
+                viewport={{ once: true }}
+              >
+                <Typography
+                  variant="h3"
+                  sx={{
+                    fontWeight: 700,
+                    mb: 3,
+                    color: colors.text,
+                    fontSize: { xs: "2rem", md: "2.5rem" },
+                  }}
+                >
+                  Đội ngũ y tế chuyên nghiệp, trang thiết bị hiện đại
+                </Typography>
+
+                <Typography
+                  variant="body1"
+                  sx={{ mb: 4, color: colors.textSecondary }}
+                >
+                  {schoolInfo.description}
+                </Typography>
+
+                <Box sx={{ mb: 4 }}>
+                  {[
+                    "Đội ngũ y bác sĩ có trình độ chuyên môn cao",
+                    "Phòng y tế được trang bị đầy đủ thiết bị",
+                    "Hệ thống theo dõi sức khỏe học sinh thông minh",
+                    "Kết nối trực tiếp với phụ huynh và giáo viên",
+                  ].map((item, index) => (
+                    <Box
+                      key={index}
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        mb: 2,
+                      }}
+                    >
+                      <Check
+                        sx={{
+                          mr: 1.5,
+                          color: colors.success,
+                          bgcolor: alpha(colors.success, 0.1),
+                          borderRadius: "50%",
+                          p: 0.5,
+                        }}
+                      />
+                      <Typography variant="body1">{item}</Typography>
+                    </Box>
+                  ))}
+                </Box>
+
+                <Button
+                  component={Link}
+                  to="/about"
+                  variant="outlined"
+                  color="primary"
+                  size="large"
+                  endIcon={<ArrowForward />}
+                  sx={{
+                    mt: 2,
+                    borderRadius: 2,
+                    textTransform: "none",
+                    px: 3,
+                  }}
+                >
+                  Tìm hiểu thêm
+                </Button>
+              </motion.div>
+            </Box>
+
+            {/* Image content */}
+            <Box sx={{ width: { xs: '100%', md: '50%' } }}>
+              <Box
+                component={motion.div}
+                initial={{ opacity: 0, scale: 0.95 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.6 }}
+                viewport={{ once: true }}
+                sx={{
+                  width: "100%",
+                  position: "relative",
+                  "&::after": {
+                    content: '""',
+                    position: "absolute",
+                    top: -15,
+                    right: -15,
+                    width: "70%",
+                    height: "90%",
+                    border: `2px solid ${colors.primary}`,
+                    borderRadius: 4,
+                    zIndex: 0,
+                  },
+                }}
+              >
+                <Box
+                  component="img"
+                  src="https://musical-indigo-mongoose.myfilebase.com/ipfs/QmgjCagPUu3CR2VgwJe4M4w5JVHTJE6zxC2FGNdVLq52CX"
+                  alt="Medical Team"
+                  sx={{
+                    width: "100%",
+                    height: "auto",
+                    borderRadius: 4,
+                    boxShadow: "0 15px 40px rgba(0,0,0,0.12)",
+                    position: "relative",
+                    zIndex: 1,
+                  }}
+                />
+              </Box>
+            </Box>
+          </Box>
+        </Container>
+      </Box>
+
+      {/* Upcoming Events */}
+      <Box sx={{ py: { xs: 8, md: 12 }, bgcolor: "#fff" }}>
+        <Container maxWidth="lg">
+          <Box sx={{ textAlign: "center", mb: { xs: 6, md: 8 } }}>
+            <Typography
+              variant="subtitle1"
+              component="p"
+              sx={{
+                textTransform: "uppercase",
+                fontWeight: 600,
+                color: colors.primary,
+                letterSpacing: 1,
+                mb: 1,
+              }}
+            >
+              Sắp diễn ra
+            </Typography>
+            <Typography
+              variant="h3"
+              component="h2"
+              sx={{ fontWeight: 700, mb: 2, color: colors.text }}
+            >
+              Sự kiện y tế
+            </Typography>
+            <Typography
+              variant="body1"
+              sx={{
+                maxWidth: 700,
+                mx: "auto",
+                color: colors.textSecondary,
+              }}
+            >
+              Các sự kiện y tế sắp diễn ra tại trường giúp chăm sóc và nâng cao sức khỏe
+              cho học sinh.
+            </Typography>
+          </Box>
+
+          <Box 
+            sx={{ 
+              display: 'flex', 
+              flexDirection: { xs: 'column', md: 'row' },
+              flexWrap: 'wrap',
+              mx: -2
+            }}
+          >
+            {schoolInfo.events.map((event, index) => (
+              <Box 
+                key={index} 
+                sx={{ 
+                  width: { xs: '100%', sm: '50%', md: '33.33%' },
+                  px: 2,
+                  mb: 4
+                }}
+              >
+                <motion.div
+                  variants={fadeInUp}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1 }}
+                  style={{ height: '100%' }}
+                >
+                  <Card
+                    sx={{
+                      borderRadius: 3,
+                      overflow: "hidden",
+                      boxShadow: "0 10px 30px rgba(0,0,0,0.07)",
+                      height: "100%",
+                      display: "flex",
+                      flexDirection: "column",
+                      transition: "transform 0.3s, box-shadow 0.3s",
+                      "&:hover": {
+                        transform: "translateY(-6px)",
+                        boxShadow: "0 15px 40px rgba(0,0,0,0.1)",
+                      },
+                    }}
+                  >
+                    <CardMedia
+                      component="img"
+                      height="200"
+                      image={event.image}
+                      alt={event.title}
+                    />
+                    <CardContent sx={{ flexGrow: 1 }}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          gap: 1.5,
+                          mb: 2,
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <Chip
+                          icon={<CalendarMonth />}
+                          label={event.date}
+                          size="small"
+                          sx={{ bgcolor: alpha(colors.primary, 0.1), color: colors.primary }}
+                        />
+                        <Chip
+                          icon={<LocationOn />}
+                          label={event.location}
+                          size="small"
+                          sx={{ bgcolor: alpha(colors.secondary, 0.1), color: colors.secondary }}
+                        />
+                      </Box>
+
+                      <Typography
+                        variant="h6"
+                        component="h3"
+                        sx={{ fontWeight: 600, mb: 1 }}
+                      >
+                        {event.title}
+                      </Typography>
+
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ mb: 2 }}
+                      >
+                        {event.description}
+                      </Typography>
+
+                      <Button
+                        variant="text"
+                        color="primary"
+                        size="small"
+                        endIcon={<KeyboardArrowRight />}
+                        sx={{ textTransform: "none", fontWeight: 500 }}
+                      >
+                        Xem chi tiết
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              </Box>
+            ))}
+          </Box>
+
+          <Box sx={{ textAlign: "center", mt: 6 }}>
+            <Button
+              component={Link}
+              to="/medical-events"
+              variant="outlined"
+              color="primary"
+              size="large"
+              sx={{
+                borderRadius: 2,
+                textTransform: "none",
+                fontWeight: 500,
+                px: 4,
+              }}
+            >
+              Xem tất cả sự kiện
+            </Button>
+          </Box>
+        </Container>
+      </Box>
+
+      {/* CTA Section */}
+      <Box
+        sx={{
+          position: "relative",
+          py: { xs: 8, md: 10 },
+          background: `linear-gradient(90deg, ${colors.primary} 0%, ${colors.primaryDark} 100%)`,
+          color: "white",
+          overflow: "hidden",
+        }}
+      >
+        {/* Background circles */}
+        <Box
+          sx={{
+            position: "absolute",
+            right: -100,
+            top: -100,
+            width: 300,
+            height: 300,
+            borderRadius: "50%",
+            bgcolor: "rgba(255,255,255,0.05)",
+          }}
+        />
+        <Box
+          sx={{
+            position: "absolute",
+            left: 100,
+            bottom: -150,
+            width: 300,
+            height: 300,
+            borderRadius: "50%",
+            bgcolor: "rgba(255,255,255,0.05)",
+          }}
+        />
+
+        <Container maxWidth="lg">
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: { xs: 'column', md: 'row' },
+            alignItems: 'center'
+          }}>
+            {/* CTA text */}
+            <Box sx={{ width: { xs: '100%', md: '60%' }, mb: { xs: 4, md: 0 } }}>
+              <Typography
+                variant="h3"
+                sx={{ fontWeight: 700, mb: 2, fontSize: { xs: "2rem", md: "2.75rem" } }}
+              >
+                Bắt đầu sử dụng nền tảng <br /> Y tế học đường ngay hôm nay
+              </Typography>
+              <Typography
+                variant="body1"
+                sx={{ mb: 4, opacity: 0.9, fontSize: { xs: "1rem", md: "1.1rem" } }}
+              >
+                Hãy tham gia cùng hàng nghìn trường học đang sử dụng nền tảng của
+                chúng tôi để nâng cao chất lượng chăm sóc sức khỏe học sinh.
+              </Typography>
+              <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
+                <Button
+                  variant="contained"
+                  size="large"
+                  component={Link}
+                  to="/register"
+                  sx={{
+                    bgcolor: "white",
+                    color: colors.primary,
+                    px: 4,
+                    py: 1.5,
+                    "&:hover": { bgcolor: "rgba(255,255,255,0.9)" },
+                    fontWeight: 600,
+                    textTransform: "none",
+                    fontSize: "1rem",
+                    borderRadius: 2,
+                  }}
+                >
+                  Đăng ký ngay
+                </Button>
+                <Button
+                  variant="outlined"
+                  size="large"
+                  component={Link}
+                  to="/contact"
+                  sx={{
+                    color: "white",
+                    borderColor: "white",
+                    px: 4,
+                    py: 1.5,
+                    "&:hover": {
+                      borderColor: "rgba(255,255,255,0.8)",
+                      bgcolor: "rgba(255,255,255,0.1)",
+                    },
+                    textTransform: "none",
+                    fontSize: "1rem",
+                    borderRadius: 2,
+                  }}
+                >
+                  Liên hệ tư vấn
+                </Button>
+              </Box>
+            </Box>
+            
+            {/* CTA logo */}
+            <Box sx={{ width: { xs: '100%', md: '40%' }, display: { xs: "none", md: "block" } }}>
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7 }}
+                viewport={{ once: true }}
+              >
+                <Box
+                  component="img"
+                  src="https://musical-indigo-mongoose.myfilebase.com/ipfs/QmPfdMNtJhcNfztJtxK88SXCrqWm54KuSWHKBW4TNhPr3x"
+                  alt="FPTMED"
+                  sx={{
+                    filter: "brightness(0) invert(1)",
+                    width: "100%",
+                    maxWidth: 250,
+                    mx: "auto",
+                    display: "block",
+                  }}
+                />
+              </motion.div>
+            </Box>
+          </Box>
+        </Container>
+      </Box>
+
+      {/* Footer */}
+      <Box
+        sx={{
+          bgcolor: colors.backgroundDark,
+          py: 6,
+          borderTop: `1px solid ${colors.divider}`,
+        }}
+      >
+        <Container maxWidth="lg">
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: { xs: 'column', md: 'row' },
+            flexWrap: 'wrap',
+            mx: -2
+          }}>
+            {/* Company info */}
+            <Box sx={{ width: { xs: '100%', md: '40%' }, px: 2, mb: { xs: 4, md: 0 } }}>
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="h6" color={colors.primary} fontWeight={700} gutterBottom>
+                  {schoolInfo.name}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  Nền tảng quản lý y tế học đường hiện đại hàng đầu Việt Nam, giúp chăm sóc sức khỏe học sinh toàn diện.
+                </Typography>
+                <Box sx={{ display: "flex", gap: 2 }}>
+                  {["Facebook", "Twitter", "LinkedIn", "Instagram"].map(
+                    (social) => (
+                      <IconButton
+                        key={social}
+                        size="small"
+                        sx={{
+                          color: colors.primary,
+                          "&:hover": { bgcolor: alpha(colors.primary, 0.1) },
+                        }}
+                      >
+                        <Box
+                          component="img"
+                          src={`https://source.unsplash.com/random/20x20?${social}`}
+                          sx={{ width: 20, height: 20, borderRadius: "50%" }}
+                        />
+                      </IconButton>
+                    )
+                  )}
+                </Box>
+              </Box>
+            </Box>
+
+            {/* Contact info */}
+            <Box sx={{ width: { xs: '100%', sm: '50%', md: '25%' }, px: 2, mb: { xs: 4, md: 0 } }}>
+              <Typography
+                variant="subtitle2"
+                color={colors.text}
+                fontWeight={600}
+                gutterBottom
+              >
+                Liên hệ
+              </Typography>
+              <Box component="ul" sx={{ m: 0, p: 0, listStyle: "none" }}>
+                <Box component="li" sx={{ mb: 1.5 }}>
+                  <Box sx={{ display: "flex", alignItems: "center" }}>
+                    <LocationOn
+                      fontSize="small"
+                      sx={{ color: colors.primary, mr: 1 }}
+                    />
+                    <Typography variant="body2" color="text.secondary">
+                      {schoolInfo.address}
+                    </Typography>
+                  </Box>
+                </Box>
+                <Box component="li" sx={{ mb: 1.5 }}>
+                  <Box sx={{ display: "flex", alignItems: "center" }}>
+                    <Phone
+                      fontSize="small"
+                      sx={{ color: colors.primary, mr: 1 }}
+                    />
+                    <Typography variant="body2" color="text.secondary">
+                      {schoolInfo.phone}
+                    </Typography>
+                  </Box>
+                </Box>
+                <Box component="li" sx={{ mb: 1.5 }}>
+                  <Box sx={{ display: "flex", alignItems: "center" }}>
+                    <Email
+                      fontSize="small"
+                      sx={{ color: colors.primary, mr: 1 }}
+                    />
+                    <Typography variant="body2" color="text.secondary">
+                      {schoolInfo.email}
+                    </Typography>
+                  </Box>
+                </Box>
+              </Box>
+            </Box>
+
+            {/* Newsletter */}
+            <Box sx={{ width: { xs: '100%', sm: '50%', md: '35%' }, px: 2 }}>
+              <Typography
+                variant="subtitle2"
+                color={colors.text}
+                fontWeight={600}
+                gutterBottom
+              >
+                Đăng ký nhận tin
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Nhận thông báo về các sự kiện y tế sắp tới và tin tức sức khỏe học đường.
+              </Typography>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: { xs: "column", sm: "row" },
+                  gap: 1,
+                }}
+              >
+                <TextField
+                  variant="outlined"
+                  size="small"
+                  placeholder="Email của bạn"
+                  fullWidth
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      bgcolor: alpha(colors.primary, 0.05),
+                      borderRadius: 2,
+                      "& fieldset": {
+                        borderColor: "transparent",
+                      },
+                      "&:hover fieldset": {
+                        borderColor: colors.primary,
+                      },
+                    },
+                  }}
+                />
+                <Button
+                  variant="contained"
+                  sx={{
+                    bgcolor: colors.primary,
+                    color: "white",
+                    borderRadius: 2,
+                    whiteSpace: "nowrap",
+                    textTransform: "none",
+                    px: 3,
+                  }}
+                >
+                  Đăng ký
+                </Button>
+              </Box>
+            </Box>
+          </Box>
+
+          <Divider sx={{ my: 4 }} />
+
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: { xs: "column", sm: "row" },
+              justifyContent: "space-between",
+              alignItems: { xs: "center", sm: "center" },
+              gap: 1,
+              textAlign: { xs: "center", sm: "left" },
+            }}
+          >
+            <Typography variant="caption" color="text.secondary">
+              © {new Date().getFullYear()} FPTMED. Bản quyền thuộc về FPT Software.
+            </Typography>
+            <Box sx={{ display: "flex", gap: 3 }}>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                component={Link}
+                to="/privacy"
+                sx={{ textDecoration: "none" }}
+              >
+                Chính sách bảo mật
+              </Typography>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                component={Link}
+                to="/terms"
+                sx={{ textDecoration: "none" }}
+              >
+                Điều khoản sử dụng
+              </Typography>
+            </Box>
+          </Box>
+        </Container>
+      </Box>
+    </Box>
   );
 };
 
