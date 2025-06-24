@@ -279,3 +279,55 @@ export interface MedicationDiaryEntry {
   createAt: string;
   createdBy: string;
 }
+
+export interface MedicalSupplyUsage {
+  supplyId: string;
+  quantity: number;
+}
+
+export interface MedicalIncidentStudent {
+  id: string;
+  studentCode: string;
+  fullName: string;
+  dateOfBirth: string;
+  gender: number;
+  class: string;
+  schoolYear: string;
+  image: string;
+  healthRecord: HealthRecord | null;
+}
+
+export interface MedicalIncident {
+  id: string;
+  student: MedicalIncidentStudent;
+  incidentType: number;
+  incidentDate: string;
+  description: string;
+  actionsTaken: string;
+  outcome: string;
+  status: number;
+  parentNotified: boolean;
+  parentNotificationDate: string;
+  medicalSupplyUsages: MedicalSupplyUsage[];
+}
+
+export interface CreateMedicalIncidentRequest {
+  studentId: string;
+  incidentType: number;
+  incidentDate: string;
+  description: string;
+  actionsTaken: string;
+  outcome: string;
+  status: number;
+  medicalSupplyUsage: MedicalSupplyUsage[];
+}
+
+export interface MedicalSupplier {
+  id: string;
+  supplyName: string;
+  supplyType: number;
+  unit: string;
+  quantity: number;
+  supplier: string;
+  image: string[];
+}
