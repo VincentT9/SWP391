@@ -11,74 +11,71 @@ import {
   TableBody,
   TableCell,
   TableContainer,
+  TableHead,
   TableRow,
 } from "@mui/material";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import { MedicalEvent } from "../../../models/types";
+import { MedicalIncident } from "../../../models/types";
 
 interface MedicalEventDetailsProps {
-  event: MedicalEvent;
+  event: MedicalIncident;
   onBack: () => void;
+  onEdit?: (event: MedicalIncident) => void;
+  isNurse?: boolean;
 }
 
 const MedicalEventDetails: React.FC<MedicalEventDetailsProps> = ({
   event,
   onBack,
+  onEdit,
+  isNurse = false,
 }) => {
-  const getEventTypeLabel = (type: string) => {
+  const getEventTypeLabel = (type: number) => {
     switch (type) {
-      case "injury":
-        return "Chấn thương";
-      case "illness":
+      case 0:
         return "Bệnh";
-      case "emergency":
+      case 1:
+        return "Chấn thương";
+      case 2:
         return "Khẩn cấp";
       default:
         return "Khác";
     }
   };
 
-  const getEventTypeColor = (type: string) => {
+  const getEventTypeColor = (type: number) => {
     switch (type) {
-      case "injury":
+      case 1:
         return "warning";
-      case "illness":
+      case 0:
         return "info";
-      case "emergency":
+      case 2:
         return "error";
       default:
         return "default";
     }
   };
 
-  const getOutcomeLabel = (outcome: string) => {
-    switch (outcome) {
-      case "resolved":
+  const getStatusLabel = (status: number) => {
+    switch (status) {
+      case 0:
+        return "Đang theo dõi";
+      case 1:
         return "Đã ổn định";
-      case "referred":
-        return "Chuyển tuyến";
-      case "sent home":
-        return "Cho về nhà";
-      case "hospitalized":
-        return "Nhập viện";
       default:
-        return outcome;
+        return "Không xác định";
     }
   };
 
-  const getOutcomeColor = (
-    outcome: string
+  const getStatusColor = (
+    status: number
   ): "success" | "warning" | "error" | "default" => {
-    switch (outcome) {
-      case "resolved":
+    switch (status) {
+      case 1:
         return "success";
-      case "referred":
+      case 0:
         return "warning";
-      case "sent home":
-        return "warning";
-      case "hospitalized":
-        return "error";
       default:
         return "default";
     }
@@ -90,7 +87,17 @@ const MedicalEventDetails: React.FC<MedicalEventDetailsProps> = ({
         <Button startIcon={<ArrowBackIcon />} onClick={onBack} sx={{ mr: 2 }}>
           Quay lại
         </Button>
-        <Typography variant="h5">Chi tiết sự kiện y tế</Typography>
+        <Typography variant="h5" sx={{ flexGrow: 1 }}>Chi tiết sự kiện y tế</Typography>
+        
+        {isNurse && onEdit && (
+          <Button 
+            variant="contained" 
+            color="primary" 
+            onClick={() => onEdit(event)}
+          >
+            Chỉnh sửa
+          </Button>
+        )}
       </Box>
 
       <Divider sx={{ mb: 3 }} />
@@ -100,83 +107,86 @@ const MedicalEventDetails: React.FC<MedicalEventDetailsProps> = ({
           sx={{
             display: "flex",
             justifyContent: "space-between",
-            alignItems: "start",
+            alignItems: "center",
           }}
         >
           <Box>
-            <Typography variant="subtitle2" color="text.secondary">
-              Mã sự kiện
+            <Typography variant="body2" color="text.secondary">
+              Loại sự kiện
             </Typography>
-            <Typography variant="body1">{event.id}</Typography>
+            <Chip
+              label={getEventTypeLabel(event.incidentType)}
+              color={getEventTypeColor(event.incidentType) as any}
+              sx={{ mt: 0.5 }}
+            />
           </Box>
-          <Chip
-            label={getEventTypeLabel(event.type)}
-            color={getEventTypeColor(event.type) as any}
-          />
-        </Box>
-
-        <Box>
-          <Typography variant="subtitle2" color="text.secondary">
-            Thời gian xảy ra
-          </Typography>
-          <Typography variant="body1">
-            {format(new Date(event.date), "dd/MM/yyyy HH:mm")}
-          </Typography>
-        </Box>
-
-        <Box>
-          <Typography variant="subtitle2" color="text.secondary">
-            Học sinh
-          </Typography>
-          <Typography variant="body1">ID: {event.studentId}</Typography>
-        </Box>
-
-        <Box>
-          <Typography variant="subtitle2" color="text.secondary">
-            Mô tả chi tiết
-          </Typography>
-          <Typography variant="body1">{event.description}</Typography>
-        </Box>
-
-        <Box>
-          <Typography variant="subtitle2" color="text.secondary">
-            Triệu chứng
-          </Typography>
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 1 }}>
-            {event.symptoms.map((symptom, index) => (
-              <Chip
-                key={index}
-                label={symptom}
-                size="small"
-                variant="outlined"
-              />
-            ))}
-          </Box>
-        </Box>
-
-        <Box>
-          <Typography variant="subtitle2" color="text.secondary">
-            Biện pháp xử lý
-          </Typography>
-          <Typography variant="body1">{event.treatment}</Typography>
-        </Box>
-
-        {event.medicationsGiven.length > 0 && (
           <Box>
-            <Typography variant="subtitle2" color="text.secondary">
-              Thuốc đã sử dụng
+            <Typography variant="body2" color="text.secondary" align="right">
+              Ngày xảy ra
+            </Typography>
+            <Typography variant="body1" align="right">
+              {format(parseISO(event.incidentDate), "dd/MM/yyyy HH:mm")}
+            </Typography>
+          </Box>
+        </Box>
+
+        <Box>
+          <Typography variant="body2" color="text.secondary">
+            Thông tin học sinh
+          </Typography>
+          <Box sx={{ mt: 1 }}>
+            <Typography variant="body1" fontWeight="bold">
+              {event.student.fullName}
+            </Typography>
+            <Typography variant="body2">
+              Mã học sinh: {event.student.studentCode}
+            </Typography>
+            <Typography variant="body2">
+              Lớp: {event.student.class} | Niên khóa: {event.student.schoolYear}
+            </Typography>
+            <Typography variant="body2">
+              Ngày sinh:{" "}
+              {format(parseISO(event.student.dateOfBirth), "dd/MM/yyyy")}
+            </Typography>
+          </Box>
+        </Box>
+
+        <Box>
+          <Typography variant="body2" color="text.secondary">
+            Mô tả sự kiện
+          </Typography>
+          <Typography variant="body1" sx={{ mt: 1 }}>
+            {event.description}
+          </Typography>
+        </Box>
+
+        <Box>
+          <Typography variant="body2" color="text.secondary">
+            Hành động đã thực hiện
+          </Typography>
+          <Typography variant="body1" sx={{ mt: 1 }}>
+            {event.actionsTaken}
+          </Typography>
+        </Box>
+
+        {event.medicalSupplyUsages && event.medicalSupplyUsages.length > 0 && (
+          <Box>
+            <Typography variant="body2" color="text.secondary">
+              Vật tư y tế đã sử dụng
             </Typography>
             <TableContainer component={Paper} variant="outlined" sx={{ mt: 1 }}>
               <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>ID</TableCell>
+                    <TableCell>Số lượng</TableCell>
+                  </TableRow>
+                </TableHead>
                 <TableBody>
-                  {event.medicationsGiven.map((med) => (
-                    <TableRow key={med.id}>
-                      <TableCell>{med.medicationName}</TableCell>
-                      <TableCell>{med.dosage}</TableCell>
-                      <TableCell>
-                        {format(new Date(med.time), "dd/MM/yyyy HH:mm")}
-                      </TableCell>
-                      <TableCell>{med.administeredBy}</TableCell>
+                  {event.medicalSupplyUsages.map((supply, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{supply.supplyId}</TableCell>
+                      <TableCell>{supply.quantity}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -186,56 +196,36 @@ const MedicalEventDetails: React.FC<MedicalEventDetailsProps> = ({
         )}
 
         <Box>
-          <Typography variant="subtitle2" color="text.secondary">
-            Kết quả xử lý
+          <Typography variant="body2" color="text.secondary">
+            Trạng thái
           </Typography>
           <Chip
-            label={getOutcomeLabel(event.outcome)}
-            color={getOutcomeColor(event.outcome)}
-            size="small"
-            sx={{ mt: 1 }}
+            label={getStatusLabel(event.status)}
+            color={getStatusColor(event.status)}
+            sx={{ mt: 0.5 }}
           />
         </Box>
 
         <Box>
-          <Typography variant="subtitle2" color="text.secondary">
-            Người xử lý
+          <Typography variant="body2" color="text.secondary">
+            Thông báo cho phụ huynh
           </Typography>
-          <Typography variant="body1">{event.attendedBy}</Typography>
-        </Box>
-
-        <Box>
-          <Typography variant="subtitle2" color="text.secondary">
-            Thông báo phụ huynh
-          </Typography>
-          <Typography variant="body1">
-            {event.notifiedParent ? (
+          <Typography variant="body1" sx={{ mt: 0.5 }}>
+            {event.parentNotified ? (
               <>
-                Đã thông báo lúc{" "}
-                {format(new Date(event.notifiedAt!), "dd/MM/yyyy HH:mm")}
+                <span>Đã thông báo - </span>
+                {event.parentNotificationDate &&
+                  event.parentNotificationDate !== "0001-01-01T00:00:00" && (
+                    <span>
+                      {format(parseISO(event.parentNotificationDate), "dd/MM/yyyy HH:mm")}
+                    </span>
+                  )}
               </>
             ) : (
               "Chưa thông báo"
             )}
           </Typography>
-          {event.notifiedParent && event.parentResponse && (
-            <Box sx={{ mt: 1 }}>
-              <Typography variant="subtitle2" color="text.secondary">
-                Phản hồi từ phụ huynh
-              </Typography>
-              <Typography variant="body1">{event.parentResponse}</Typography>
-            </Box>
-          )}
         </Box>
-
-        {event.notes && (
-          <Box>
-            <Typography variant="subtitle2" color="text.secondary">
-              Ghi chú
-            </Typography>
-            <Typography variant="body1">{event.notes}</Typography>
-          </Box>
-        )}
       </Stack>
     </Paper>
   );

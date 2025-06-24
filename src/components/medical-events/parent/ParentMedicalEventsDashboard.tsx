@@ -12,12 +12,13 @@ import {
   Chip,
   Button,
   Alert,
+  CircularProgress,
 } from "@mui/material";
-import { format } from "date-fns";
-import { MedicalEvent } from "../../../models/types";
-import { mockMedicalEvents } from "../../../utils/mockData";
+import { format, parseISO } from "date-fns";
+import { MedicalIncident } from "../../../models/types";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import MedicalEventDetails from "../nurse/MedicalEventDetails";
+import axios from "../../../utils/axiosConfig";
 
 interface ParentMedicalEventsDashboardProps {
   parentId: string;
@@ -26,18 +27,34 @@ interface ParentMedicalEventsDashboardProps {
 const ParentMedicalEventsDashboard: React.FC<
   ParentMedicalEventsDashboardProps
 > = ({ parentId }) => {
-  const [events, setEvents] = useState<MedicalEvent[]>([]);
-  const [selectedEvent, setSelectedEvent] = useState<MedicalEvent | null>(null);
+  const [events, setEvents] = useState<MedicalIncident[]>([]);
+  const [selectedEvent, setSelectedEvent] = useState<MedicalIncident | null>(null);
   const [isViewingDetails, setIsViewingDetails] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // In a real app, we would fetch events for the parent's children from an API
-    // For now, just simulate by filtering mock events
-    // This is a placeholder since we don't have a parent-child relationship in our mock data
-    setEvents(mockMedicalEvents);
+    const fetchMedicalIncidents = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        // In a real app, we would fetch events for the parent's children from an API
+        // For this example, we'll use the general endpoint
+        const response = await axios.get('/api/medical-incident/all');
+        // In a real implementation, you would filter by parent's children
+        setEvents(response.data);
+      } catch (err) {
+        console.error("Error fetching medical incidents:", err);
+        setError("Có lỗi khi tải dữ liệu sự kiện y tế");
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchMedicalIncidents();
   }, [parentId]);
 
-  const handleViewEvent = (event: MedicalEvent) => {
+  const handleViewEvent = (event: MedicalIncident) => {
     setSelectedEvent(event);
     setIsViewingDetails(true);
   };
@@ -47,59 +64,51 @@ const ParentMedicalEventsDashboard: React.FC<
     setSelectedEvent(null);
   };
 
-  const getEventTypeLabel = (type: string) => {
+  const getEventTypeLabel = (type: number) => {
     switch (type) {
-      case "injury":
-        return "Chấn thương";
-      case "illness":
+      case 0:
         return "Bệnh";
-      case "emergency":
+      case 1:
+        return "Chấn thương";
+      case 2:
         return "Khẩn cấp";
       default:
         return "Khác";
     }
   };
 
-  const getEventTypeColor = (type: string) => {
+  const getEventTypeColor = (type: number) => {
     switch (type) {
-      case "injury":
+      case 1:
         return "warning";
-      case "illness":
+      case 0:
         return "info";
-      case "emergency":
+      case 2:
         return "error";
       default:
         return "default";
     }
   };
 
-  const getOutcomeLabel = (outcome: string) => {
-    switch (outcome) {
-      case "resolved":
+  const getStatusLabel = (status: number) => {
+    switch (status) {
+      case 0:
+        return "Đang theo dõi";
+      case 1:
         return "Đã ổn định";
-      case "referred":
-        return "Chuyển tuyến";
-      case "sent home":
-        return "Cho về nhà";
-      case "hospitalized":
-        return "Nhập viện";
       default:
-        return outcome;
+        return "Không xác định";
     }
   };
 
-  const getOutcomeColor = (
-    outcome: string
+  const getStatusColor = (
+    status: number
   ): "success" | "warning" | "error" | "default" => {
-    switch (outcome) {
-      case "resolved":
+    switch (status) {
+      case 1:
         return "success";
-      case "referred":
+      case 0:
         return "warning";
-      case "sent home":
-        return "warning";
-      case "hospitalized":
-        return "error";
       default:
         return "default";
     }
@@ -111,63 +120,82 @@ const ParentMedicalEventsDashboard: React.FC<
         Sự kiện y tế của học sinh
       </Typography>
 
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+
+      {loading && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+          <CircularProgress />
+        </Box>
+      )}
+
       {isViewingDetails && selectedEvent ? (
         <MedicalEventDetails event={selectedEvent} onBack={handleBackToList} />
       ) : (
         <>
-          {events.length === 0 ? (
+          {!loading && events.length === 0 ? (
             <Alert severity="info">
               Không có sự kiện y tế nào được ghi nhận cho học sinh của bạn.
             </Alert>
           ) : (
-            <TableContainer component={Paper}>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Thời gian</TableCell>
-                    <TableCell>Loại</TableCell>
-                    <TableCell>Mô tả</TableCell>
-                    <TableCell>Xử lý</TableCell>
-                    <TableCell>Kết quả</TableCell>
-                    <TableCell align="center">Thao tác</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {events.map((event) => (
-                    <TableRow key={event.id} hover>
-                      <TableCell>
-                        {format(new Date(event.date), "dd/MM/yyyy HH:mm")}
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          label={getEventTypeLabel(event.type)}
-                          color={getEventTypeColor(event.type) as any}
-                          size="small"
-                        />
-                      </TableCell>
-                      <TableCell>{event.description}</TableCell>
-                      <TableCell>{event.treatment.slice(0, 30)}...</TableCell>
-                      <TableCell>
-                        <Chip
-                          label={getOutcomeLabel(event.outcome)}
-                          color={getOutcomeColor(event.outcome)}
-                          size="small"
-                        />
-                      </TableCell>
-                      <TableCell align="center">
-                        <Button
-                          startIcon={<VisibilityIcon />}
-                          size="small"
-                          onClick={() => handleViewEvent(event)}
-                        >
-                          Chi tiết
-                        </Button>
-                      </TableCell>
+            !loading && (
+              <TableContainer component={Paper}>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Thời gian</TableCell>
+                      <TableCell>Học sinh</TableCell>
+                      <TableCell>Loại</TableCell>
+                      <TableCell>Mô tả</TableCell>
+                      <TableCell>Xử lý</TableCell>
+                      <TableCell>Trạng thái</TableCell>
+                      <TableCell align="center">Thao tác</TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
+                  </TableHead>
+                  <TableBody>
+                    {events.map((event) => (
+                      <TableRow key={event.id} hover>
+                        <TableCell>
+                          {format(parseISO(event.incidentDate), "dd/MM/yyyy HH:mm")}
+                        </TableCell>
+                        <TableCell>
+                          {event.student.fullName} - {event.student.class}
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={getEventTypeLabel(event.incidentType)}
+                            color={getEventTypeColor(event.incidentType) as any}
+                            size="small"
+                          />
+                        </TableCell>
+                        <TableCell>{event.description}</TableCell>
+                        <TableCell>{event.actionsTaken.length > 30 ? 
+                          `${event.actionsTaken.slice(0, 30)}...` : event.actionsTaken}</TableCell>
+                        <TableCell>
+                          <Chip
+                            label={getStatusLabel(event.status)}
+                            color={getStatusColor(event.status)}
+                            size="small"
+                          />
+                        </TableCell>
+                        <TableCell align="center">
+                          <Button
+                            startIcon={<VisibilityIcon />}
+                            size="small"
+                            onClick={() => handleViewEvent(event)}
+                          >
+                            Chi tiết
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            )
           )}
         </>
       )}

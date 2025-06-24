@@ -34,6 +34,7 @@ function App() {
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/homepage" element={<HomePage />} />
             <Route path="/" element={<MainLayout />}>
               <Route index element={<HomePage />} />
               <Route path="health-records" element={<HealthRecordsPage />} />

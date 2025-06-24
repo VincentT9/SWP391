@@ -1,14 +1,10 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import {
   AppBar,
   Box,
   CssBaseline,
-  Drawer,
   IconButton,
-  List,
-  ListItem,
-  ListItemButton,
   Toolbar,
   Typography,
   Button,
@@ -16,29 +12,32 @@ import {
   MenuItem,
   Avatar,
   useTheme,
-  Fab,
-  Tooltip,
   useMediaQuery,
+  Divider,
+  Badge,
+  Container,
+  ListItemIcon,
+  ListItemText,
+  Tabs,
+  Tab,
+  alpha,
+  Popover,
+  List,
+  ListItem,
+  ListItemButton,
+  Chip,
 } from "@mui/material";
 import {
   Menu as MenuIcon,
-  Home as HomeIcon,
-  MedicalServices as MedicalServicesIcon,
-  Medication as MedicationIcon,
-  Settings as SettingsIcon,
-  AccountCircle,
   Notifications as NotificationsIcon,
-  ChevronLeft,
-  ChevronRight,
+  KeyboardArrowDown,
+  Logout,
+  AccountCircle,
+  Settings as SettingsIcon,
+  ArrowDropDown,
 } from "@mui/icons-material";
-import SchoolIcon from "@mui/icons-material/School";
-import VaccinesIcon from "@mui/icons-material/Vaccines";
 import { useAuth } from "../auth/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
-
-// Modified drawer width and added collapsed state width
-const drawerWidth = 250;
-const collapsedDrawerWidth = 70;
 
 // Define animation variants for page transitions
 const pageVariants = {
@@ -62,632 +61,1072 @@ const pageTransition = {
   duration: 0.3,
 };
 
-// Define animation for list items
-const listItemVariants = {
-  hidden: { opacity: 0, x: -20 },
-  visible: (i: number) => ({
-    opacity: 1,
-    x: 0,
-    transition: {
-      delay: i * 0.05,
-      duration: 0.3,
-    },
-  }),
+// Modern healthcare-focused color palette with more vibrant colors
+const colors = {
+  primary: "#1e88e5", // Vibrant blue
+  primaryLight: "#6ab7ff",
+  primaryDark: "#005cb2",
+  secondary: "#00b0ff", // Light blue accent
+  secondaryLight: "#69e2ff",
+  secondaryDark: "#0081cb",
+  success: "#4caf50", // Green for success states
+  warning: "#ff9800", // Orange for warnings
+  error: "#f44336", // Red for errors
+  text: "#263238", // Dark text for readability
+  textSecondary: "#546e7a", // Secondary text
+  background: "#f8fafd", // Light background with a slight blue tint
+  backgroundDark: "#ffffff", // Card backgrounds
+  divider: "#e0e0e0", // Divider color
+  badge: "#ff1744", // Bright red for notification badges
 };
 
-// Define animation for the drawer
-const drawerVariants = {
-  closed: {
-    width: collapsedDrawerWidth,
-    transition: {
-      type: "spring",
-      stiffness: 400,
-      damping: 40,
-    },
-  },
-  open: {
-    width: drawerWidth,
-    transition: {
-      type: "spring",
-      stiffness: 400,
-      damping: 40,
-    },
-  },
-};
-
-// Define animation for the toggle button
-const toggleButtonVariants = {
-  closed: { rotate: 0 },
-  open: { rotate: 180 },
-};
-
-// Define animation for content - remove margins completely
-const contentVariants = {
-  narrow: {
-    marginLeft: 0,
-    paddingLeft: `${collapsedDrawerWidth}px`,
-    transition: { type: "spring", stiffness: 400, damping: 40 },
-  },
-  wide: {
-    marginLeft: 0,
-    paddingLeft: `${drawerWidth}px`,
-    transition: { type: "spring", stiffness: 400, damping: 40 },
-  },
-};
-
-interface MenuItemType {
+// Define menu categories and items
+interface MenuSubmenuItem {
   text: string;
   path: string;
-  icon: React.ReactNode;
   role?: string[];
+  badge?: number;
 }
 
-const menuItems: MenuItemType[] = [
-  { text: "Trang chủ", path: "/", icon: <HomeIcon /> },
+interface MenuCategory {
+  name: string;
+  path?: string;
+  role?: string[];
+  badge?: number;
+  submenu?: MenuSubmenuItem[];
+}
+
+const menuCategories: MenuCategory[] = [
   {
-    text: "Sức khỏe của tôi",
-    path: "/my-health",
-    icon: <MedicalServicesIcon />,
-    role: ["student"],
+    name: "Trang chủ",
+    path: "/",
   },
   {
-    text: "Sức Khỏe học sinh",
-    path: "/health-check",
-    icon: <MedicalServicesIcon />,
-    role: ["MedicalStaff"],
+    name: "Sổ sức khỏe", // More friendly name for "Học sinh"
+    submenu: [
+      {
+        text: "Khám sức khỏe định kỳ", // More descriptive for medical staff
+        path: "/health-check",
+        role: ["MedicalStaff"],
+      },
+      {
+        text: "Theo dõi sức khỏe con", // Caring name for parent view
+        path: "/health-records",
+        role: ["Parent"],
+      },
+      {
+        text: "Quản lý thông tin học sinh", // More comprehensive for admin
+        path: "/admin/students",
+        role: ["Admin"],
+      },
+    ],
   },
   {
-    text: "Sự kiện y tế",
-    path: "/medical-events",
-    icon: <MedicalServicesIcon />,
-    role: ["MedicalStaff", "Admin", "Parent"],
+    name: "Hoạt động y tế", // More comprehensive than "Sự kiện y tế"
+    submenu: [
+      {
+        text: "Sức khỏe học đường", // More specific description
+        path: "/medical-events",
+        role: ["MedicalStaff", "Admin", "Parent"],
+      },
+    ],
   },
   {
-    text: "Hồ sơ sức khỏe học sinh",
-    path: "/health-records",
-    icon: <MedicalServicesIcon />,
-    role: ["Parent"],
+    name: "Y dược học đường", // More educational term for "Thuốc & Vật tư"
+    submenu: [
+      {
+        text: "Danh mục thuốc", // Simplified name
+        path: "/medication",
+        role: ["MedicalStaff"],
+      },
+      {
+        text: "Đăng ký sử dụng thuốc", // More action-oriented for parents
+        path: "/medication",
+        role: ["Parent"],
+      },
+      {
+        text: "Thiết bị y tế trường học", // More educational context
+        path: "/medical-supplier",
+        role: ["MedicalStaff", "Admin"],
+      },
+    ],
   },
   {
-    text: "Quản lý thuốc",
-    path: "/medication",
-    icon: <MedicationIcon />,
-    role: ["MedicalStaff", "Admin"],
-  },
-  {
-    text: "Gửi thuốc đến trường",
-    path: "/medication",
-    icon: <MedicationIcon />,
-    role: ["Parent"],
-  },
-  {
-    text: "Vật tư y tế",
-    path: "/medical-supplier",
-    icon: <MedicalServicesIcon />,
-    role: ["MedicalStaff", "Admin"],
-  },
-  {
-    text: "Tiêm chủng",
-    path: "/vaccination",
-    icon: <VaccinesIcon />,
-    role: ["MedicalStaff", "Admin"],
-  },
-  {
-    text: "Quản lý người dùng",
-    path: "/user-management",
-    icon: <SettingsIcon />,
+    name: "Hệ thống", // Simpler than "Quản trị"
     role: ["Admin"],
+    submenu: [
+      {
+        text: "Quản lý người dùng hệ thống", // More comprehensive
+        path: "/user-management",
+        role: ["Admin"],
+      },
+    ],
   },
-  {
-    text: "Quản lý học sinh",
-    path: "/admin/students",
-    icon: <SchoolIcon />,
-    role: ["Admin"],
-  },
-  { text: "Thông báo", path: "/notifications", icon: <NotificationsIcon /> },
 ];
 
+// Type guard for checking if a menu item has a badge
+const hasBadge = (
+  item: MenuSubmenuItem
+): item is MenuSubmenuItem & { badge: number } => {
+  return item.badge !== undefined && typeof item.badge === "number";
+};
+
 const MainLayout = () => {
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true); // Default to opened
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState(0);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [menuAnchors, setMenuAnchors] = useState<{
+    [key: string]: HTMLElement | null;
+  }>({});
+  const [notificationAnchor, setNotificationAnchor] =
+    useState<null | HTMLElement>(null);
+
   const location = useLocation();
   const navigate = useNavigate();
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const sidebarRef = useRef<HTMLDivElement>(null);
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const isTablet = useMediaQuery(theme.breakpoints.between("md", "lg"));
 
-  // Use AuthContext instead of mock user
+  // Use AuthContext
   const { user, logout } = useAuth();
 
-  // Handle click outside to close sidebar
+  // Set active tab based on current location
   useEffect(() => {
-    // Remove this entire effect or comment it out to prevent auto-closing
-    // const handleClickOutside = (event: MouseEvent) => {
-    //   if (
-    //     sidebarRef.current &&
-    //     !sidebarRef.current.contains(event.target as Node) &&
-    //     !isMobile &&
-    //     sidebarOpen
-    //   ) {
-    //     setSidebarOpen(false);
-    //   }
-    // };
-    // document.addEventListener("mousedown", handleClickOutside);
-    // return () => {
-    //   document.removeEventListener("mousedown", handleClickOutside);
-    // };
-  }, [sidebarOpen, isMobile]);
+    const currentPath = location.pathname;
+    const tabIndex = menuCategories.findIndex((category) => {
+      if (category.path === currentPath) return true;
+      if (category.submenu) {
+        return category.submenu.some((item) => item.path === currentPath);
+      }
+      return false;
+    });
 
-  // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!user?.isAuthenticated) {
-      navigate("/login");
+    if (tabIndex !== -1) {
+      setActiveTab(tabIndex);
     }
-  }, [user, navigate]);
+  }, [location.pathname]);
 
-  const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
+  const handleMobileMenuToggle = () => {
+    setMobileMenuOpen(!mobileMenuOpen);
   };
 
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+    setActiveTab(newValue);
+    const category = menuCategories[newValue];
+    if (category.path) {
+      navigate(category.path);
+    }
   };
 
-  const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
+  const handleMenuOpen = (
+    event: React.MouseEvent<HTMLElement>,
+    menuName: string
+  ) => {
+    setMenuAnchors({
+      ...menuAnchors,
+      [menuName]: event.currentTarget,
+    });
+  };
+
+  const handleMenuClose = (menuName: string) => {
+    setMenuAnchors({
+      ...menuAnchors,
+      [menuName]: null,
+    });
+  };
+
+  const handleNotificationOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setNotificationAnchor(event.currentTarget);
+  };
+
+  const handleNotificationClose = () => {
+    setNotificationAnchor(null);
+  };
+
+  const handleUserMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
 
-  const handleClose = () => {
+  const handleUserMenuClose = () => {
     setAnchorEl(null);
   };
 
   const handleLogout = () => {
     logout();
-    navigate("/login");
-    handleClose();
+    navigate("/");
+    handleUserMenuClose();
   };
 
-  // Show loading or redirect if user is not authenticated
-  if (!user?.isAuthenticated) {
-    return null; // or a loading spinner
-  }
-
-  const drawer = (
-    <Box
-      ref={sidebarRef}
-      sx={{
-        background: "#f0f2f5", // Changed from #f5f9ff to more gray tone
-        height: "100%",
-        position: "relative",
-        overflow: "hidden",
-      }}
-    >
-      {/* Remove the decorative element below */}
-      {/* 
-      <Box
-        component={motion.div}
-        sx={{
-          position: "absolute",
-          top: 20,
-          right: 20,
-          borderRadius: "50%",
-          width: 100,
-          height: 100,
-          background:
-            "radial-gradient(circle, rgba(25, 118, 210, 0.2) 0%, rgba(3, 78, 162, 0.05) 100%)",
-          zIndex: 0,
-        }}
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ duration: 0.5 }}
-      />
-      */}
-
-      <List sx={{ pt: 3, pb: 0, position: "relative", zIndex: 1 }}>
-        <AnimatePresence>
-          {menuItems.map((item, index) => {
-            // Skip items that the user doesn't have access to
-            if (item.role && !item.role.includes(user.role)) return null;
-
-            const isActive = location.pathname === item.path;
-
-            return (
-              <motion.div
-                key={item.text}
-                custom={index}
-                initial="hidden"
-                animate="visible"
-                variants={listItemVariants}
-              >
-                <Tooltip
-                  title={!sidebarOpen ? item.text : ""}
-                  placement="right"
-                  arrow
-                >
-                  <ListItem
-                    disablePadding
-                    sx={{
-                      borderBottom: "1px solid rgba(0,0,0,0.04)",
-                      "&:hover": {
-                        bgcolor: "rgba(3, 78, 162, 0.08)",
-                      },
-                      bgcolor: isActive
-                        ? "rgba(3, 78, 162, 0.12)"
-                        : "transparent",
-                      borderLeft: isActive
-                        ? `4px solid #034ea2`
-                        : "4px solid transparent",
-                      transition: "all 0.2s ease",
-                    }}
-                  >
-                    <ListItemButton
-                      component={Link}
-                      to={item.path}
-                      sx={{
-                        py: 1.8,
-                        px: 1.5,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: sidebarOpen ? "flex-start" : "center",
-                        transition: "all 0.2s",
-                      }}
-                    >
-                      <Box
-                        component={motion.div}
-                        whileHover={{ scale: 1.15 }}
-                        sx={{
-                          display: "flex",
-                          mr: sidebarOpen ? 1.5 : 0,
-                          ml: sidebarOpen ? 1 : 0,
-                          color: isActive ? "#034ea2" : "rgba(0, 0, 0, 0.6)",
-                        }}
-                      >
-                        {item.icon}
-                      </Box>
-                      {sidebarOpen && (
-                        <Typography
-                          sx={{
-                            fontSize: "14px",
-                            fontWeight: isActive ? 600 : 400,
-                            color: isActive ? "#034ea2" : "rgba(0, 0, 0, 0.75)",
-                            flexGrow: 1,
-                            letterSpacing: "0.01em",
-                            opacity: sidebarOpen ? 1 : 0,
-                            transition: "opacity 0.2s",
-                          }}
-                        >
-                          {item.text}
-                        </Typography>
-                      )}
-                    </ListItemButton>
-                  </ListItem>
-                </Tooltip>
-              </motion.div>
-            );
-          })}
-        </AnimatePresence>
-      </List>
-    </Box>
-  );
+  // Navigate to page and close menus
+  const navigateTo = (path: string, menuName?: string) => {
+    navigate(path);
+    if (menuName) {
+      handleMenuClose(menuName);
+    }
+  };
 
   return (
-    <Box
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        height: "100vh",
-        bgcolor: "#f0f2f5", // Changed from #f5f9ff to more gray tone
-        overflow: "hidden",
-      }}
-    >
+    <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
       <CssBaseline />
+
+      {/* Top Navigation Bar with gradient background */}
       <AppBar
-        component={motion.div}
-        initial={{ y: -60 }}
-        animate={{ y: 0 }}
-        transition={{ duration: 0.3 }}
         position="fixed"
+        elevation={0}
         sx={{
-          zIndex: (theme) => theme.zIndex.drawer + 1,
-          background: "linear-gradient(90deg, #034EA2 0%, #1976d2 100%)", // Blue gradient updated with new primary color
-          boxShadow: "none",
-          borderBottom: "1px solid rgba(0,0,0,0.05)",
+          boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+          zIndex: theme.zIndex.drawer + 1,
         }}
       >
-        <Toolbar
-          sx={{
-            minHeight: "48px",
-            px: { xs: 1, sm: 2 },
-            display: "flex",
-            justifyContent: "space-between",
-          }}
-        >
-          {/* Left section with logo */}
-          <Box sx={{ display: "flex", alignItems: "center" }}>
-            <IconButton
-              color="inherit"
-              aria-label="open drawer"
-              edge="start"
-              onClick={handleDrawerToggle}
-              sx={{ mr: 1, display: { sm: "none" } }}
-            >
-              <MenuIcon />
-            </IconButton>
-
-            {/* FPTMED Logo */}
+        <Container maxWidth="xl">
+          <Toolbar disableGutters sx={{ minHeight: { xs: 64, md: 70 } }}>
+            {/* Logo - Just a styled circle with gradient */}
             <Box
-              component={motion.img}
+              component={motion.div}
               whileHover={{ scale: 1.05 }}
-              marginLeft={{ xs: 1, sm: 4 }}
-              src="https://musical-indigo-mongoose.myfilebase.com/ipfs/QmPfdMNtJhcNfztJtxK88SXCrqWm54KuSWHKBW4TNhPr3x"
-              alt="FPTMED"
-              sx={{ height: 35, mr: 1 }}
-            />
-          </Box>
-          {/* Right section with user info */}
-          <Box sx={{ display: "flex", alignItems: "center" }}>
-            {user?.isAuthenticated ? (
-              <Box sx={{ display: "flex", alignItems: "center" }}>
-                <Typography variant="body2" sx={{ mr: 1, fontSize: "14px" }}>
-                  Xin chào, {user.name}
-                </Typography>
-                <Typography
-                  variant="caption"
-                  sx={{ mr: 1, fontSize: "12px", opacity: 0.8 }}
-                >
-                  ({user.role})
-                </Typography>
-                <motion.div
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <IconButton
-                    size="small"
-                    aria-label="account of current user"
-                    aria-controls="menu-appbar"
-                    aria-haspopup="true"
-                    onClick={handleMenu}
-                    color="inherit"
-                  >
-                    {user.avatar ? (
-                      <Avatar
-                        alt={user.name}
-                        src={user.avatar}
-                        sx={{
-                          width: 32,
-                          height: 32,
-                          border: "2px solid rgba(255,255,255,0.7)",
-                        }}
-                      />
-                    ) : (
-                      <AccountCircle />
-                    )}
-                  </IconButton>
-                </motion.div>
-                <Menu
-                  id="menu-appbar"
-                  anchorEl={anchorEl}
-                  anchorOrigin={{
-                    vertical: "bottom",
-                    horizontal: "right",
-                  }}
-                  keepMounted
-                  transformOrigin={{
-                    vertical: "top",
-                    horizontal: "right",
-                  }}
-                  open={Boolean(anchorEl)}
-                  onClose={handleClose}
-                  PaperProps={{
-                    sx: {
-                      boxShadow: "0 2px 10px rgba(0,0,0,0.08)",
-                      borderRadius: "8px",
-                      mt: 1,
-                    },
-                  }}
-                >
-                  <MenuItem
-                    component={Link}
-                    to="/profile"
-                    onClick={handleClose}
-                    sx={{
-                      py: 1.2,
-                      px: 2.5,
-                      "&:hover": {
-                        bgcolor: "rgba(158, 145, 125, 0.08)",
-                      },
-                    }}
-                  >
-                    Trang cá nhân
-                  </MenuItem>
-                  <MenuItem
-                    onClick={handleLogout}
-                    sx={{
-                      py: 1.2,
-                      px: 2.5,
-                      "&:hover": {
-                        bgcolor: "rgba(244, 67, 54, 0.04)",
-                        color: "error.main",
-                      },
-                    }}
-                  >
-                    Đăng xuất
-                  </MenuItem>
-                </Menu>
-              </Box>
-            ) : (
-              <>
-                <Button
-                  color="inherit"
-                  component={Link}
-                  to="/login"
-                  size="small"
-                >
-                  Đăng nhập
-                </Button>
-                <Button
-                  color="inherit"
-                  component={Link}
-                  to="/register"
-                  size="small"
-                >
-                  Đăng ký
-                </Button>
-              </>
-            )}
-          </Box>
-        </Toolbar>
-      </AppBar>
-
-      <Toolbar sx={{ minHeight: "48px", display: "block" }} />
-
-      <Box sx={{ display: "flex", flexGrow: 1, overflow: "hidden" }}>
-        {/* Sidebar */}
-        <Box
-          component="nav"
-          sx={{
-            width: {
-              xs: 0,
-              sm: sidebarOpen ? drawerWidth : collapsedDrawerWidth,
-            },
-            flexShrink: 0,
-            transition: "width 0.3s",
-            position: "absolute",
-            height: "calc(100vh - 48px)",
-            zIndex: 1200,
-            "& .MuiDrawer-paper": {
-              boxSizing: "border-box",
-              border: "none",
-              bgcolor: "#f0f2f5", // Changed from #f5f9ff to more gray tone
-              boxShadow: "none",
-              top: "auto",
-              height: "100%",
-              borderTop: "none",
-              overflow: "hidden",
-            },
-          }}
-        >
-          <Drawer
-            variant="temporary"
-            open={mobileOpen}
-            onClose={handleDrawerToggle}
-            ModalProps={{
-              keepMounted: true,
-            }}
-            sx={{
-              display: { xs: "block", sm: "none" },
-              "& .MuiDrawer-paper": {
-                width: drawerWidth,
-                boxSizing: "border-box",
-                top: "48px",
-                height: "calc(100% - 48px)",
-              },
-            }}
-          >
-            {drawer}
-          </Drawer>
-
-          <Drawer
-            variant="permanent"
-            sx={{
-              display: { xs: "none", sm: "block" },
-              "& .MuiDrawer-paper": {
-                width: sidebarOpen ? drawerWidth : collapsedDrawerWidth,
-                transition: "width 0.3s",
-              },
-            }}
-            open
-          >
-            <AnimatePresence>
-              <motion.div
-                initial={false}
-                animate={sidebarOpen ? "open" : "closed"}
-                variants={drawerVariants}
-              >
-                {drawer}
-              </motion.div>
-            </AnimatePresence>
-          </Drawer>
-        </Box>
-
-        {/* Toggle sidebar button */}
-        {!isMobile && (
-          <Box
-            sx={{
-              position: "fixed",
-              bottom: 20,
-              left: sidebarOpen ? drawerWidth - 22 : collapsedDrawerWidth - 22,
-              zIndex: theme.zIndex.drawer + 2,
-              transition: "left 0.3s",
-            }}
-          >
-            <Fab
-              component={motion.button}
-              initial={false}
-              animate={sidebarOpen ? "open" : "closed"}
-              variants={toggleButtonVariants}
-              size="small"
-              color="primary"
-              aria-label="toggle sidebar"
-              onClick={toggleSidebar}
               sx={{
-                bgcolor: "#034EA2", // Updated to use the requested color
-                "&:hover": {
-                  bgcolor: "#023a7a",
-                },
+                mr: { xs: 2, md: 3 },
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
               }}
             >
-              <ChevronLeft />
-            </Fab>
-          </Box>
-        )}
+              <Box
+                component="img"
+                src="https://musical-indigo-mongoose.myfilebase.com/ipfs/QmPfdMNtJhcNfztJtxK88SXCrqWm54KuSWHKBW4TNhPr3x"
+                alt="FPTMED"
+                sx={{
+                  height: { xs: 34, md: 40 },
+                  transition: "all 0.2s ease",
+                }}
+              />
+            </Box>
 
-        {/* Main Content with Page Transitions - responsive to sidebar state */}
-        <Box
-          component={motion.div}
-          initial={false}
-          animate={sidebarOpen && !isMobile ? "wide" : "narrow"}
-          variants={!isMobile ? contentVariants : {}}
-          sx={{
-            flexGrow: 1,
-            p: 0,
-            bgcolor: "#f0f2f5", // Changed from #f5f9ff to more gray tone
-            overflow: "auto",
-            width: "100%",
-            ml: 0,
-            height: "100%",
-            position: "relative",
-            zIndex: 1,
-            "&::-webkit-scrollbar": {
-              width: "8px",
-            },
-            "&::-webkit-scrollbar-track": {
-              background: "#f1f1f1",
-            },
-            "&::-webkit-scrollbar-thumb": {
-              background: "#034EA2",
-              borderRadius: "4px",
-            },
-            "&::-webkit-scrollbar-thumb:hover": {
-              background: "#023a7a",
-            },
-          }}
-        >
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={location.pathname}
-              initial="initial"
-              animate="in"
-              exit="out"
-              variants={pageVariants}
-              transition={pageTransition}
-              style={{ minHeight: "100%" }}
+            {/* Mobile Toggle Menu - Only show if authenticated */}
+            {isMobile && user?.isAuthenticated && (
+              <IconButton
+                edge="start"
+                color="inherit"
+                aria-label="open drawer"
+                onClick={handleMobileMenuToggle}
+                sx={{ mr: 2 }}
+              >
+                <MenuIcon />
+              </IconButton>
+            )}
+
+            {/* Desktop Navigation - Only show if authenticated */}
+            {!isMobile && user?.isAuthenticated && (
+              <Tabs
+                value={activeTab}
+                onChange={handleTabChange}
+                variant={isTablet ? "scrollable" : "standard"}
+                scrollButtons={isTablet ? "auto" : false}
+                sx={{
+                  flexGrow: 1,
+                  minHeight: 70,
+                  "& .MuiTab-root": {
+                    minHeight: 70,
+                    px: 3,
+                    fontWeight: 500,
+                    fontSize: "0.95rem",
+                    color: "rgba(255, 255, 255, 0.85)",
+                    textTransform: "none",
+                    transition: "all 0.2s ease",
+                    position: "relative",
+                    "&:hover": {
+                      color: "#ffffff",
+                      background: "rgba(255, 255, 255, 0.1)",
+                    },
+                    alignItems: "center",
+                  },
+                  "& .Mui-selected": {
+                    color: "#ffffff !important", // Ensure text remains visible when selected
+                    fontWeight: 600,
+                    opacity: 1, // Make sure opacity is set to 1
+                    visibility: "visible", // Explicitly set visibility
+                    zIndex: 1, // Ensure it's on top
+                    "&::after": {
+                      content: '""',
+                      position: "absolute",
+                      bottom: 0,
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                      width: "30%",
+                      height: 3,
+                      borderRadius: 3,
+                      backgroundColor: "#ffffff",
+                    },
+                  },
+                  "& .MuiTabs-indicator": {
+                    display: "none",
+                  },
+                }}
+              >
+                {menuCategories.map((category, index) => {
+                  // Filter out menu categories based on user role
+                  if (category.role && !category.role.includes(user.role))
+                    return null;
+
+                  return (
+                    <Tab
+                      key={category.name}
+                      label={
+                        <Box sx={{ display: "flex", alignItems: "center" }}>
+                          <Typography
+                            component="span"
+                            sx={{ fontWeight: "inherit" }}
+                          >
+                            {category.name}
+                          </Typography>
+                          {category.badge && (
+                            <Chip
+                              size="small"
+                              label={category.badge}
+                              sx={{
+                                ml: 1,
+                                height: 18,
+                                minWidth: 18,
+                                fontSize: "0.7rem",
+                                fontWeight: 700,
+                                bgcolor: "rgba(255, 255, 255, 0.9)",
+                                color: colors.primary,
+                              }}
+                            />
+                          )}
+                          {category.submenu && (
+                            <ArrowDropDown sx={{ ml: 0.5 }} />
+                          )}
+                        </Box>
+                      }
+                      onClick={
+                        category.submenu
+                          ? (e) => {
+                              e.preventDefault();
+                              handleMenuOpen(e, category.name);
+                            }
+                          : undefined
+                      }
+                    />
+                  );
+                })}
+              </Tabs>
+            )}
+
+            {/* Spacer when not authenticated to push auth buttons to the right */}
+            {!user?.isAuthenticated && <Box sx={{ flexGrow: 1 }} />}
+
+            {/* Right side - notifications, user menu or auth buttons */}
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              {/* Show login/register buttons for unauthenticated users */}
+              {!user?.isAuthenticated && (
+                <>
+                  <Button
+                    component={Link}
+                    to="/register"
+                    variant="outlined"
+                    sx={{
+                      borderRadius: 28,
+                      textTransform: "none",
+                      px: { xs: 2, md: 3 },
+                      py: 1,
+                      mr: 1,
+                      color: "white",
+                      borderColor: "rgba(255, 255, 255, 0.5)",
+                      "&:hover": {
+                        borderColor: "white",
+                        background: "rgba(255, 255, 255, 0.1)",
+                      },
+                    }}
+                  >
+                    Đăng ký
+                  </Button>
+                  <Button
+                    component={Link}
+                    to="/login"
+                    variant="contained"
+                    sx={{
+                      borderRadius: 28,
+                      textTransform: "none",
+                      px: { xs: 2, md: 3 },
+                      py: 1,
+                      background: "rgba(255, 255, 255, 0.9)",
+                      color: colors.primary,
+                      fontWeight: 600,
+                      boxShadow: "0 4px 14px rgba(0, 0, 0, 0.1)",
+                      "&:hover": {
+                        background: "white",
+                        boxShadow: "0 6px 20px rgba(0, 0, 0, 0.15)",
+                      },
+                    }}
+                  >
+                    Đăng nhập
+                  </Button>
+                </>
+              )}
+
+              {/* Show notifications and user menu only for authenticated users */}
+              {user?.isAuthenticated && (
+                <>
+                  {/* Notifications */}
+                  <IconButton
+                    onClick={handleNotificationOpen}
+                    size="medium"
+                    sx={{
+                      color: "white",
+                      "&:hover": {
+                        background: "rgba(255, 255, 255, 0.1)",
+                      },
+                    }}
+                  >
+                    <Badge
+                      badgeContent={3}
+                      sx={{
+                        "& .MuiBadge-badge": {
+                          bgcolor: colors.badge,
+                          boxShadow: "0 0 0 2px #1a73e8",
+                        },
+                      }}
+                    >
+                      <NotificationsIcon />
+                    </Badge>
+                  </IconButton>
+
+                  {/* User Menu */}
+                  <Box
+                    component={motion.div}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={handleUserMenuOpen}
+                    sx={{
+                      ml: 1,
+                      display: "flex",
+                      alignItems: "center",
+                      cursor: "pointer",
+                      py: 0.5,
+                      px: { xs: 0.5, md: 1.5 },
+                      borderRadius: 28,
+                      background: "rgba(255, 255, 255, 0.1)",
+                      backdropFilter: "blur(10px)",
+                      border: "1px solid rgba(255, 255, 255, 0.18)",
+                      transition: "all 0.2s",
+                      "&:hover": {
+                        background: "rgba(255, 255, 255, 0.18)",
+                      },
+                    }}
+                  >
+                    <Avatar
+                      sx={{
+                        width: 36,
+                        height: 36,
+                        bgcolor: "white",
+                        color: colors.primary,
+                        fontWeight: "bold",
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                      }}
+                      alt={user.name || "User"}
+                    >
+                      {user?.name?.charAt(0) || "U"}
+                    </Avatar>
+                    {!isMobile && (
+                      <>
+                        <Box sx={{ ml: 1.5 }}>
+                          <Typography
+                            variant="body2"
+                            fontWeight={600}
+                            sx={{ lineHeight: 1.2, color: "white" }}
+                          >
+                            {user?.name}
+                          </Typography>
+                          <Typography
+                            variant="caption"
+                            sx={{ color: "rgba(255, 255, 255, 0.8)" }}
+                          >
+                            {user?.role}
+                          </Typography>
+                        </Box>
+                        <KeyboardArrowDown
+                          sx={{ ml: 0.5, color: "rgba(255, 255, 255, 0.7)" }}
+                        />
+                      </>
+                    )}
+                  </Box>
+                </>
+              )}
+            </Box>
+          </Toolbar>
+        </Container>
+      </AppBar>
+
+      {/* Only render these menus if user is authenticated */}
+      {user?.isAuthenticated && (
+        <>
+          {/* Dropdown Menus for Navigation Categories */}
+          {menuCategories.map((category) => {
+            if (!category.submenu) return null;
+
+            return (
+              <Popover
+                key={`menu-${category.name}`}
+                open={Boolean(menuAnchors[category.name])}
+                anchorEl={menuAnchors[category.name]}
+                onClose={() => handleMenuClose(category.name)}
+                anchorOrigin={{
+                  vertical: "bottom",
+                  horizontal: "left",
+                }}
+                transformOrigin={{
+                  vertical: "top",
+                  horizontal: "left",
+                }}
+                sx={{
+                  mt: 1,
+                  "& .MuiPaper-root": {
+                    borderRadius: 3,
+                    minWidth: 220,
+                    overflow: "hidden",
+                    boxShadow: "0 10px 40px rgba(0,0,0,0.1)",
+                    background: "rgba(255, 255, 255, 0.95)",
+                    backdropFilter: "blur(10px)",
+                    border: "1px solid rgba(0, 0, 0, 0.05)",
+                  },
+                }}
+              >
+                <List sx={{ p: 1 }}>
+                  {category.submenu.map((item) => {
+                    // Filter based on user role
+                    if (item.role && !item.role.includes(user.role))
+                      return null;
+
+                    return (
+                      <ListItem disablePadding key={item.text}>
+                        <ListItemButton
+                          component={motion.div}
+                          whileHover={{ x: 4 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => navigateTo(item.path, category.name)}
+                          sx={{
+                            py: 1.2,
+                            px: 2,
+                            borderRadius: 2,
+                            transition: "all 0.2s",
+                            "&:hover": {
+                              bgcolor: alpha(colors.primary, 0.08),
+                            },
+                          }}
+                        >
+                          <ListItemText
+                            primary={item.text}
+                            primaryTypographyProps={{
+                              fontSize: "0.95rem",
+                              fontWeight: 500,
+                            }}
+                          />
+                          {hasBadge(item) && (
+                            <Chip
+                              size="small"
+                              label={item.badge}
+                              sx={{
+                                bgcolor: colors.primary,
+                                color: "white",
+                                height: 22,
+                                fontSize: "0.75rem",
+                                fontWeight: 600,
+                                ml: 1,
+                              }}
+                            />
+                          )}
+                        </ListItemButton>
+                      </ListItem>
+                    );
+                  })}
+                </List>
+              </Popover>
+            );
+          })}
+
+          {/* Notification Menu */}
+          <Menu
+            anchorEl={notificationAnchor}
+            open={Boolean(notificationAnchor)}
+            onClose={handleNotificationClose}
+            PaperProps={{
+              sx: {
+                width: 340,
+                boxShadow: "0 10px 40px rgba(0,0,0,0.1)",
+                borderRadius: 3,
+                mt: 1.5,
+                overflow: "hidden",
+                background: "rgba(255, 255, 255, 0.97)",
+                backdropFilter: "blur(10px)",
+              },
+            }}
+            transformOrigin={{ horizontal: "right", vertical: "top" }}
+            anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+          >
+            <Box
+              sx={{
+                p: 2.5,
+                pb: 2,
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                background: "linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%)",
+                color: "white",
+              }}
             >
-              <Outlet />
-            </motion.div>
-          </AnimatePresence>
-        </Box>
+              <Typography variant="subtitle1" fontWeight={600}>
+                Thông báo mới
+              </Typography>
+              <Chip
+                size="small"
+                label="3 mới"
+                sx={{
+                  bgcolor: "rgba(255, 255, 255, 0.25)",
+                  color: "white",
+                  fontWeight: 600,
+                  fontSize: "0.7rem",
+                }}
+              />
+            </Box>
+
+            <Box sx={{ maxHeight: 400, overflowY: "auto" }}>
+              <MenuItem
+                component={motion.div}
+                whileHover={{ x: 3 }}
+                sx={{ py: 2 }}
+                onClick={handleNotificationClose}
+              >
+                <Box
+                  sx={{ display: "flex", alignItems: "flex-start", gap: 1.5 }}
+                >
+                  <Box
+                    sx={{
+                      width: 10,
+                      height: 10,
+                      borderRadius: "50%",
+                      bgcolor: colors.badge,
+                      mt: 0.8,
+                      boxShadow: `0 0 0 3px ${alpha(colors.badge, 0.2)}`,
+                    }}
+                  />
+                  <Box>
+                    <Typography variant="body2" fontWeight={600}>
+                      Lịch khám sức khỏe định kỳ
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Lớp 10A3 sẽ được khám vào ngày 25/06
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        display: "block",
+                        color: alpha(colors.textSecondary, 0.7),
+                        mt: 0.7,
+                      }}
+                    >
+                      5 phút trước
+                    </Typography>
+                  </Box>
+                </Box>
+              </MenuItem>
+
+              <MenuItem
+                component={motion.div}
+                whileHover={{ x: 3 }}
+                sx={{ py: 2 }}
+                onClick={handleNotificationClose}
+              >
+                <Box
+                  sx={{ display: "flex", alignItems: "flex-start", gap: 1.5 }}
+                >
+                  <Box
+                    sx={{
+                      width: 10,
+                      height: 10,
+                      borderRadius: "50%",
+                      bgcolor: colors.badge,
+                      mt: 0.8,
+                      boxShadow: `0 0 0 3px ${alpha(colors.badge, 0.2)}`,
+                    }}
+                  />
+                  <Box>
+                    <Typography variant="body2" fontWeight={600}>
+                      Cập nhật hồ sơ y tế
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Vui lòng cập nhật thông tin y tế mới nhất
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        display: "block",
+                        color: alpha(colors.textSecondary, 0.7),
+                        mt: 0.7,
+                      }}
+                    >
+                      3 giờ trước
+                    </Typography>
+                  </Box>
+                </Box>
+              </MenuItem>
+
+              <MenuItem
+                component={motion.div}
+                whileHover={{ x: 3 }}
+                sx={{ py: 2 }}
+                onClick={handleNotificationClose}
+              >
+                <Box
+                  sx={{ display: "flex", alignItems: "flex-start", gap: 1.5 }}
+                >
+                  <Box
+                    sx={{
+                      width: 10,
+                      height: 10,
+                      borderRadius: "50%",
+                      bgcolor: colors.badge,
+                      mt: 0.8,
+                      boxShadow: `0 0 0 3px ${alpha(colors.badge, 0.2)}`,
+                    }}
+                  />
+                  <Box>
+                    <Typography variant="body2" fontWeight={600}>
+                      Thông báo từ y tá trường
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Có 3 học sinh cần được khám theo dõi
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        display: "block",
+                        color: alpha(colors.textSecondary, 0.7),
+                        mt: 0.7,
+                      }}
+                    >
+                      Hôm qua
+                    </Typography>
+                  </Box>
+                </Box>
+              </MenuItem>
+            </Box>
+
+            <Box
+              sx={{
+                p: 2,
+                textAlign: "center",
+                borderTop: `1px solid ${alpha(colors.divider, 0.8)}`,
+              }}
+            >
+              <Button
+                component={Link}
+                to="/notifications"
+                variant="contained"
+                size="small"
+                onClick={handleNotificationClose}
+                sx={{
+                  textTransform: "none",
+                  borderRadius: 5,
+                  px: 3,
+                  py: 1,
+                  background:
+                    "linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%)",
+                  boxShadow: "0 4px 12px rgba(26, 115, 232, 0.4)",
+                  "&:hover": {
+                    boxShadow: "0 6px 16px rgba(26, 115, 232, 0.6)",
+                  },
+                }}
+              >
+                Xem tất cả thông báo
+              </Button>
+            </Box>
+          </Menu>
+
+          {/* User Profile Menu */}
+          <Menu
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={handleUserMenuClose}
+            PaperProps={{
+              sx: {
+                width: 250,
+                boxShadow: "0 10px 40px rgba(0,0,0,0.12)",
+                borderRadius: 3,
+                mt: 1.5,
+                overflow: "hidden",
+                background: "rgba(255, 255, 255, 0.97)",
+                backdropFilter: "blur(10px)",
+              },
+            }}
+            transformOrigin={{ horizontal: "right", vertical: "top" }}
+            anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+          >
+            <Box
+              sx={{
+                p: 3,
+                textAlign: "center",
+                background: "linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%)",
+              }}
+            >
+              <Avatar
+                sx={{
+                  width: 70,
+                  height: 70,
+                  margin: "0 auto",
+                  border: "4px solid rgba(255, 255, 255, 0.6)",
+                  bgcolor: "white",
+                  color: colors.primary,
+                  fontSize: "1.8rem",
+                  fontWeight: "bold",
+                }}
+              >
+                {user?.name?.charAt(0) || "U"}
+              </Avatar>
+              <Typography
+                variant="subtitle1"
+                sx={{ mt: 2, fontWeight: 600, color: "white" }}
+              >
+                {user?.name}
+              </Typography>
+              <Typography
+                variant="caption"
+                sx={{ color: "rgba(255, 255, 255, 0.8)" }}
+              >
+                {user?.role}
+              </Typography>
+            </Box>
+
+            <MenuItem
+              component={motion.div}
+              whileHover={{ x: 3 }}
+              onClick={() => {
+                navigate("/profile");
+                handleUserMenuClose();
+              }}
+              sx={{ py: 1.5, px: 2.5 }}
+            >
+              <ListItemIcon>
+                <AccountCircle
+                  fontSize="small"
+                  sx={{ color: colors.primary }}
+                />
+              </ListItemIcon>
+              <ListItemText primary="Trang cá nhân" />
+            </MenuItem>
+
+            <MenuItem
+              component={motion.div}
+              whileHover={{ x: 3 }}
+              onClick={() => {
+                navigate("/settings");
+                handleUserMenuClose();
+              }}
+              sx={{ py: 1.5, px: 2.5 }}
+            >
+              <ListItemIcon>
+                <SettingsIcon fontSize="small" sx={{ color: colors.primary }} />
+              </ListItemIcon>
+              <ListItemText primary="Cài đặt" />
+            </MenuItem>
+
+            <Divider sx={{ my: 1 }} />
+
+            <MenuItem
+              component={motion.div}
+              whileHover={{ x: 3 }}
+              onClick={handleLogout}
+              sx={{ py: 1.5, px: 2.5 }}
+            >
+              <ListItemIcon>
+                <Logout fontSize="small" sx={{ color: colors.error }} />
+              </ListItemIcon>
+              <ListItemText
+                primary="Đăng xuất"
+                primaryTypographyProps={{ color: colors.error }}
+              />
+            </MenuItem>
+          </Menu>
+
+          {/* Mobile Navigation Menu */}
+          <Menu
+            anchorEl={document.body}
+            open={mobileMenuOpen}
+            onClose={handleMobileMenuToggle}
+            PaperProps={{
+              sx: {
+                width: "100%",
+                maxWidth: "100%",
+                top: "64px !important",
+                left: "0px !important",
+                boxShadow: "0 10px 40px rgba(0,0,0,0.15)",
+                background: "rgba(255, 255, 255, 0.97)",
+                backdropFilter: "blur(10px)",
+              },
+            }}
+          >
+            <List sx={{ py: 2 }}>
+              {menuCategories.flatMap((category) => {
+                // For categories with submenu, add title and then all items
+                if (category.submenu) {
+                  return [
+                    // Category heading
+                    <ListItem
+                      key={`category-${category.name}`}
+                      sx={{ py: 0.5, px: 3 }}
+                    >
+                      <Typography
+                        variant="overline"
+                        color={colors.primary}
+                        fontWeight={700}
+                        sx={{ letterSpacing: 1.5 }}
+                      >
+                        {category.name}
+                      </Typography>
+                    </ListItem>,
+                    // Category items
+                    ...category.submenu
+                      .filter(
+                        (item) => !item.role || item.role.includes(user.role)
+                      )
+                      .map((item) => (
+                        <ListItem disablePadding key={item.text}>
+                          <ListItemButton
+                            component={motion.div}
+                            whileHover={{ x: 5 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => {
+                              navigate(item.path);
+                              handleMobileMenuToggle();
+                            }}
+                            sx={{
+                              py: 1.5,
+                              px: 3,
+                              borderRadius: 2,
+                              mx: 1.5,
+                              my: 0.3,
+                              transition: "all 0.2s",
+                            }}
+                          >
+                            <ListItemText
+                              primary={item.text}
+                              primaryTypographyProps={{
+                                fontWeight:
+                                  location.pathname === item.path ? 600 : 400,
+                                color:
+                                  location.pathname === item.path
+                                    ? colors.primary
+                                    : colors.text,
+                              }}
+                            />
+                            {hasBadge(item) && (
+                              <Chip
+                                size="small"
+                                label={item.badge}
+                                sx={{
+                                  bgcolor: colors.primary,
+                                  color: "white",
+                                  height: 20,
+                                  fontSize: "0.75rem",
+                                  fontWeight: 600,
+                                }}
+                              />
+                            )}
+                          </ListItemButton>
+                        </ListItem>
+                      )),
+                  ];
+                } else {
+                  // For standalone categories without submenu
+                  if (
+                    category.role &&
+                    Array.isArray(category.role) &&
+                    !category.role.includes(user.role)
+                  )
+                    return [];
+
+                  return [
+                    <ListItem disablePadding key={category.name}>
+                      <ListItemButton
+                        component={motion.div}
+                        whileHover={{ x: 5 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => {
+                          navigate(category.path || "/");
+                          handleMobileMenuToggle();
+                        }}
+                        sx={{
+                          py: 1.5,
+                          px: 3,
+                          borderRadius: 2,
+                          mx: 1.5,
+                          my: 0.3,
+                          bgcolor:
+                            location.pathname === category.path
+                              ? alpha(colors.primary, 0.1)
+                              : "transparent",
+                        }}
+                      >
+                        <ListItemText
+                          primary={category.name}
+                          primaryTypographyProps={{
+                            fontWeight:
+                              location.pathname === category.path ? 600 : 400,
+                            color:
+                              location.pathname === category.path
+                                ? colors.primary
+                                : colors.text,
+                          }}
+                        />
+                        {category.badge && (
+                          <Chip
+                            size="small"
+                            label={category.badge}
+                            sx={{
+                              bgcolor: colors.primary,
+                              color: "white",
+                              height: 24,
+                              fontSize: "0.75rem",
+                              fontWeight: 600,
+                            }}
+                          />
+                        )}
+                      </ListItemButton>
+                    </ListItem>,
+                  ];
+                }
+              })}
+            </List>
+          </Menu>
+        </>
+      )}
+
+      {/* Main Content with background pattern */}
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          pt: { xs: 8, sm: 10 },
+          pb: { xs: 4, sm: 6 },
+          px: { xs: 2, sm: 4, md: 5 },
+          backgroundImage:
+            "radial-gradient(rgba(26, 115, 232, 0.04) 2px, transparent 0)",
+          backgroundSize: "30px 30px",
+          minHeight: "100vh",
+        }}
+      >
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={location.pathname}
+            initial="initial"
+            animate="in"
+            exit="out"
+            variants={pageVariants}
+            transition={pageTransition}
+            style={{ height: "100%" }}
+          >
+            <Outlet />
+          </motion.div>
+        </AnimatePresence>
       </Box>
     </Box>
   );

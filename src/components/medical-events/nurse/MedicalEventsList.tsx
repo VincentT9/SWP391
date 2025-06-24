@@ -17,12 +17,12 @@ import {
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import VisibilityIcon from "@mui/icons-material/Visibility";
-import { format } from "date-fns";
-import { MedicalEvent } from "../../../models/types";
+import { format, parseISO } from "date-fns";
+import { MedicalIncident } from "../../../models/types";
 
 interface MedicalEventsListProps {
-  events: MedicalEvent[];
-  onEventSelect: (event: MedicalEvent) => void;
+  events: MedicalIncident[];
+  onEventSelect: (event: MedicalIncident) => void;
 }
 
 const MedicalEventsList: React.FC<MedicalEventsListProps> = ({
@@ -35,64 +35,56 @@ const MedicalEventsList: React.FC<MedicalEventsListProps> = ({
     const searchLower = searchTerm.toLowerCase();
     return (
       event.description.toLowerCase().includes(searchLower) ||
-      event.type.toLowerCase().includes(searchLower) ||
-      event.symptoms.some((s) => s.toLowerCase().includes(searchLower))
+      event.student.fullName.toLowerCase().includes(searchLower) ||
+      event.student.class.toLowerCase().includes(searchLower)
     );
   });
 
-  const getEventTypeLabel = (type: string) => {
+  const getEventTypeLabel = (type: number) => {
     switch (type) {
-      case "injury":
-        return "Chấn thương";
-      case "illness":
+      case 0:
         return "Bệnh";
-      case "emergency":
+      case 1:
+        return "Chấn thương";
+      case 2:
         return "Khẩn cấp";
       default:
         return "Khác";
     }
   };
 
-  const getEventTypeColor = (type: string) => {
+  const getEventTypeColor = (type: number) => {
     switch (type) {
-      case "injury":
+      case 1:
         return "warning";
-      case "illness":
+      case 0:
         return "info";
-      case "emergency":
+      case 2:
         return "error";
       default:
         return "default";
     }
   };
 
-  const getOutcomeLabel = (outcome: string) => {
-    switch (outcome) {
-      case "resolved":
+  const getStatusLabel = (status: number) => {
+    switch (status) {
+      case 0:
+        return "Đang theo dõi";
+      case 1:
         return "Đã ổn định";
-      case "referred":
-        return "Chuyển tuyến";
-      case "sent home":
-        return "Cho về nhà";
-      case "hospitalized":
-        return "Nhập viện";
       default:
-        return outcome;
+        return "Không xác định";
     }
   };
 
-  const getOutcomeColor = (
-    outcome: string
+  const getStatusColor = (
+    status: number
   ): "success" | "warning" | "error" | "default" => {
-    switch (outcome) {
-      case "resolved":
+    switch (status) {
+      case 1:
         return "success";
-      case "referred":
+      case 0:
         return "warning";
-      case "sent home":
-        return "warning";
-      case "hospitalized":
-        return "error";
       default:
         return "default";
     }
@@ -104,7 +96,7 @@ const MedicalEventsList: React.FC<MedicalEventsListProps> = ({
         <TextField
           fullWidth
           variant="outlined"
-          placeholder="Tìm kiếm theo mô tả, loại sự kiện, hoặc triệu chứng..."
+          placeholder="Tìm kiếm theo họ tên, mô tả, lớp học..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           InputProps={{
@@ -128,10 +120,11 @@ const MedicalEventsList: React.FC<MedicalEventsListProps> = ({
               <TableRow>
                 <TableCell>Thời gian</TableCell>
                 <TableCell>Học sinh</TableCell>
+                <TableCell>Lớp</TableCell>
                 <TableCell>Loại</TableCell>
                 <TableCell>Mô tả</TableCell>
                 <TableCell>Xử lý</TableCell>
-                <TableCell>Kết quả</TableCell>
+                <TableCell>Trạng thái</TableCell>
                 <TableCell align="center">Thao tác</TableCell>
               </TableRow>
             </TableHead>
@@ -139,22 +132,27 @@ const MedicalEventsList: React.FC<MedicalEventsListProps> = ({
               {filteredEvents.map((event) => (
                 <TableRow key={event.id} hover>
                   <TableCell>
-                    {format(new Date(event.date), "dd/MM/yyyy HH:mm")}
+                    {format(parseISO(event.incidentDate), "dd/MM/yyyy HH:mm")}
                   </TableCell>
-                  <TableCell>ID: {event.studentId}</TableCell>
+                  <TableCell>{event.student.fullName}</TableCell>
+                  <TableCell>{event.student.class}</TableCell>
                   <TableCell>
                     <Chip
-                      label={getEventTypeLabel(event.type)}
-                      color={getEventTypeColor(event.type) as any}
+                      label={getEventTypeLabel(event.incidentType)}
+                      color={getEventTypeColor(event.incidentType) as any}
                       size="small"
                     />
                   </TableCell>
                   <TableCell>{event.description}</TableCell>
-                  <TableCell>{event.treatment.slice(0, 30)}...</TableCell>
+                  <TableCell>
+                    {event.actionsTaken.length > 30
+                      ? `${event.actionsTaken.slice(0, 30)}...`
+                      : event.actionsTaken}
+                  </TableCell>
                   <TableCell>
                     <Chip
-                      label={getOutcomeLabel(event.outcome)}
-                      color={getOutcomeColor(event.outcome)}
+                      label={getStatusLabel(event.status)}
+                      color={getStatusColor(event.status)}
                       size="small"
                     />
                   </TableCell>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Typography,
   Box,
@@ -16,81 +16,45 @@ import {
   FormControlLabel,
   Divider,
   Stack,
+  CircularProgress,
 } from "@mui/material";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
-import { MedicalEvent, MedicationGiven, Student } from "../../../models/types";
-import { mockMedicalSupplies } from "../../../utils/mockData";
+import { CreateMedicalIncidentRequest, MedicalSupplyUsage } from "../../../models/types";
 import { toast } from "react-toastify";
+import instance from "../../../utils/axiosConfig";
 
-// Mock data for students - in a real app, this would come from API
-const mockStudents: Student[] = [
-  {
-    id: "student1",
-    firstName: "Nguyễn",
-    lastName: "Văn A",
-    dateOfBirth: new Date("2010-05-15"),
-    gender: "male",
-    grade: "7",
-    class: "7A",
-    parentId: "parent1",
-    healthRecordId: "hr1",
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: "student2",
-    firstName: "Trần",
-    lastName: "Thị B",
-    dateOfBirth: new Date("2011-03-22"),
-    gender: "female",
-    grade: "6",
-    class: "6B",
-    parentId: "parent2",
-    healthRecordId: "hr2",
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: "student3",
-    firstName: "Lê",
-    lastName: "Văn C",
-    dateOfBirth: new Date("2009-11-10"),
-    gender: "male",
-    grade: "8",
-    class: "8C",
-    parentId: "parent3",
-    healthRecordId: "hr3",
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-];
+// Student interface for form
+interface Student {
+  id: string;
+  studentCode: string;
+  fullName: string;
+  dateOfBirth: string;
+  gender: number;
+  class: string;
+  schoolYear: string;
+  image: string;
+}
 
-// Common symptoms for quick selection
-const commonSymptoms = [
-  "Sốt",
-  "Đau đầu",
-  "Đau bụng",
-  "Buồn nôn",
-  "Nôn",
-  "Đau họng",
-  "Ho",
-  "Chảy máu",
-  "Xước da",
-  "Bầm tím",
-  "Đau tai",
-  "Mệt mỏi",
-  "Chóng mặt",
-  "Khó thở",
-];
+// Supply interface matching the API response
+interface MedicalSupplier {
+  id: string;
+  supplyName: string;
+  supplyType: number;
+  unit: string;
+  quantity: number;
+  supplier: string;
+  image: string[];
+}
 
 interface MedicalEventFormProps {
   nurseId: string;
   nurseName: string;
-  initialEvent?: MedicalEvent;
-  onSave: (event: MedicalEvent) => void;
+  initialEvent?: any;
+  onSave: (event: any) => void; // Changed to 'any' to handle both create and update requests
   onCancel: () => void;
+  isEditMode?: boolean;
 }
 
 const MedicalEventForm: React.FC<MedicalEventFormProps> = ({
@@ -99,386 +63,654 @@ const MedicalEventForm: React.FC<MedicalEventFormProps> = ({
   initialEvent,
   onSave,
   onCancel,
+  isEditMode = false,
 }) => {
-  const isEditing = !!initialEvent;
-  const [student, setStudent] = useState<Student | null>(
-    isEditing
-      ? mockStudents.find((s) => s.id === initialEvent.studentId) || null
-      : null
+  const [loading, setLoading] = useState(false);
+  const [loadingSupplies, setLoadingSupplies] = useState(false);
+  const [students, setStudents] = useState<Student[]>([]);
+  const [studentSearchText, setStudentSearchText] = useState("");
+  const [medicalSuppliers, setMedicalSuppliers] = useState<MedicalSupplier[]>([]);
+  
+  const [student, setStudent] = useState<Student | null>(initialEvent ? {
+    id: initialEvent.student.id,
+    studentCode: initialEvent.student.studentCode,
+    fullName: initialEvent.student.fullName,
+    dateOfBirth: initialEvent.student.dateOfBirth,
+    gender: initialEvent.student.gender,
+    class: initialEvent.student.class,
+    schoolYear: initialEvent.student.schoolYear,
+    image: initialEvent.student.image || ""
+  } : null);
+  const [incidentDate, setIncidentDate] = useState<Date>(
+    initialEvent ? new Date(initialEvent.incidentDate) : new Date()
   );
-  const [eventDate, setEventDate] = useState<Date>(
-    isEditing ? new Date(initialEvent.date) : new Date()
-  );
-  const [eventType, setEventType] = useState<string>(
-    isEditing ? initialEvent.type : "injury"
+  const [incidentType, setIncidentType] = useState<number>(
+    initialEvent ? initialEvent.incidentType : 0
   );
   const [description, setDescription] = useState<string>(
-    isEditing ? initialEvent.description : ""
+    initialEvent ? initialEvent.description : ""
   );
-  const [symptoms, setSymptoms] = useState<string[]>(
-    isEditing ? initialEvent.symptoms : []
-  );
-  const [treatment, setTreatment] = useState<string>(
-    isEditing ? initialEvent.treatment : ""
+  const [actionsTaken, setActionsTaken] = useState<string>(
+    initialEvent ? initialEvent.actionsTaken : ""
   );
   const [outcome, setOutcome] = useState<string>(
-    isEditing ? initialEvent.outcome : "resolved"
+    initialEvent ? initialEvent.outcome : ""
+  );
+  const [status, setStatus] = useState<number>(
+    initialEvent ? initialEvent.status : 0
   );
   const [notifyParent, setNotifyParent] = useState<boolean>(
-    isEditing ? initialEvent.notifiedParent : false
+    initialEvent ? initialEvent.parentNotified : false
   );
-  const [notes, setNotes] = useState<string>(
-    isEditing ? initialEvent.notes || "" : ""
+  const [medicalSupplyUsages, setMedicalSupplyUsages] = useState<MedicalSupplyUsage[]>(
+    initialEvent && initialEvent.medicalSupplyUsages ? [...initialEvent.medicalSupplyUsages] : []
   );
-  const [medicationsGiven, setMedicationsGiven] = useState<MedicationGiven[]>(
-    isEditing ? initialEvent.medicationsGiven : []
-  );
-
-  // Supplies used in treatment
-  const [selectedSupply, setSelectedSupply] = useState<string>("");
-  const [selectedMedication, setSelectedMedication] = useState<string>("");
-  const [selectedMedicationDosage, setSelectedMedicationDosage] =
-    useState<string>("");
-  const [selectedSupplyQuantity, setSelectedSupplyQuantity] =
-    useState<number>(1);
+  
+  // Supply usage states
+  const [selectedSupplyId, setSelectedSupplyId] = useState<string>("");
+  const [selectedSupplyQuantity, setSelectedSupplyQuantity] = useState<number>(1);
 
   // Form validation
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  
+  // Fetch all students on component mount
+  useEffect(() => {
+    const fetchStudents = async () => {
+      setLoading(true);
+      try {
+        const response = await instance.get('/api/Student/get-all-students');
+        setStudents(response.data);
+      } catch (error) {
+        console.error('Error fetching students:', error);
+        toast.error('Không thể tải danh sách học sinh');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchStudents();
+  }, []);
+  
+  // Fetch all medical suppliers on component mount
+  useEffect(() => {
+    const fetchMedicalSuppliers = async () => {
+      setLoadingSupplies(true);
+      try {
+        const response = await instance.get('/api/MedicalSupplier/get-all-suppliers');
+        setMedicalSuppliers(response.data);
+      } catch (error) {
+        console.error('Error fetching medical suppliers:', error);
+        toast.error('Không thể tải danh sách vật tư y tế');
+      } finally {
+        setLoadingSupplies(false);
+      }
+    };
+    
+    fetchMedicalSuppliers();
+  }, []);
+
+  // Student search functionality
+  const searchStudent = async (searchText: string) => {
+    if (!searchText || searchText.length < 1) {
+      setStudents([]);
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      // Fetch students from API
+      const response = await instance.get('/api/Student/get-all-students');
+      const allStudents = response.data;
+      
+      // Filter students based on search query
+      const filteredResults = allStudents.filter((student: Student) => 
+        student.fullName.toLowerCase().includes(searchText.toLowerCase()) ||
+        student.studentCode.toLowerCase().includes(searchText.toLowerCase()) ||
+        student.class?.toLowerCase().includes(searchText.toLowerCase())
+      );
+      
+      setStudents(filteredResults);
+    } catch (error) {
+      console.error("Error searching students:", error);
+      toast.error("Không thể tải danh sách học sinh");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleStudentChange = async (value: Student | null) => {
+    setStudent(value);
+    if (value) {
+      try {
+        // In a real app, we would fetch student details including health record
+        // const response = await axios.get(`/api/Student/get-student-by-id/${value.id}`);
+        // const studentData = response.data;
+        // Additional logic here if needed
+      } catch (error) {
+        console.error("Error fetching student details:", error);
+      }
+    }
+  };
+
+  const addSupplyUsage = async () => {
+    if (!selectedSupplyId) {
+      setErrors({...errors, supply: "Vui lòng chọn vật tư y tế"});
+      return;
+    }
+    
+    if (selectedSupplyQuantity <= 0) {
+      setErrors({...errors, supplyQuantity: "Số lượng phải lớn hơn 0"});
+      return;
+    }
+    
+    try {
+      // Get detailed information about the selected medical supply
+      const response = await instance.get(`/api/MedicalSupplier/get-supplier-by-id/${selectedSupplyId}`);
+      const supplyDetails = response.data;
+      
+      // Check if we have enough quantity available
+      if (supplyDetails.quantity < selectedSupplyQuantity) {
+        setErrors({
+          ...errors, 
+          supplyQuantity: `Chỉ còn ${supplyDetails.quantity} ${supplyDetails.unit} trong kho`
+        });
+        return;
+      }
+      
+      // Check if this supply is already in our list (in case of edit mode)
+      const existingSupplyIndex = medicalSupplyUsages.findIndex(
+        supply => supply.supplyId === selectedSupplyId
+      );
+      
+      if (existingSupplyIndex >= 0 && initialEvent?.medicalSupplyUsages) {
+        // Check if it's an original supply in edit mode
+        const isOriginalSupply = initialEvent.medicalSupplyUsages.some(
+          (supply: any) => supply.supplyId === selectedSupplyId
+        );
+        
+        if (isOriginalSupply) {
+          setErrors({
+            ...errors,
+            supply: "Vật tư này đã được sử dụng trước đây, vui lòng chọn vật tư khác"
+          });
+          return;
+        }
+        
+        // Update existing supply quantity if it's a new supply
+        const updatedSupplies = [...medicalSupplyUsages];
+        updatedSupplies[existingSupplyIndex].quantity += selectedSupplyQuantity;
+        
+        // Update the actions taken field with the supply usage information
+        setActionsTaken(prev => {
+          const supplyInfo = `Sử dụng thêm ${selectedSupplyQuantity} ${supplyDetails.unit} ${supplyDetails.supplyName}`;
+          return prev ? `${prev}, ${supplyInfo}` : supplyInfo;
+        });
+        
+        setMedicalSupplyUsages(updatedSupplies);
+      } else {
+        // Add the supply to the list
+        const newSupplyUsage: MedicalSupplyUsage = {
+          supplyId: selectedSupplyId,
+          quantity: selectedSupplyQuantity
+        };
+        
+        // Update the actions taken field with the supply usage information
+        setActionsTaken(prev => {
+          const supplyInfo = `Sử dụng ${selectedSupplyQuantity} ${supplyDetails.unit} ${supplyDetails.supplyName}`;
+          return prev ? `${prev}, ${supplyInfo}` : supplyInfo;
+        });
+        
+        setMedicalSupplyUsages([...medicalSupplyUsages, newSupplyUsage]);
+      }
+      
+      setSelectedSupplyId("");
+      setSelectedSupplyQuantity(1);
+      
+      // Clear any supply errors
+      const { supply, supplyQuantity, ...otherErrors } = errors;
+      setErrors(otherErrors);
+    } catch (error) {
+      console.error('Error fetching medical supply details:', error);
+      toast.error('Không thể tải thông tin vật tư y tế');
+    }
+  };
+
+  const removeSupplyUsage = (index: number) => {
+    // In edit mode, check if this is an original supply that can't be removed
+    if (isEditMode && initialEvent?.medicalSupplyUsages) {
+      const supplyToRemove = medicalSupplyUsages[index];
+      
+      // Check if the supply to remove is from the original event
+      const isOriginalSupply = initialEvent.medicalSupplyUsages.some(
+        (supply: any) => supply.supplyId === supplyToRemove.supplyId
+      );
+      
+      if (isOriginalSupply) {
+        toast.error("Không thể xóa vật tư đã được sử dụng trong sự kiện này trước đây");
+        return;
+      }
+    }
+    
+    // Remove the supply if it's new or if we're not in edit mode
+    const updatedSupplies = [...medicalSupplyUsages];
+    updatedSupplies.splice(index, 1);
+    setMedicalSupplyUsages(updatedSupplies);
+  };
 
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
-
+    
     if (!student) {
       newErrors.student = "Vui lòng chọn học sinh";
     }
-
+    
     if (!description.trim()) {
       newErrors.description = "Vui lòng nhập mô tả sự kiện";
     }
-
-    if (!treatment.trim()) {
-      newErrors.treatment = "Vui lòng nhập biện pháp xử lý";
+    
+    if (!actionsTaken.trim()) {
+      newErrors.actionsTaken = "Vui lòng nhập hành động đã thực hiện";
     }
-
-    if (symptoms.length === 0) {
-      newErrors.symptoms = "Vui lòng chọn ít nhất một triệu chứng";
+    
+    if (!outcome.trim()) {
+      newErrors.outcome = "Vui lòng nhập kết quả";
     }
-
+    
+    // Check medical supply usages
+    if (medicalSupplyUsages.length > 0) {
+      for (const usage of medicalSupplyUsages) {
+        const supplierInfo = medicalSuppliers.find(s => s.id === usage.supplyId);
+        
+        if (supplierInfo && usage.quantity > supplierInfo.quantity) {
+          newErrors.supplyQuantity = `Vật tư "${supplierInfo.supplyName}" không đủ số lượng (còn ${supplierInfo.quantity} ${supplierInfo.unit})`;
+          break;
+        }
+      }
+    }
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleMedicationAdd = () => {
-    if (!selectedMedication || !selectedMedicationDosage) return;
-
-    // Create a new medication given entry
-    const newMedicationGiven: MedicationGiven = {
-      id: `med-${Date.now()}`,
-      medicationId: selectedMedication,
-      medicationName: selectedMedication, // In a real app, would look up the name
-      dosage: selectedMedicationDosage,
-      time: new Date(),
-      administeredBy: nurseName,
-    };
-
-    // Add to the medications given array
-    setMedicationsGiven([...medicationsGiven, newMedicationGiven]);
-
-    // Clear the form fields
-    setSelectedMedication("");
-    setSelectedMedicationDosage("");
-  };
-
-  const handleSupplyAdd = () => {
-    if (!selectedSupply) return;
-
-    // In a real app, we would record this in the database
-    // and update inventory counts
-
-    // For now, just add to treatment text
-    const supplyInfo = mockMedicalSupplies.find((s) => s.id === selectedSupply);
-    if (supplyInfo) {
-      setTreatment(
-        treatment +
-          (treatment ? ", " : "") +
-          `Sử dụng ${selectedSupplyQuantity} ${supplyInfo.unit} ${supplyInfo.name}`
-      );
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
     }
-
-    setSelectedSupply("");
-    setSelectedSupplyQuantity(1);
-  };
-
-  const handleSaveEvent = () => {
-    if (!validateForm()) return;
-
-    if (!student) return; // TypeScript safety
-
-    const eventData: MedicalEvent = {
-      id: initialEvent?.id || "",
-      studentId: student.id,
-      date: eventDate,
-      type: eventType as "injury" | "illness" | "emergency" | "other",
-      description,
-      symptoms,
-      treatment,
-      medicationsGiven,
-      outcome: outcome as
-        | "resolved"
-        | "referred"
-        | "sent home"
-        | "hospitalized",
-      attendedBy: nurseName,
-      notifiedParent: notifyParent,
-      notifiedAt: notifyParent ? new Date() : undefined,
-      parentResponse: "",
-      notes,
-    };
-
-    onSave(eventData);
-    toast.success("Đã tạo sự kiện y tế mới!");
+    
+    if (!student) {
+      return; // This should be caught by validation
+    }
+    
+    setLoading(true);
+    
+    try {
+      // For update mode, only send the allowed fields
+      if (isEditMode && initialEvent) {
+        const updateData = {
+          id: initialEvent.id,
+          incidentType: incidentType,
+          incidentDate: incidentDate.toISOString(),
+          description: description,
+          actionsTaken: actionsTaken,
+          outcome: outcome,
+          status: status,
+          parentNotified: notifyParent,
+          parentNotificationDate: notifyParent ? new Date().toISOString() : initialEvent.parentNotificationDate,
+          // Only include new supply usages that aren't in the original event
+          medicalSupplyUsage: medicalSupplyUsages.filter(
+            newSupply => !initialEvent.medicalSupplyUsages?.some(
+              (origSupply: any) => origSupply.supplyId === newSupply.supplyId && origSupply.quantity === newSupply.quantity
+            )
+          )
+        };
+        
+        // Update parent notification action text
+        if (notifyParent && !initialEvent.parentNotified) {
+          if (!updateData.actionsTaken.includes("Đã thông báo cho phụ huynh")) {
+            updateData.actionsTaken += "\nĐã thông báo cho phụ huynh.";
+          }
+        }
+        
+        onSave(updateData);
+      } else {
+        // Create new incident
+        const incidentData = {
+          studentId: student.id,
+          incidentType: incidentType,
+          incidentDate: incidentDate.toISOString(),
+          description: description,
+          actionsTaken: actionsTaken,
+          outcome: outcome,
+          status: status,
+          medicalSupplyUsage: medicalSupplyUsages
+        };
+        
+        // If parent notification is enabled for new incidents
+        if (notifyParent) {
+          if (!actionsTaken.includes("Đã thông báo cho phụ huynh")) {
+            incidentData.actionsTaken += "\nĐã thông báo cho phụ huynh.";
+          }
+          
+          // These fields are not in the CreateMedicalIncidentRequest type but might be used by the API
+          (incidentData as any).parentNotified = true;
+          (incidentData as any).parentNotificationDate = new Date().toISOString();
+        }
+        
+        // When creating, we should also update supplier quantities
+        if (medicalSupplyUsages.length > 0) {
+          for (const usage of medicalSupplyUsages) {
+            try {
+              // Get current supplier details
+              const supplierResponse = await instance.get(`/api/MedicalSupplier/get-supplier-by-id/${usage.supplyId}`);
+              const supplierData = supplierResponse.data;
+              
+              // Calculate new quantity
+              const newQuantity = Math.max(0, supplierData.quantity - usage.quantity);
+              
+              // Update the supplier inventory
+              await instance.put(`/api/MedicalSupplier/update-supplier/${usage.supplyId}`, {
+                supplyName: supplierData.supplyName,
+                supplyType: supplierData.supplyType,
+                unit: supplierData.unit,
+                quantity: newQuantity,
+                supplier: supplierData.supplier,
+                image: supplierData.image
+              });
+            } catch (err) {
+              console.error(`Error updating supply ${usage.supplyId}:`, err);
+            }
+          }
+        }
+        
+        onSave(incidentData);
+      }
+      
+      // Show success message
+      toast.success(isEditMode ? "Đã cập nhật sự kiện y tế!" : "Đã ghi nhận sự kiện y tế mới!");
+    } catch (error) {
+      console.error(isEditMode ? "Error updating medical incident:" : "Error creating medical incident:", error);
+      toast.error(isEditMode ? "Có lỗi xảy ra khi cập nhật sự kiện y tế" : "Có lỗi xảy ra khi tạo sự kiện y tế");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <Paper sx={{ p: 3 }}>
-      <Typography variant="h5" gutterBottom>
-        {isEditing ? "Cập nhật sự kiện y tế" : "Ghi nhận sự kiện y tế mới"}
+      <Typography variant="h5" sx={{ mb: 3 }}>
+        {initialEvent ? 'Cập nhật sự kiện y tế' : 'Ghi nhận sự kiện y tế mới'}
       </Typography>
+
       <Divider sx={{ mb: 3 }} />
 
-      <Stack spacing={3}>
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: { xs: "column", md: "row" },
-            gap: 2,
-          }}
-        >
-          <Box sx={{ flex: 1 }}>
+      <form onSubmit={handleSubmit}>
+        <Stack spacing={3}>
+          {/* Student Selection */}
+          <FormControl error={!!errors.student} fullWidth>
             <Autocomplete
-              options={mockStudents}
-              getOptionLabel={(option) =>
-                `${option.lastName} ${option.firstName} - Lớp ${option.class}`
-              }
+              id="student-select"
+              options={students}
+              loading={loading}
               value={student}
-              onChange={(_, newValue) => setStudent(newValue)}
+              onChange={(_, value) => handleStudentChange(value)}
+              onInputChange={(_, value) => {
+                setStudentSearchText(value);
+                searchStudent(value);
+              }}
+              getOptionLabel={(option) => `${option.fullName} - ${option.studentCode} - Lớp ${option.class}`}
+              renderOption={(props, option) => (
+                <li {...props}>
+                  <Box>
+                    <Typography variant="body1">{option.fullName}</Typography>
+                    <Typography variant="caption">
+                      {option.studentCode} | Lớp {option.class} | Khóa {option.schoolYear}
+                    </Typography>
+                  </Box>
+                </li>
+              )}
               renderInput={(params) => (
                 <TextField
                   {...params}
                   label="Chọn học sinh"
-                  variant="outlined"
-                  required
+                  placeholder="Nhập tên hoặc mã học sinh để tìm kiếm"
                   error={!!errors.student}
-                  helperText={errors.student}
+                  helperText={errors.student || "Nhập tên học sinh để tìm kiếm"}
+                  InputProps={{
+                    ...params.InputProps,
+                    endAdornment: (
+                      <>
+                        {loading ? <CircularProgress size={20} /> : null}
+                        {params.InputProps.endAdornment}
+                      </>
+                    ),
+                    readOnly: isEditMode
+                  }}
+                  disabled={isEditMode}
                 />
               )}
+              isOptionEqualToValue={(option, value) => option.id === value.id}
+              filterOptions={(x) => x} // Disable client-side filtering as we're using server-side search
+              disabled={isEditMode}
             />
-          </Box>
+            {isEditMode && student && (
+              <FormHelperText>
+                Không thể thay đổi học sinh trong chế độ sửa
+              </FormHelperText>
+            )}
+          </FormControl>
 
-          <Box sx={{ flex: 1 }}>
-            <LocalizationProvider dateAdapter={AdapterDateFns}>
-              <DateTimePicker
-                label="Thời gian xảy ra"
-                value={eventDate}
-                onChange={(newValue) => setEventDate(newValue || new Date())}
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                    variant: "outlined",
-                  },
-                }}
-              />
-            </LocalizationProvider>
-          </Box>
-        </Box>
-
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: { xs: "column", md: "row" },
-            gap: 2,
-          }}
-        >
-          <Box sx={{ flex: 1 }}>
-            <FormControl fullWidth required>
-              <InputLabel id="event-type-label">Loại sự kiện</InputLabel>
-              <Select
-                labelId="event-type-label"
-                value={eventType}
-                label="Loại sự kiện"
-                onChange={(e) => setEventType(e.target.value)}
-              >
-                <MenuItem value="injury">Chấn thương</MenuItem>
-                <MenuItem value="illness">Bệnh</MenuItem>
-                <MenuItem value="emergency">Khẩn cấp</MenuItem>
-                <MenuItem value="other">Khác</MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
-
-          <Box sx={{ flex: 1 }}>
-            <FormControl fullWidth required>
-              <InputLabel id="outcome-label">Kết quả xử lý</InputLabel>
-              <Select
-                labelId="outcome-label"
-                value={outcome}
-                label="Kết quả xử lý"
-                onChange={(e) => setOutcome(e.target.value)}
-              >
-                <MenuItem value="resolved">Đã ổn định</MenuItem>
-                <MenuItem value="referred">Chuyển tuyến</MenuItem>
-                <MenuItem value="sent home">Cho về nhà</MenuItem>
-                <MenuItem value="hospitalized">Nhập viện</MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
-        </Box>
-
-        <TextField
-          fullWidth
-          label="Mô tả chi tiết"
-          multiline
-          rows={2}
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          required
-          error={!!errors.description}
-          helperText={errors.description}
-        />
-
-        <Autocomplete
-          multiple
-          freeSolo
-          options={commonSymptoms}
-          value={symptoms}
-          onChange={(_, newValue) => setSymptoms(newValue)}
-          renderTags={(value, getTagProps) =>
-            value.map((option, index) => (
-              <Chip
-                label={option}
-                {...getTagProps({ index })}
-                color="primary"
-                variant="outlined"
-                size="small"
-              />
-            ))
-          }
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label="Triệu chứng"
-              placeholder="Thêm triệu chứng"
-              variant="outlined"
-              required
-              error={!!errors.symptoms}
-              helperText={errors.symptoms}
+          {/* Incident DateTime */}
+          <LocalizationProvider dateAdapter={AdapterDateFns}>
+            <DateTimePicker
+              label="Thời gian xảy ra"
+              value={incidentDate}
+              onChange={(newValue) => newValue && setIncidentDate(newValue)}
+              slotProps={{
+                textField: { fullWidth: true }
+              }}
+              disabled={isEditMode}
             />
-          )}
-        />
+            {isEditMode && (
+              <FormHelperText>
+                Không thể thay đổi thời gian xảy ra trong chế độ sửa
+              </FormHelperText>
+            )}
+          </LocalizationProvider>
 
-        <Box>
-          <Typography variant="subtitle1" gutterBottom>
-            Vật tư y tế đã sử dụng
-          </Typography>
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: { xs: "column", md: "row" },
-              gap: 2,
-            }}
-          >
-            <Box sx={{ flex: 2 }}>
-              <FormControl fullWidth>
+          {/* Incident Type */}
+          <FormControl fullWidth>
+            <InputLabel id="incident-type-label">Loại sự kiện</InputLabel>
+            <Select
+              labelId="incident-type-label"
+              id="incident-type"
+              value={incidentType}
+              label="Loại sự kiện"
+              onChange={(e) => setIncidentType(e.target.value as number)}
+              disabled={isEditMode}
+            >
+              <MenuItem value={0}>Bệnh</MenuItem>
+              <MenuItem value={1}>Chấn thương</MenuItem>
+              <MenuItem value={2}>Khẩn cấp</MenuItem>
+            </Select>
+            {isEditMode && (
+              <FormHelperText>
+                Không thể thay đổi loại sự kiện trong chế độ sửa
+              </FormHelperText>
+            )}
+          </FormControl>
+
+          {/* Description */}
+          <TextField
+            label="Mô tả sự kiện"
+            multiline
+            rows={3}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            error={!!errors.description}
+            helperText={errors.description}
+            fullWidth
+          />
+
+          {/* Actions Taken */}
+          <TextField
+            label="Hành động đã thực hiện"
+            multiline
+            rows={3}
+            value={actionsTaken}
+            onChange={(e) => setActionsTaken(e.target.value)}
+            error={!!errors.actionsTaken}
+            helperText={errors.actionsTaken}
+            fullWidth
+          />
+
+          {/* Outcome */}
+          <TextField
+            label="Kết quả"
+            multiline
+            rows={2}
+            value={outcome}
+            onChange={(e) => setOutcome(e.target.value)}
+            error={!!errors.outcome}
+            helperText={errors.outcome}
+            fullWidth
+          />
+
+          {/* Status */}
+          <FormControl fullWidth>
+            <InputLabel id="status-label">Trạng thái</InputLabel>
+            <Select
+              labelId="status-label"
+              id="status"
+              value={status}
+              label="Trạng thái"
+              onChange={(e) => setStatus(e.target.value as number)}
+            >
+              <MenuItem value={0}>Đang theo dõi</MenuItem>
+              <MenuItem value={1}>Đã ổn định</MenuItem>
+            </Select>
+          </FormControl>
+
+          {/* Medical Supply Usage */}
+          <Paper variant="outlined" sx={{ p: 2 }}>
+            <Typography variant="subtitle1" sx={{ mb: 2 }}>
+              Vật tư y tế đã sử dụng
+            </Typography>
+            
+            <Box sx={{ display: "flex", mb: 2, gap: 2 }}>
+              <FormControl fullWidth error={!!errors.supply} sx={{ flex: 2 }}>
                 <InputLabel id="supply-label">Chọn vật tư</InputLabel>
                 <Select
                   labelId="supply-label"
-                  value={selectedSupply}
+                  id="supply-select"
+                  value={selectedSupplyId}
                   label="Chọn vật tư"
-                  onChange={(e) => setSelectedSupply(e.target.value)}
+                  onChange={(e) => setSelectedSupplyId(e.target.value as string)}
+                  disabled={loadingSupplies}
                 >
-                  {mockMedicalSupplies.map((supply) => (
-                    <MenuItem key={supply.id} value={supply.id}>
-                      {supply.name} ({supply.quantity} {supply.unit})
-                    </MenuItem>
-                  ))}
+                  {loadingSupplies ? (
+                    <MenuItem disabled>Đang tải...</MenuItem>
+                  ) : (
+                    medicalSuppliers.map((supply) => (
+                      <MenuItem key={supply.id} value={supply.id}>
+                        {supply.supplyName} ({supply.quantity} {supply.unit})
+                      </MenuItem>
+                    ))
+                  )}
                 </Select>
+                {errors.supply && <FormHelperText>{errors.supply}</FormHelperText>}
               </FormControl>
-            </Box>
-            <Box sx={{ flex: 1 }}>
               <TextField
-                fullWidth
-                type="number"
                 label="Số lượng"
-                InputProps={{ inputProps: { min: 1 } }}
+                type="number"
                 value={selectedSupplyQuantity}
-                onChange={(e) =>
-                  setSelectedSupplyQuantity(parseInt(e.target.value) || 1)
-                }
+                onChange={(e) => setSelectedSupplyQuantity(parseInt(e.target.value) || 0)}
+                error={!!errors.supplyQuantity}
+                helperText={errors.supplyQuantity}
+                InputProps={{ inputProps: { min: 1 } }}
+                sx={{ flex: 1 }}
               />
-            </Box>
-            <Box sx={{ flex: 1 }}>
               <Button
-                variant="outlined"
-                fullWidth
-                onClick={handleSupplyAdd}
-                disabled={!selectedSupply}
+                variant="contained"
+                onClick={addSupplyUsage}
+                sx={{ alignSelf: "center", height: 56 }}
+                disabled={!selectedSupplyId || loadingSupplies}
               >
                 Thêm
               </Button>
             </Box>
+            
+            {medicalSupplyUsages.length > 0 && (
+              <Stack spacing={1}>
+                {medicalSupplyUsages.map((supply, index) => {
+                  const supplierInfo = medicalSuppliers.find(s => s.id === supply.supplyId);
+                  
+                  // Check if this is an original supply in edit mode
+                  const isOriginalSupply = isEditMode && initialEvent?.medicalSupplyUsages?.some(
+                    (origSupply: any) => origSupply.supplyId === supply.supplyId && origSupply.quantity === supply.quantity
+                  );
+                  
+                  return (
+                    <Box key={index} sx={{ 
+                      display: "flex", 
+                      alignItems: "center", 
+                      bgcolor: isOriginalSupply ? '#e8f4fd' : '#f5f5f5',
+                      p: 1, 
+                      borderRadius: 1,
+                      border: isOriginalSupply ? '1px solid #bbdefb' : 'none'
+                    }}>
+                      <Typography sx={{ flex: 1 }}>
+                        {supplierInfo ? supplierInfo.supplyName : supply.supplyId} - SL: {supply.quantity} {supplierInfo?.unit}
+                        {isOriginalSupply && <span style={{ color: '#0277bd', marginLeft: 8 }}>(Đã sử dụng trước đây)</span>}
+                      </Typography>
+                      {!isOriginalSupply && (
+                        <Button
+                          size="small"
+                          color="error"
+                          onClick={() => removeSupplyUsage(index)}
+                        >
+                          Xóa
+                        </Button>
+                      )}
+                    </Box>
+                  );
+                })}
+              </Stack>
+            )}
+          </Paper>
+
+          {/* Notify Parent */}
+          <FormControlLabel
+            control={
+              <Switch
+                checked={notifyParent}
+                onChange={(e) => setNotifyParent(e.target.checked)}
+              />
+            }
+            label="Thông báo cho phụ huynh"
+          />
+
+          {/* Form Actions */}
+          <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2, pt: 2 }}>
+            <Button 
+              variant="outlined" 
+              onClick={onCancel}
+              disabled={loading}
+            >
+              Quay lại
+            </Button>
+            <Button 
+              variant="contained" 
+              type="submit"
+              disabled={loading}
+              startIcon={loading ? <CircularProgress size={20} color="inherit" /> : null}
+            >
+              {loading ? "Đang xử lý..." : initialEvent ? "Cập nhật" : "Lưu"}
+            </Button>
           </Box>
-        </Box>
-
-        <TextField
-          fullWidth
-          label="Biện pháp xử lý"
-          multiline
-          rows={3}
-          value={treatment}
-          onChange={(e) => setTreatment(e.target.value)}
-          required
-          error={!!errors.treatment}
-          helperText={errors.treatment}
-        />
-
-        <TextField
-          fullWidth
-          label="Ghi chú"
-          multiline
-          rows={2}
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-        />
-
-        <FormControlLabel
-          control={
-            <Switch
-              checked={notifyParent}
-              onChange={(e) => setNotifyParent(e.target.checked)}
-            />
-          }
-          label="Thông báo cho phụ huynh"
-        />
-        {notifyParent && (
-          <FormHelperText>
-            Phụ huynh sẽ được thông báo về sự kiện y tế này
-          </FormHelperText>
-        )}
-
-        <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
-          <Button
-            variant="outlined"
-            color="inherit"
-            onClick={onCancel}
-            sx={{ mr: 2 }}
-          >
-            Hủy
-          </Button>
-          <Button variant="contained" color="primary" onClick={handleSaveEvent}>
-            {isEditing ? "Cập nhật" : "Lưu"}
-          </Button>
-        </Box>
-      </Stack>
+        </Stack>
+      </form>
     </Paper>
   );
 };
