@@ -212,8 +212,6 @@ const ParentMedicationDashboard: React.FC<ParentMedicationDashboardProps> = ({
         } else {
           console.error("Error message:", error.message);
         }
-
-        setError("Không thể tải danh sách thuốc. Vui lòng thử lại sau.");
       }
     },
     [parentId]
