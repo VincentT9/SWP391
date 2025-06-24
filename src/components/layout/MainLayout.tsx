@@ -133,22 +133,22 @@ const menuCategories: MenuCategory[] = [
       },
     ],
   },
-  // {
-  //   name: "Quản lý vật tư, trang thiết bị", // More educational term for "Thuốc & Vật tư"
-  //   role: ["MedicalStaff", "Admin"],
-  //   submenu: [
-  //     {
-  //       text: "Danh mục thuốc từ phụ huynh", // Simplified name
-  //       path: "/medication",
-  //       role: ["MedicalStaff"],
-  //     },
-  //     {
-  //       text: "Thiết bị y tế trường học", // More educational context
-  //       path: "/medical-supplier",
-  //       role: ["MedicalStaff", "Admin"],
-  //     },
-  //   ],
-  // },
+  {
+    name: "Quản lý vật tư, trang thiết bị", // More educational term for "Thuốc & Vật tư"
+    role: ["MedicalStaff", "Admin"],
+    submenu: [
+      {
+        text: "Danh mục thuốc từ phụ huynh", // Simplified name
+        path: "/medication",
+        role: ["MedicalStaff"],
+      },
+      {
+        text: "Thiết bị y tế trường học", // More educational context
+        path: "/medical-supplier",
+        role: ["MedicalStaff", "Admin"],
+      },
+    ],
+  },
   {
     name: "Gửi thuốc đến trường", // More action-oriented for parents
     path: "/medication",
