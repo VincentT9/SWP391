@@ -103,6 +103,7 @@ const menuCategories: MenuCategory[] = [
   },
   {
     name: "Sổ sức khỏe", // More friendly name for "Học sinh"
+    role: ["MedicalStaff", "Parent"],
     submenu: [
       {
         text: "Khám sức khỏe định kỳ", // More descriptive for medical staff
@@ -110,51 +111,58 @@ const menuCategories: MenuCategory[] = [
         role: ["MedicalStaff"],
       },
       {
-        text: "Theo dõi sức khỏe con", // Caring name for parent view
+        text: "Khai báo & theo dõi sức khỏe học sinh", // Caring name for parent view
         path: "/health-records",
         role: ["Parent"],
-      },
-      {
-        text: "Quản lý thông tin học sinh", // More comprehensive for admin
-        path: "/admin/students",
-        role: ["Admin"],
       },
     ],
   },
   {
     name: "Hoạt động y tế", // More comprehensive than "Sự kiện y tế"
+    role: ["MedicalStaff", "Admin", "Parent"],
     submenu: [
       {
-        text: "Sức khỏe học đường", // More specific description
+        text: "Sự kiện y tế học đường", // More specific description
         path: "/medical-events",
         role: ["MedicalStaff", "Admin", "Parent"],
       },
-    ],
-  },
-  {
-    name: "Y dược học đường", // More educational term for "Thuốc & Vật tư"
-    submenu: [
       {
-        text: "Danh mục thuốc", // Simplified name
-        path: "/medication",
-        role: ["MedicalStaff"],
-      },
-      {
-        text: "Đăng ký sử dụng thuốc", // More action-oriented for parents
-        path: "/medication",
-        role: ["Parent"],
-      },
-      {
-        text: "Thiết bị y tế trường học", // More educational context
-        path: "/medical-supplier",
+        text: "Quản lý tiêm phòng", // More specific description
+        path: "/vaccination",
         role: ["MedicalStaff", "Admin"],
       },
     ],
+  },
+  // {
+  //   name: "Quản lý vật tư, trang thiết bị", // More educational term for "Thuốc & Vật tư"
+  //   role: ["MedicalStaff", "Admin"],
+  //   submenu: [
+  //     {
+  //       text: "Danh mục thuốc từ phụ huynh", // Simplified name
+  //       path: "/medication",
+  //       role: ["MedicalStaff"],
+  //     },
+  //     {
+  //       text: "Thiết bị y tế trường học", // More educational context
+  //       path: "/medical-supplier",
+  //       role: ["MedicalStaff", "Admin"],
+  //     },
+  //   ],
+  // },
+  {
+    name: "Gửi thuốc đến trường", // More action-oriented for parents
+    path: "/medication",
+    role: ["Parent"],
   },
   {
     name: "Hệ thống", // Simpler than "Quản trị"
     role: ["Admin"],
     submenu: [
+      {
+        text: "Quản lý thông tin học sinh", // More comprehensive for admin
+        path: "/admin/students",
+        role: ["Admin"],
+      },
       {
         text: "Quản lý người dùng hệ thống", // More comprehensive
         path: "/user-management",
