@@ -102,76 +102,66 @@ const menuCategories: MenuCategory[] = [
     path: "/",
   },
   {
-    name: "Học sinh",
+    name: "Sổ sức khỏe", // More friendly name for "Học sinh"
     submenu: [
+     
       {
-        text: "Sức khỏe của tôi",
-        path: "/my-health",
-        role: ["student"],
-        badge: 1,
-      },
-      {
-        text: "Sức khỏe học sinh",
+        text: "Khám sức khỏe định kỳ", // More descriptive for medical staff
         path: "/health-check",
         role: ["MedicalStaff"],
       },
       {
-        text: "Hồ sơ sức khỏe học sinh",
+        text: "Theo dõi sức khỏe con", // Caring name for parent view
         path: "/health-records",
         role: ["Parent"],
       },
       {
-        text: "Quản lý học sinh",
+        text: "Quản lý thông tin học sinh", // More comprehensive for admin
         path: "/admin/students",
         role: ["Admin"],
       },
     ]
   },
   {
-    name: "Sự kiện y tế",
+    name: "Hoạt động y tế", // More comprehensive than "Sự kiện y tế"
     submenu: [
       {
-        text: "Sự kiện y tế",
+        text: "Sức khỏe học đường", // More specific description
         path: "/medical-events",
         role: ["MedicalStaff", "Admin", "Parent"],
       },
     ]
   },
   {
-    name: "Thuốc & Vật tư",
+    name: "Y dược học đường", // More educational term for "Thuốc & Vật tư"
     submenu: [
       {
-        text: "Quản lý thuốc",
+        text: "Danh mục thuốc", // Simplified name
         path: "/medication",
-        role: ["MedicalStaff", "Admin"],
+        role: ["MedicalStaff"],
       },
       {
-        text: "Gửi thuốc đến trường",
+        text: "Đăng ký sử dụng thuốc", // More action-oriented for parents
         path: "/medication",
         role: ["Parent"],
       },
       {
-        text: "Vật tư y tế",
+        text: "Thiết bị y tế trường học", // More educational context
         path: "/medical-supplier",
         role: ["MedicalStaff", "Admin"],
       }
     ]
   },
   {
-    name: "Quản trị",
+    name: "Hệ thống", // Simpler than "Quản trị"
     role: ["Admin"],
     submenu: [
       {
-        text: "Quản lý người dùng",
+        text: "Quản lý người dùng hệ thống", // More comprehensive
         path: "/user-management",
         role: ["Admin"],
       },
     ]
-  },
-  {
-    name: "Thông báo",
-    path: "/notifications",
-    badge: 3,
   },
 ];
 
@@ -344,8 +334,11 @@ const MainLayout = () => {
                     alignItems: 'center',
                   },
                   '& .Mui-selected': {
-                    color: '#ffffff',
+                    color: '#ffffff !important', // Ensure text remains visible when selected
                     fontWeight: 600,
+                    opacity: 1, // Make sure opacity is set to 1
+                    visibility: 'visible', // Explicitly set visibility
+                    zIndex: 1, // Ensure it's on top
                     '&::after': {
                       content: '""',
                       position: 'absolute',

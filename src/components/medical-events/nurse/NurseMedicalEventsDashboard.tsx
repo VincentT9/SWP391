@@ -5,7 +5,7 @@ import { MedicalEventForm, MedicalEventsList, MedicalEventDetails } from ".";
 import { MedicalIncident } from "../../../models/types";
 import axios from "../../../utils/axiosConfig";
 import { toast } from "react-toastify";
-
+import instance from "../../../utils/axiosConfig";
 interface NurseMedicalEventsDashboardProps {
   nurseId: string;
   nurseName: string;
@@ -27,7 +27,7 @@ const NurseMedicalEventsDashboard: React.FC<
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get('/api/medical-incident/all');
+      const response = await instance.get('/api/medical-incident/all');
       setEvents(response.data);
     } catch (err) {
       console.error("Error fetching incidents:", err);
@@ -69,7 +69,7 @@ const NurseMedicalEventsDashboard: React.FC<
     setError(null);
     
     try {
-      await axios.post('/api/medical-incident/create', incidentData);
+      await instance.post('/api/medical-incident/create', incidentData);
       // Refresh incidents list after creating a new one
       await fetchIncidents();
       
@@ -106,7 +106,7 @@ const NurseMedicalEventsDashboard: React.FC<
       };
       
       // Update the incident
-      await axios.post(`/api/medical-incident/update/${selectedEvent.id}`, updateData);
+      await instance.put(`/api/medical-incident/update/${selectedEvent.id}`, updateData);
       
       // If there are new medical supplies to add, process them
       if (incidentData.medicalSupplyUsage && incidentData.medicalSupplyUsage.length > 0) {
@@ -121,14 +121,14 @@ const NurseMedicalEventsDashboard: React.FC<
         // Update supplier quantities for any new supplies added
         for (const supply of newSupplies) {
           // Get current supplier details
-          const supplierResponse = await axios.get(`/api/MedicalSupplier/get-supplier-by-id/${supply.supplyId}`);
+          const supplierResponse = await instance.get(`/api/MedicalSupplier/get-supplier-by-id/${supply.supplyId}`);
           const supplierData = supplierResponse.data;
           
           // Calculate new quantity
           const newQuantity = Math.max(0, supplierData.quantity - supply.quantity);
           
           // Update the supplier inventory
-          await axios.put(`/api/MedicalSupplier/update-supplier/${supply.supplyId}`, {
+          await instance.put(`/api/MedicalSupplier/update-supplier/${supply.supplyId}`, {
             ...supplierData,
             quantity: newQuantity
           });

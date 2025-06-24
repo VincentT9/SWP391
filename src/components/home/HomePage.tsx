@@ -300,27 +300,7 @@ const HomePage = () => {
                   >
                     Khám phá ngay
                   </Button>
-                  <Button
-                    variant="outlined"
-                    component={Link}
-                    to="/login"
-                    size="large"
-                    sx={{
-                      px: 4,
-                      py: 1.5,
-                      borderRadius: 2,
-                      borderColor: colors.primary,
-                      color: colors.primary,
-                      textTransform: "none",
-                      fontSize: "1rem",
-                      "&:hover": {
-                        borderColor: colors.primaryDark,
-                        bgcolor: alpha(colors.primary, 0.05),
-                      },
-                    }}
-                  >
-                    Đăng nhập
-                  </Button>
+                  
                 </Stack>
 
                 {/* Stats */}
@@ -648,7 +628,7 @@ const HomePage = () => {
               >
                 <Box
                   component="img"
-                  src="https://musical-indigo-mongoose.myfilebase.com/ipfs/QmgjCagPUu3CR2VgwJe4M4w5JVHTJE6zxC2FGNdVLq52CX"
+                  src="https://matquocte.vn/wp-content/uploads/2023/08/gioi-thieu-doi-ngu-dnd-scaled.webp"
                   alt="Medical Team"
                   sx={{
                     width: "100%",
@@ -935,7 +915,7 @@ const HomePage = () => {
                   src="https://musical-indigo-mongoose.myfilebase.com/ipfs/QmPfdMNtJhcNfztJtxK88SXCrqWm54KuSWHKBW4TNhPr3x"
                   alt="FPTMED"
                   sx={{
-                    filter: "brightness(0) invert(1)",
+                   
                     width: "100%",
                     maxWidth: 250,
                     mx: "auto",
@@ -983,11 +963,11 @@ const HomePage = () => {
                           "&:hover": { bgcolor: alpha(colors.primary, 0.1) },
                         }}
                       >
-                        <Box
+                        {/* <Box
                           component="img"
                           src={`https://source.unsplash.com/random/20x20?${social}`}
                           sx={{ width: 20, height: 20, borderRadius: "50%" }}
-                        />
+                        /> */}
                       </IconButton>
                     )
                   )}
