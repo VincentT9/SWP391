@@ -267,7 +267,7 @@ const ParentMedicationDashboard: React.FC<ParentMedicationDashboardProps> = ({
   const handleViewLogs = async (requestId: string, studentId: string) => {
     setLoading(true);
     try {
-      const baseUrl = process.env.REACT_APP_BASE_URL || "http://localhost:5112";
+      const baseUrl = process.env.REACT_APP_BASE_URL;
 
       // Gọi API mới lấy danh sách nhật ký uống thuốc dựa vào studentId
       const response = await instance.get<MedicationDiaryEntry[]>(

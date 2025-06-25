@@ -102,7 +102,7 @@ const menuCategories: MenuCategory[] = [
     path: "/",
   },
   {
-    name: "Sổ sức khỏe", // More friendly name for "Học sinh"
+    name: "Sổ sức khỏe & chăm sóc học sinh", // More friendly name for "Học sinh"
     role: ["MedicalStaff", "Parent"],
     submenu: [
       {
@@ -115,12 +115,22 @@ const menuCategories: MenuCategory[] = [
         path: "/health-records",
         role: ["Parent"],
       },
+      {
+        text: "Gửi thuốc đến trường", // More action-oriented for parents
+        path: "/medication",
+        role: ["Parent"],
+      },
     ],
   },
   {
     name: "Hoạt động y tế", // More comprehensive than "Sự kiện y tế"
     role: ["MedicalStaff", "Admin", "Parent"],
     submenu: [
+      {
+        text: "Danh mục thuốc từ phụ huynh", // Simplified name
+        path: "/medication",
+        role: ["MedicalStaff"],
+      },
       {
         text: "Sự kiện y tế học đường", // More specific description
         path: "/medical-events",
@@ -136,23 +146,7 @@ const menuCategories: MenuCategory[] = [
   {
     name: "Quản lý vật tư, trang thiết bị", // More educational term for "Thuốc & Vật tư"
     role: ["MedicalStaff", "Admin"],
-    submenu: [
-      {
-        text: "Danh mục thuốc từ phụ huynh", // Simplified name
-        path: "/medication",
-        role: ["MedicalStaff"],
-      },
-      {
-        text: "Thiết bị y tế trường học", // More educational context
-        path: "/medical-supplier",
-        role: ["MedicalStaff", "Admin"],
-      },
-    ],
-  },
-  {
-    name: "Gửi thuốc đến trường", // More action-oriented for parents
-    path: "/medication",
-    role: ["Parent"],
+    path: "/medical-supplier",
   },
   {
     name: "Hệ thống", // Simpler than "Quản trị"

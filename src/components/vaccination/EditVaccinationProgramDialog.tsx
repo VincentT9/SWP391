@@ -12,18 +12,38 @@ import {
   Select,
   MenuItem,
   FormHelperText,
+  CircularProgress,
 } from "@mui/material";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { vi as viLocale } from "date-fns/locale";
-import { startOfDay, isBefore } from "date-fns"; // Thêm imports cần thiết
 import instance from "../../utils/axiosConfig";
 import { toast } from "react-toastify";
 
+// Định nghĩa interface cho dữ liệu campaign
+interface Campaign {
+  id: string;
+  name: string;
+  description: string;
+  status: number;
+  type: number;
+  createdBy: string;
+  updatedBy: string | null;
+  createAt: string;
+  updateAt: string;
+  schedules: any[];
+}
+
+// Định nghĩa interface cho form data
+interface FormData {
+  name: string;
+  description: string;
+  status: number;
+}
+
 interface EditVaccinationProgramDialogProps {
   open: boolean;
-  campaign: any;
+  campaign: Campaign | null;
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -31,28 +51,20 @@ interface EditVaccinationProgramDialogProps {
 const EditVaccinationProgramDialog: React.FC<
   EditVaccinationProgramDialogProps
 > = ({ open, campaign, onClose, onSuccess }) => {
-  const [editFormData, setEditFormData] = useState({
-    campaignName: "",
-    vaccineType: "",
+  const [editFormData, setEditFormData] = useState<FormData>({
+    name: "",
     description: "",
-    startDate: new Date(),
-    endDate: new Date(),
     status: 0,
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  // Lấy ngày hiện tại và reset về đầu ngày để so sánh chính xác
-  const today = startOfDay(new Date());
 
   // Update form data when campaign changes
   useEffect(() => {
     if (campaign) {
       setEditFormData({
-        campaignName: campaign.campaignName,
-        vaccineType: campaign.vaccineType,
+        name: campaign.name,
         description: campaign.description,
-        startDate: new Date(campaign.startDate),
-        endDate: new Date(campaign.endDate),
         status: campaign.status,
       });
     }
@@ -65,77 +77,32 @@ const EditVaccinationProgramDialog: React.FC<
   };
 
   // Handle form input changes
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setEditFormData((prev) => ({
-      ...prev,
+    setEditFormData({
+      ...editFormData,
       [name]: value,
-    }));
+    });
   };
 
-  // Handle select changes
+  // Handle status select change
   const handleStatusChange = (e: any) => {
-    setEditFormData((prev) => ({
-      ...prev,
+    setEditFormData({
+      ...editFormData,
       status: e.target.value,
-    }));
+    });
   };
 
-  // Handle date changes
-  const handleStartDateChange = (date: Date | null) => {
-    if (date) {
-      setEditFormData((prev) => ({
-        ...prev,
-        startDate: date,
-      }));
-    }
-  };
-
-  const handleEndDateChange = (date: Date | null) => {
-    if (date) {
-      setEditFormData((prev) => ({
-        ...prev,
-        endDate: date,
-      }));
-    }
-  };
-
-  // Validate form
+  // Validate form inputs
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
 
-    if (!editFormData.campaignName.trim()) {
-      newErrors.campaignName = "Tên chương trình là bắt buộc";
-    }
-
-    if (!editFormData.vaccineType.trim()) {
-      newErrors.vaccineType = "Loại vaccine là bắt buộc";
+    if (!editFormData.name.trim()) {
+      newErrors.name = "Tên chương trình là bắt buộc";
     }
 
     if (!editFormData.description.trim()) {
       newErrors.description = "Mô tả là bắt buộc";
-    }
-
-    if (!editFormData.startDate) {
-      newErrors.startDate = "Ngày bắt đầu là bắt buộc";
-    } else {
-      // Kiểm tra ngày bắt đầu phải từ ngày hiện tại trở đi
-      const startDateStart = startOfDay(new Date(editFormData.startDate));
-      if (isBefore(startDateStart, today)) {
-        newErrors.startDate = "Ngày bắt đầu phải từ ngày hiện tại trở đi";
-      }
-    }
-
-    if (!editFormData.endDate) {
-      newErrors.endDate = "Ngày kết thúc là bắt buộc";
-    } else if (
-      editFormData.startDate &&
-      editFormData.endDate &&
-      editFormData.endDate < editFormData.startDate
-    ) {
-      newErrors.endDate = "Ngày kết thúc phải sau ngày bắt đầu";
     }
 
     setErrors(newErrors);
@@ -144,7 +111,7 @@ const EditVaccinationProgramDialog: React.FC<
 
   // Submit form
   const handleSubmit = async () => {
-    if (!validateForm()) {
+    if (!validateForm() || !campaign) {
       return;
     }
 
@@ -152,45 +119,38 @@ const EditVaccinationProgramDialog: React.FC<
 
     try {
       const updateData = {
-        campaignName: editFormData.campaignName,
-        vaccineType: editFormData.vaccineType,
+        name: editFormData.name,
         description: editFormData.description,
-        startDate: editFormData.startDate.toISOString(),
-        endDate: editFormData.endDate.toISOString(),
         status: editFormData.status,
+        type: campaign.type, // Giữ nguyên type
       };
 
       await instance.put(
-        `/api/VaccCampaign/update-vacc-campaign/${campaign.id}`,
+        `/api/Campaign/update-campaign/${campaign.id}`,
         updateData
       );
 
       toast.success("Cập nhật chương trình tiêm chủng thành công!");
 
-      // Update campaign object with new values (for immediate UI update)
-      campaign.campaignName = editFormData.campaignName;
-      campaign.vaccineType = editFormData.vaccineType;
-      campaign.description = editFormData.description;
-      campaign.startDate = editFormData.startDate.toISOString();
-      campaign.endDate = editFormData.endDate.toISOString();
-      campaign.status = editFormData.status;
+      // Cập nhật đối tượng campaign với giá trị mới (cho UI cập nhật ngay lập tức)
+      if (campaign) {
+        campaign.name = editFormData.name;
+        campaign.description = editFormData.description;
+        campaign.status = editFormData.status;
+      }
 
-      // Close dialog and notify parent component
+      // Đóng dialog và thông báo cho component cha
       onSuccess();
       handleCloseDialog();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating campaign:", error);
-      toast.error(
-        "Không thể cập nhật chương trình tiêm chủng. Vui lòng thử lại."
-      );
+      const errorMessage =
+        error.response?.data?.message ||
+        "Không thể cập nhật chương trình tiêm chủng. Vui lòng thử lại.";
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  // Function to check if date should be disabled (any date before today)
-  const shouldDisableDate = (date: Date) => {
-    return isBefore(date, today);
   };
 
   return (
@@ -207,11 +167,11 @@ const EditVaccinationProgramDialog: React.FC<
                 fullWidth
                 margin="normal"
                 label="Tên chương trình"
-                name="campaignName"
-                value={editFormData.campaignName}
+                name="name"
+                value={editFormData.name}
                 onChange={handleInputChange}
-                error={!!errors.campaignName}
-                helperText={errors.campaignName}
+                error={!!errors.name}
+                helperText={errors.name}
                 required
               />
             </Box>
@@ -224,16 +184,6 @@ const EditVaccinationProgramDialog: React.FC<
                 mb: 3,
               }}
             >
-              <TextField
-                fullWidth
-                label="Loại vaccine"
-                name="vaccineType"
-                value={editFormData.vaccineType}
-                onChange={handleInputChange}
-                error={!!errors.vaccineType}
-                helperText={errors.vaccineType}
-                required
-              />
               <FormControl fullWidth error={!!errors.status}>
                 <InputLabel id="status-select-label">Trạng thái</InputLabel>
                 <Select
@@ -253,54 +203,18 @@ const EditVaccinationProgramDialog: React.FC<
               </FormControl>
             </Box>
 
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: { xs: "column", sm: "row" },
-                gap: 2,
-                mb: 3,
-              }}
-            >
-              <DatePicker
-                label="Ngày bắt đầu *"
-                value={editFormData.startDate}
-                onChange={handleStartDateChange}
-                shouldDisableDate={shouldDisableDate} // Vô hiệu hóa ngày trong quá khứ
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                    error: !!errors.startDate,
-                    helperText: errors.startDate,
-                  },
-                }}
-              />
-              <DatePicker
-                label="Ngày kết thúc *"
-                value={editFormData.endDate}
-                onChange={handleEndDateChange}
-                shouldDisableDate={shouldDisableDate} // Vô hiệu hóa ngày trong quá khứ
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                    error: !!errors.endDate,
-                    helperText: errors.endDate,
-                  },
-                }}
-              />
-            </Box>
-
             <Box sx={{ mb: 3 }}>
               <TextField
                 fullWidth
                 label="Mô tả"
                 name="description"
+                multiline
+                rows={4}
                 value={editFormData.description}
                 onChange={handleInputChange}
                 error={!!errors.description}
                 helperText={errors.description}
                 required
-                multiline
-                rows={4}
               />
             </Box>
           </Box>
@@ -315,8 +229,9 @@ const EditVaccinationProgramDialog: React.FC<
           variant="contained"
           color="primary"
           disabled={isSubmitting}
+          startIcon={isSubmitting ? <CircularProgress size={20} /> : null}
         >
-          {isSubmitting ? "Đang cập nhật..." : "Cập nhật"}
+          {isSubmitting ? "Đang lưu..." : "Lưu thay đổi"}
         </Button>
       </DialogActions>
     </Dialog>

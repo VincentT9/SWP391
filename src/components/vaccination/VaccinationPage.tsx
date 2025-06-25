@@ -36,12 +36,12 @@ const VaccinationPage = () => {
     const fetchCampaigns = async () => {
       try {
         setLoading(true);
-        let url = "/api/VaccCampaign/get-all-vacc-campaigns";
+        let url = "/api/Campaign/get-all-campaigns";
 
         // Filter by status if tab is not "All"
         if (tabValue > 0 && tabValue <= 4) {
           const status = tabValue - 1; // Adjust to match status enum
-          url = `/api/VaccCampaign/get-vacc-campaigns-by-status/${status}`;
+          url = `/api/Campaign/get-campaigns-by-status/${status}`;
         }
 
         const response = await instance.get(url);
@@ -80,10 +80,14 @@ const VaccinationPage = () => {
 
   const handleSaveCampaign = async (campaignData: any) => {
     try {
-      await instance.post(
-        "/api/VaccCampaign/create-vacc-campaign",
-        campaignData
-      );
+      const newCampaignData = {
+        name: campaignData.campaignName,
+        description: campaignData.description,
+        status: 0, // Mặc định là "Đã lên kế hoạch"
+        type: 0, // Mặc định type 0 cho tiêm chủng
+      };
+
+      await instance.post("/api/Campaign/create-campaign", newCampaignData);
       toast.success("Tạo chương trình tiêm chủng thành công!");
       setIsCreating(false);
       setRefresh((prev) => prev + 1);

@@ -24,6 +24,7 @@ import NotificationsPage from "./components/notifications/NotificationsPage";
 import MedicalSupplier from "./components/admin/MedicalSupplier";
 import StudentManagementPage from "./components/admin/StudentManagementPage";
 import VaccinationPage from "./components/vaccination/VaccinationPage";
+import ParentMedicationDashboard from "./components/medication/parent/ParentMedicationDashboard";
 
 function App() {
   return (

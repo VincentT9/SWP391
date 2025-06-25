@@ -9,12 +9,12 @@ import {
   TableHead,
   TableRow,
   Typography,
-  Chip,
   IconButton,
+  Chip,
   Tooltip,
   Alert,
 } from "@mui/material";
-import { Visibility as VisibilityIcon } from "@mui/icons-material";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 import { format } from "date-fns";
 
 interface VaccinationProgramListProps {
@@ -28,12 +28,12 @@ const VaccinationProgramList: React.FC<VaccinationProgramListProps> = ({
   onCampaignSelect,
   getStatusLabel,
 }) => {
-  // Helper function to format date safely
   const formatDate = (dateString: string) => {
+    if (!dateString) return "N/A";
     try {
       return format(new Date(dateString), "dd/MM/yyyy");
     } catch (error) {
-      return "Ngày không hợp lệ";
+      return "Invalid date";
     }
   };
 
@@ -42,7 +42,7 @@ const VaccinationProgramList: React.FC<VaccinationProgramListProps> = ({
       case 0:
         return "info"; // Planned
       case 1:
-        return "warning"; // InProgress
+        return "warning"; // In progress
       case 2:
         return "success"; // Completed
       case 3:
@@ -66,8 +66,8 @@ const VaccinationProgramList: React.FC<VaccinationProgramListProps> = ({
                 <TableCell sx={{ fontWeight: "bold" }}>
                   Tên chương trình
                 </TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>Loại vaccine</TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>Thời gian</TableCell>
+                <TableCell sx={{ fontWeight: "bold" }}>Ngày tạo</TableCell>
+                <TableCell sx={{ fontWeight: "bold" }}>Người tạo</TableCell>
                 <TableCell sx={{ fontWeight: "bold" }}>Trạng thái</TableCell>
                 <TableCell sx={{ fontWeight: "bold" }}>Thao tác</TableCell>
               </TableRow>
@@ -77,7 +77,7 @@ const VaccinationProgramList: React.FC<VaccinationProgramListProps> = ({
                 <TableRow key={campaign.id} hover>
                   <TableCell sx={{ maxWidth: 250 }}>
                     <Typography variant="body2" fontWeight="medium" noWrap>
-                      {campaign.campaignName}
+                      {campaign.name}
                     </Typography>
                     <Typography variant="caption" color="textSecondary" noWrap>
                       {campaign.description.length > 50
@@ -85,11 +85,8 @@ const VaccinationProgramList: React.FC<VaccinationProgramListProps> = ({
                         : campaign.description}
                     </Typography>
                   </TableCell>
-                  <TableCell>{campaign.vaccineType}</TableCell>
-                  <TableCell>
-                    {formatDate(campaign.startDate)} -{" "}
-                    {formatDate(campaign.endDate)}
-                  </TableCell>
+                  <TableCell>{formatDate(campaign.createAt)}</TableCell>
+                  <TableCell>{campaign.createdBy || "N/A"}</TableCell>
                   <TableCell>
                     <Chip
                       label={getStatusLabel(campaign.status)}

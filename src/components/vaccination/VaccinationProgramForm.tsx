@@ -5,20 +5,13 @@ import {
   Typography,
   TextField,
   Button,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  FormHelperText,
   Divider,
   Alert,
   Stack,
 } from "@mui/material";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { vi as viLocale } from "date-fns/locale";
-import { startOfDay, isBefore } from "date-fns"; // Thêm imports cần thiết
 
 interface VaccinationProgramFormProps {
   onSave: (campaignData: any) => void;
@@ -30,20 +23,8 @@ const VaccinationProgramForm: React.FC<VaccinationProgramFormProps> = ({
   onCancel,
 }) => {
   const [campaignName, setCampaignName] = useState("");
-  const [vaccineType, setVaccineType] = useState("");
   const [description, setDescription] = useState("");
-  const [startDate, setStartDate] = useState<Date | null>(null);
-  const [endDate, setEndDate] = useState<Date | null>(null);
-  const [status, setStatus] = useState<number>(0); // Default: Planned
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-
-  // Lấy ngày hiện tại và reset về đầu ngày để so sánh chính xác
-  const today = startOfDay(new Date());
-
-  // Function to check if date should be disabled (any date before today)
-  const shouldDisableDate = (date: Date) => {
-    return isBefore(date, today);
-  };
 
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
@@ -52,28 +33,8 @@ const VaccinationProgramForm: React.FC<VaccinationProgramFormProps> = ({
       newErrors.campaignName = "Tên chương trình là bắt buộc";
     }
 
-    if (!vaccineType.trim()) {
-      newErrors.vaccineType = "Loại vaccine là bắt buộc";
-    }
-
     if (!description.trim()) {
       newErrors.description = "Mô tả là bắt buộc";
-    }
-
-    if (!startDate) {
-      newErrors.startDate = "Ngày bắt đầu là bắt buộc";
-    } else {
-      // Kiểm tra ngày bắt đầu phải từ ngày hiện tại trở đi
-      const startDateStart = startOfDay(new Date(startDate));
-      if (isBefore(startDateStart, today)) {
-        newErrors.startDate = "Ngày bắt đầu phải từ ngày hiện tại trở đi";
-      }
-    }
-
-    if (!endDate) {
-      newErrors.endDate = "Ngày kết thúc là bắt buộc";
-    } else if (startDate && endDate && endDate < startDate) {
-      newErrors.endDate = "Ngày kết thúc phải sau ngày bắt đầu";
     }
 
     setErrors(newErrors);
@@ -87,11 +48,7 @@ const VaccinationProgramForm: React.FC<VaccinationProgramFormProps> = ({
 
     const campaignData = {
       campaignName,
-      vaccineType,
       description,
-      startDate: startDate?.toISOString(),
-      endDate: endDate?.toISOString(),
-      status,
     };
 
     onSave(campaignData);
@@ -115,79 +72,7 @@ const VaccinationProgramForm: React.FC<VaccinationProgramFormProps> = ({
               onChange={(e) => setCampaignName(e.target.value)}
               error={!!errors.campaignName}
               helperText={errors.campaignName}
-              placeholder="Ví dụ: Tiêm phòng ngừa bệnh sởi năm 2025"
-            />
-          </Box>
-
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: { xs: "column", md: "row" },
-              gap: { xs: 3, md: 2 },
-            }}
-          >
-            <TextField
-              fullWidth
-              label="Loại vaccine"
-              required
-              value={vaccineType}
-              onChange={(e) => setVaccineType(e.target.value)}
-              error={!!errors.vaccineType}
-              helperText={errors.vaccineType}
-              placeholder="Ví dụ: MMR_VAX_PRO_2025"
-            />
-
-            <FormControl fullWidth required error={!!errors.status}>
-              <InputLabel>Trạng thái</InputLabel>
-              <Select
-                value={status}
-                onChange={(e) => setStatus(e.target.value as number)}
-                label="Trạng thái"
-              >
-                <MenuItem value={0}>Lên kế hoạch</MenuItem>
-                <MenuItem value={1}>Đang tiến hành</MenuItem>
-                <MenuItem value={2}>Đã hoàn thành</MenuItem>
-                <MenuItem value={3}>Đã hủy</MenuItem>
-              </Select>
-              {errors.status && (
-                <FormHelperText>{errors.status}</FormHelperText>
-              )}
-            </FormControl>
-          </Box>
-
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: { xs: "column", md: "row" },
-              gap: { xs: 3, md: 2 },
-            }}
-          >
-            <DatePicker
-              label="Ngày bắt đầu *"
-              value={startDate}
-              onChange={(newDate) => setStartDate(newDate)}
-              shouldDisableDate={shouldDisableDate} // Vô hiệu hóa ngày trong quá khứ
-              slotProps={{
-                textField: {
-                  fullWidth: true,
-                  error: !!errors.startDate,
-                  helperText: errors.startDate,
-                },
-              }}
-            />
-
-            <DatePicker
-              label="Ngày kết thúc *"
-              value={endDate}
-              onChange={(newDate) => setEndDate(newDate)}
-              shouldDisableDate={shouldDisableDate} // Vô hiệu hóa ngày trong quá khứ
-              slotProps={{
-                textField: {
-                  fullWidth: true,
-                  error: !!errors.endDate,
-                  helperText: errors.endDate,
-                },
-              }}
+              placeholder="Nhập tên chương trình tiêm chủng"
             />
           </Box>
 
