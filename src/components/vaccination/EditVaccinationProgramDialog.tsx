@@ -39,6 +39,7 @@ interface FormData {
   name: string;
   description: string;
   status: number;
+  type: number;
 }
 
 interface EditVaccinationProgramDialogProps {
@@ -55,6 +56,7 @@ const EditVaccinationProgramDialog: React.FC<
     name: "",
     description: "",
     status: 0,
+    type: 0,
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -66,6 +68,7 @@ const EditVaccinationProgramDialog: React.FC<
         name: campaign.name,
         description: campaign.description,
         status: campaign.status,
+        type: campaign.type,
       });
     }
   }, [campaign]);
@@ -90,6 +93,14 @@ const EditVaccinationProgramDialog: React.FC<
     setEditFormData({
       ...editFormData,
       status: e.target.value,
+    });
+  };
+
+  // Handle type select change
+  const handleTypeChange = (e: any) => {
+    setEditFormData({
+      ...editFormData,
+      type: e.target.value,
     });
   };
 
@@ -122,7 +133,7 @@ const EditVaccinationProgramDialog: React.FC<
         name: editFormData.name,
         description: editFormData.description,
         status: editFormData.status,
-        type: campaign.type, // Giữ nguyên type
+        type: editFormData.type,
       };
 
       await instance.put(
@@ -137,6 +148,7 @@ const EditVaccinationProgramDialog: React.FC<
         campaign.name = editFormData.name;
         campaign.description = editFormData.description;
         campaign.status = editFormData.status;
+        campaign.type = editFormData.type;
       }
 
       // Đóng dialog và thông báo cho component cha
@@ -216,6 +228,23 @@ const EditVaccinationProgramDialog: React.FC<
                 helperText={errors.description}
                 required
               />
+            </Box>
+
+            <Box sx={{ mb: 3, mt: 2 }}>
+              <FormControl fullWidth>
+                <InputLabel id="type-select-label">
+                  Loại chương trình
+                </InputLabel>
+                <Select
+                  labelId="type-select-label"
+                  value={editFormData.type}
+                  label="Loại chương trình"
+                  onChange={handleTypeChange}
+                >
+                  <MenuItem value={0}>Tiêm chủng</MenuItem>
+                  <MenuItem value={1}>Khám sức khỏe</MenuItem>
+                </Select>
+              </FormControl>
             </Box>
           </Box>
         </LocalizationProvider>

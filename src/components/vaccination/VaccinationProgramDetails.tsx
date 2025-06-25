@@ -3,8 +3,6 @@ import {
   Box,
   Paper,
   Typography,
-  Tabs,
-  Tab,
   Divider,
   Chip,
   Button,
@@ -22,10 +20,10 @@ import {
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import PeopleIcon from "@mui/icons-material/People";
 import { format } from "date-fns";
-import EditVaccinationProgramDialog from "./EditVaccinationProgramDialog"; // Thêm import này
-
-// Import và khai báo các thành phần khác nếu cần
+import EditVaccinationProgramDialog from "./EditVaccinationProgramDialog";
+import ScheduleStudentListDialog from "./ScheduleStudentListDialog";
 
 interface VaccinationProgramDetailsProps {
   campaign: any;
@@ -38,13 +36,9 @@ const VaccinationProgramDetails: React.FC<VaccinationProgramDetailsProps> = ({
   onBack,
   getStatusLabel,
 }) => {
-  const [tabValue, setTabValue] = useState(0);
-  // Thêm state để quản lý dialog chỉnh sửa
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setTabValue(newValue);
-  };
+  const [isStudentListDialogOpen, setIsStudentListDialogOpen] = useState(false);
+  const [selectedSchedule, setSelectedSchedule] = useState<any>(null);
 
   const formatDate = (dateString: string) => {
     if (!dateString) return "N/A";
@@ -55,19 +49,21 @@ const VaccinationProgramDetails: React.FC<VaccinationProgramDetailsProps> = ({
     }
   };
 
-  // Thêm hàm xử lý khi nhấn nút chỉnh sửa
   const handleEditClick = () => {
     setIsEditDialogOpen(true);
   };
 
-  // Thêm hàm xử lý khi đóng dialog
   const handleEditDialogClose = () => {
     setIsEditDialogOpen(false);
   };
 
-  // Thêm hàm xử lý khi chỉnh sửa thành công
   const handleEditSuccess = () => {
     // Có thể thêm logic refresh dữ liệu nếu cần
+  };
+
+  const handleViewStudentsClick = (schedule: any) => {
+    setSelectedSchedule(schedule);
+    setIsStudentListDialogOpen(true);
   };
 
   const getStatusChip = (status: number) => {
@@ -85,16 +81,14 @@ const VaccinationProgramDetails: React.FC<VaccinationProgramDetailsProps> = ({
     }
   };
 
-  const getScheduleStatusChip = (status: string) => {
-    switch (status) {
-      case "completed":
-        return <Chip size="small" label="Đã hoàn thành" color="success" />;
-      case "scheduled":
-        return <Chip size="small" label="Đã lên lịch" color="info" />;
-      case "cancelled":
-        return <Chip size="small" label="Đã hủy" color="error" />;
+  const getCampaignTypeLabel = (type: number) => {
+    switch (type) {
+      case 0:
+        return "Tiêm chủng";
+      case 1:
+        return "Khám sức khỏe";
       default:
-        return <Chip size="small" label="Không xác định" color="default" />;
+        return "Không xác định";
     }
   };
 
@@ -124,6 +118,14 @@ const VaccinationProgramDetails: React.FC<VaccinationProgramDetailsProps> = ({
               </Typography>
               <Stack direction="row" spacing={2} flexWrap="wrap" sx={{ mt: 1 }}>
                 <Typography variant="body2">
+                  Loại:{" "}
+                  <Chip
+                    size="small"
+                    label={getCampaignTypeLabel(campaign.type)}
+                    color="primary"
+                  />
+                </Typography>
+                <Typography variant="body2">
                   Trạng thái: {getStatusChip(campaign.status)}
                 </Typography>
                 <Typography variant="body2">
@@ -147,7 +149,7 @@ const VaccinationProgramDetails: React.FC<VaccinationProgramDetailsProps> = ({
                 variant="outlined"
                 startIcon={<EditIcon />}
                 sx={{ mr: 1 }}
-                onClick={handleEditClick} // Thêm sự kiện onClick
+                onClick={handleEditClick}
               >
                 Chỉnh sửa
               </Button>
@@ -158,118 +160,135 @@ const VaccinationProgramDetails: React.FC<VaccinationProgramDetailsProps> = ({
         <Divider sx={{ mb: 2 }} />
 
         <Box sx={{ width: "100%" }}>
-          <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-            <Tabs
-              value={tabValue}
-              onChange={handleTabChange}
-              aria-label="campaign details tabs"
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="h6">
+              Lịch {campaign.type === 0 ? "tiêm chủng" : "khám sức khỏe"}
+            </Typography>
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ mt: 0.5, mb: 2 }}
             >
-              <Tab label="Lịch tiêm chủng" />
-              <Tab label="Danh sách học sinh" />
-            </Tabs>
+              Nhấp vào dòng hoặc biểu tượng{" "}
+              <PeopleIcon
+                fontSize="small"
+                sx={{ verticalAlign: "middle", fontSize: "1rem" }}
+              />{" "}
+              để xem danh sách học sinh trong lịch
+            </Typography>
           </Box>
 
-          {tabValue === 0 && (
-            <Box sx={{ pt: 2 }}>
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  mb: 2,
-                }}
-              >
-                <Typography variant="h6">Lịch tiêm chủng</Typography>
-                <Button variant="contained" size="small">
-                  Thêm lịch tiêm
-                </Button>
-              </Box>
+          <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
+            <Button variant="contained" size="small">
+              Thêm lịch {campaign.type === 0 ? "tiêm" : "khám"}
+            </Button>
+          </Box>
 
-              {campaign.schedules && campaign.schedules.length > 0 ? (
-                <TableContainer>
-                  <Table sx={{ minWidth: 650 }} aria-label="schedules table">
-                    <TableHead>
-                      <TableRow>
-                        <TableCell sx={{ fontWeight: "bold" }}>
-                          Ngày tiêm
-                        </TableCell>
-                        <TableCell sx={{ fontWeight: "bold" }}>
-                          Địa điểm
-                        </TableCell>
-                        <TableCell sx={{ fontWeight: "bold" }}>
-                          Ghi chú
-                        </TableCell>
-                        <TableCell sx={{ fontWeight: "bold" }}>
-                          Thao tác
-                        </TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {campaign.schedules.map((schedule: any) => (
-                        <TableRow key={schedule.id} hover>
-                          <TableCell>
-                            {formatDate(schedule.scheduledDate)}
-                          </TableCell>
-                          <TableCell>{schedule.location}</TableCell>
-                          <TableCell>{schedule.notes}</TableCell>
-                          <TableCell align="center">
-                            <Box
-                              sx={{ display: "flex", justifyContent: "center" }}
+          {campaign.schedules && campaign.schedules.length > 0 ? (
+            <TableContainer>
+              <Table sx={{ minWidth: 650 }} aria-label="schedules table">
+                <TableHead>
+                  <TableRow>
+                    <TableCell sx={{ fontWeight: "bold" }}>
+                      Ngày {campaign.type === 0 ? "tiêm" : "khám"}
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: "bold" }}>Địa điểm</TableCell>
+                    <TableCell sx={{ fontWeight: "bold" }}>Ghi chú</TableCell>
+                    <TableCell sx={{ fontWeight: "bold", width: "180px" }}>
+                      Thao tác
+                    </TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {campaign.schedules.map((schedule: any) => (
+                    <TableRow
+                      key={schedule.id}
+                      hover
+                      sx={{
+                        cursor: "pointer",
+                        "&:hover": {
+                          backgroundColor: "rgba(0, 0, 0, 0.04)",
+                        },
+                      }}
+                      onClick={() => handleViewStudentsClick(schedule)}
+                    >
+                      <TableCell>
+                        {formatDate(schedule.scheduledDate)}
+                      </TableCell>
+                      <TableCell>{schedule.location}</TableCell>
+                      <TableCell>{schedule.notes}</TableCell>
+                      <TableCell>
+                        <Box sx={{ display: "flex" }}>
+                          <Tooltip title="Xem danh sách học sinh">
+                            <IconButton
+                              size="small"
+                              color="primary"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleViewStudentsClick(schedule);
+                              }}
                             >
-                              <Tooltip title="Chỉnh sửa lịch">
-                                <IconButton size="small" color="primary">
-                                  <EditIcon />
-                                </IconButton>
-                              </Tooltip>
-                              <Tooltip title="Xóa lịch">
-                                <IconButton size="small" color="error">
-                                  <DeleteIcon />
-                                </IconButton>
-                              </Tooltip>
-                            </Box>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              ) : (
-                <Alert severity="info">
-                  Chưa có lịch tiêm chủng nào được tạo.
-                </Alert>
-              )}
-            </Box>
-          )}
-
-          {tabValue === 1 && (
-            <Box sx={{ pt: 2 }}>
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  mb: 2,
-                }}
-              >
-                <Typography variant="h6">Danh sách học sinh</Typography>
-                <Button variant="contained" size="small">
-                  Thêm học sinh
-                </Button>
-              </Box>
-
-              <Alert severity="info">
-                Chưa có học sinh nào được thêm vào chương trình này.
-              </Alert>
-            </Box>
+                              <PeopleIcon />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Chỉnh sửa lịch">
+                            <IconButton
+                              size="small"
+                              color="info"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // Xử lý sự kiện chỉnh sửa lịch
+                              }}
+                            >
+                              <EditIcon />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Xóa lịch">
+                            <IconButton
+                              size="small"
+                              color="error"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // Xử lý sự kiện xóa lịch
+                              }}
+                            >
+                              <DeleteIcon />
+                            </IconButton>
+                          </Tooltip>
+                        </Box>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          ) : (
+            <Alert severity="info">
+              Chưa có lịch{" "}
+              {campaign.type === 0 ? "tiêm chủng" : "khám sức khỏe"} nào được
+              tạo.
+            </Alert>
           )}
         </Box>
       </Paper>
 
-      {/* Thêm dialog chỉnh sửa */}
+      {/* Dialog chỉnh sửa chương trình */}
       <EditVaccinationProgramDialog
         open={isEditDialogOpen}
         campaign={campaign}
         onClose={handleEditDialogClose}
         onSuccess={handleEditSuccess}
       />
+
+      {/* Dialog danh sách học sinh */}
+      {selectedSchedule && (
+        <ScheduleStudentListDialog
+          open={isStudentListDialogOpen}
+          onClose={() => setIsStudentListDialogOpen(false)}
+          schedule={selectedSchedule}
+          campaignType={campaign.type}
+        />
+      )}
     </Box>
   );
 };

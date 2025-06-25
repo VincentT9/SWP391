@@ -52,6 +52,17 @@ const VaccinationProgramList: React.FC<VaccinationProgramListProps> = ({
     }
   };
 
+  const getCampaignTypeLabel = (type: number) => {
+    switch (type) {
+      case 0:
+        return "Tiêm chủng";
+      case 1:
+        return "Khám sức khỏe";
+      default:
+        return "Không xác định";
+    }
+  };
+
   return (
     <Box>
       {campaigns.length === 0 ? (
@@ -66,6 +77,7 @@ const VaccinationProgramList: React.FC<VaccinationProgramListProps> = ({
                 <TableCell sx={{ fontWeight: "bold" }}>
                   Tên chương trình
                 </TableCell>
+                <TableCell sx={{ fontWeight: "bold" }}>Loại</TableCell>
                 <TableCell sx={{ fontWeight: "bold" }}>Ngày tạo</TableCell>
                 <TableCell sx={{ fontWeight: "bold" }}>Người tạo</TableCell>
                 <TableCell sx={{ fontWeight: "bold" }}>Trạng thái</TableCell>
@@ -85,6 +97,7 @@ const VaccinationProgramList: React.FC<VaccinationProgramListProps> = ({
                         : campaign.description}
                     </Typography>
                   </TableCell>
+                  <TableCell>{getCampaignTypeLabel(campaign.type)}</TableCell>
                   <TableCell>{formatDate(campaign.createAt)}</TableCell>
                   <TableCell>{campaign.createdBy || "N/A"}</TableCell>
                   <TableCell>

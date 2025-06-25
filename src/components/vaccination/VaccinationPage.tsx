@@ -84,16 +84,20 @@ const VaccinationPage = () => {
         name: campaignData.campaignName,
         description: campaignData.description,
         status: 0, // Mặc định là "Đã lên kế hoạch"
-        type: 0, // Mặc định type 0 cho tiêm chủng
+        type: campaignData.type, // Sử dụng type đã chọn từ form
       };
 
       await instance.post("/api/Campaign/create-campaign", newCampaignData);
-      toast.success("Tạo chương trình tiêm chủng thành công!");
+      toast.success(
+        campaignData.type === 0
+          ? "Tạo chương trình tiêm chủng thành công!"
+          : "Tạo chương trình khám sức khỏe thành công!"
+      );
       setIsCreating(false);
       setRefresh((prev) => prev + 1);
     } catch (error) {
       console.error("Error saving campaign:", error);
-      toast.error("Không thể tạo chương trình tiêm chủng. Vui lòng thử lại.");
+      toast.error("Không thể tạo chương trình. Vui lòng thử lại.");
     }
   };
 
