@@ -16,6 +16,10 @@ import {
   Tooltip,
   Alert,
   Stack,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import EditIcon from "@mui/icons-material/Edit";
@@ -24,21 +28,28 @@ import PeopleIcon from "@mui/icons-material/People";
 import { format } from "date-fns";
 import EditVaccinationProgramDialog from "./EditVaccinationProgramDialog";
 import ScheduleStudentListDialog from "./ScheduleStudentListDialog";
+import instance from "../../utils/axiosConfig";
+import { toast } from "react-toastify";
 
+// Cập nhật interface để thêm prop onDeleteSuccess
 interface VaccinationProgramDetailsProps {
   campaign: any;
   onBack: () => void;
   getStatusLabel: (status: number) => string;
+  onDeleteSuccess: () => void; // Thêm prop mới
 }
 
 const VaccinationProgramDetails: React.FC<VaccinationProgramDetailsProps> = ({
   campaign,
   onBack,
   getStatusLabel,
+  onDeleteSuccess,
 }) => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isStudentListDialogOpen, setIsStudentListDialogOpen] = useState(false);
   const [selectedSchedule, setSelectedSchedule] = useState<any>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const formatDate = (dateString: string) => {
     if (!dateString) return "N/A";
@@ -64,6 +75,34 @@ const VaccinationProgramDetails: React.FC<VaccinationProgramDetailsProps> = ({
   const handleViewStudentsClick = (schedule: any) => {
     setSelectedSchedule(schedule);
     setIsStudentListDialogOpen(true);
+  };
+
+  const handleDeleteClick = () => {
+    setIsDeleteDialogOpen(true);
+  };
+
+  // Cập nhật hàm handleConfirmDelete
+  const handleConfirmDelete = async () => {
+    setIsDeleting(true);
+    try {
+      await instance.delete(`/api/Campaign/delete-campaign/${campaign.id}`);
+      toast.success("Xóa chương trình thành công!");
+      setIsDeleteDialogOpen(false);
+      // Thay vì gọi onBack(), gọi onDeleteSuccess()
+      onDeleteSuccess(); // Sẽ làm mới danh sách và quay về
+    } catch (error: any) {
+      console.error("Error deleting campaign:", error);
+      toast.error(
+        error.response?.data?.message ||
+          "Không thể xóa chương trình. Vui lòng thử lại."
+      );
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setIsDeleteDialogOpen(false);
   };
 
   const getStatusChip = (status: number) => {
@@ -152,6 +191,14 @@ const VaccinationProgramDetails: React.FC<VaccinationProgramDetailsProps> = ({
                 onClick={handleEditClick}
               >
                 Chỉnh sửa
+              </Button>
+              <Button
+                variant="outlined"
+                color="error"
+                startIcon={<DeleteIcon />}
+                onClick={handleDeleteClick}
+              >
+                Xóa
               </Button>
             </Box>
           </Box>
@@ -289,6 +336,33 @@ const VaccinationProgramDetails: React.FC<VaccinationProgramDetailsProps> = ({
           campaignType={campaign.type}
         />
       )}
+
+      {/* Dialog xác nhận xóa chương trình */}
+      <Dialog open={isDeleteDialogOpen} onClose={handleCancelDelete}>
+        <DialogTitle>Xác nhận xóa chương trình</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Bạn có chắc chắn muốn xóa chương trình{" "}
+            <strong>{campaign.name}</strong>?
+            <br />
+            Hành động này không thể hoàn tác và sẽ xóa tất cả lịch tiêm/khám và
+            dữ liệu liên quan.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCancelDelete} disabled={isDeleting}>
+            Hủy
+          </Button>
+          <Button
+            onClick={handleConfirmDelete}
+            color="error"
+            variant="contained"
+            disabled={isDeleting}
+          >
+            {isDeleting ? "Đang xóa..." : "Xóa"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

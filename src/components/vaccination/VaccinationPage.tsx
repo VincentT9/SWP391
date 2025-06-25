@@ -106,8 +106,11 @@ const VaccinationPage = () => {
     setIsViewingDetails(false);
   };
 
-  const handleBackToList = () => {
+  const handleBackToList = (shouldRefresh = false) => {
     setIsViewingDetails(false);
+    if (shouldRefresh) {
+      setRefresh((prev) => prev + 1); // Refresh danh sách
+    }
   };
 
   const getStatusLabel = (status: number) => {
@@ -123,6 +126,11 @@ const VaccinationPage = () => {
       default:
         return "Không xác định";
     }
+  };
+
+  // Thêm hàm xử lý refresh
+  const handleRefresh = () => {
+    setRefresh((prev) => prev + 1);
   };
 
   return (
@@ -186,6 +194,7 @@ const VaccinationPage = () => {
                 campaigns={campaigns}
                 onCampaignSelect={handleCampaignSelect}
                 getStatusLabel={getStatusLabel}
+                onRefresh={handleRefresh} // Thêm prop này
               />
             )}
           </>
@@ -203,6 +212,7 @@ const VaccinationPage = () => {
             campaign={selectedCampaign}
             onBack={handleBackToList}
             getStatusLabel={getStatusLabel}
+            onDeleteSuccess={() => handleBackToList(true)} // Thêm prop mới
           />
         )}
       </Box>
