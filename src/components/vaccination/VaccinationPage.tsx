@@ -9,8 +9,16 @@ import {
   Button,
   Alert,
   CircularProgress,
+  ToggleButtonGroup,
+  ToggleButton,
+  Divider,
+  Stack,
+  Chip,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
+import FilterAltIcon from "@mui/icons-material/FilterAlt";
+import VaccinesIcon from "@mui/icons-material/Vaccines";
+import MedicalInformationIcon from "@mui/icons-material/MedicalInformation";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
@@ -26,8 +34,12 @@ const VaccinationPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [campaigns, setCampaigns] = useState<any[]>([]);
+  const [filteredCampaigns, setFilteredCampaigns] = useState<any[]>([]);
   const [selectedCampaign, setSelectedCampaign] = useState<any>(null);
   const [refresh, setRefresh] = useState(0);
+
+  // Thay đổi kiểu dữ liệu của state typeFilter từ number | null thành string | number
+  const [typeFilter, setTypeFilter] = useState<string | number>("all"); // Sử dụng "all" thay vì null
 
   const navigate = useNavigate();
 
@@ -45,9 +57,14 @@ const VaccinationPage = () => {
         }
 
         const response = await instance.get(url);
-        setCampaigns(
-          Array.isArray(response.data) ? response.data : [response.data]
-        );
+        const data = Array.isArray(response.data)
+          ? response.data
+          : [response.data];
+        setCampaigns(data);
+
+        // Áp dụng lọc theo loại chương trình
+        applyFilters(data);
+
         setError(null);
       } catch (err) {
         console.error("Error fetching vaccination campaigns:", err);
@@ -55,6 +72,7 @@ const VaccinationPage = () => {
           "Không thể tải danh sách chương trình tiêm chủng. Vui lòng thử lại sau."
         );
         setCampaigns([]);
+        setFilteredCampaigns([]);
       } finally {
         setLoading(false);
       }
@@ -63,8 +81,40 @@ const VaccinationPage = () => {
     fetchCampaigns();
   }, [tabValue, refresh]);
 
+  // Thêm useEffect để áp dụng bộ lọc khi type filter thay đổi
+  useEffect(() => {
+    applyFilters(campaigns);
+  }, [typeFilter, campaigns]);
+
+  // Hàm áp dụng bộ lọc
+  const applyFilters = (data: any[]) => {
+    if (!data.length) {
+      setFilteredCampaigns([]);
+      return;
+    }
+
+    let result = [...data];
+
+    // Áp dụng lọc theo loại chương trình nếu có
+    if (typeFilter !== "all") {
+      // Sử dụng "all" thay vì null
+      result = result.filter((campaign) => campaign.type === typeFilter);
+    }
+
+    setFilteredCampaigns(result);
+  };
+
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
+  };
+
+  // Hàm xử lý thay đổi bộ lọc loại chương trình
+  const handleTypeFilterChange = (
+    event: React.MouseEvent<HTMLElement>,
+    newTypeFilter: string | number | null // Cập nhật kiểu dữ liệu phù hợp
+  ) => {
+    // Nếu newTypeFilter là null, gán thành "all", nếu không thì giữ nguyên
+    setTypeFilter(newTypeFilter === null ? "all" : newTypeFilter);
   };
 
   const handleCreateClick = () => {
@@ -128,9 +178,16 @@ const VaccinationPage = () => {
     }
   };
 
-  // Thêm hàm xử lý refresh
+  // Hàm xử lý refresh
   const handleRefresh = () => {
     setRefresh((prev) => prev + 1);
+  };
+
+  // Lấy tổng số chương trình theo từng loại
+  const countByType = {
+    all: campaigns.length,
+    vaccination: campaigns.filter((c) => c.type === 0).length,
+    healthcheck: campaigns.filter((c) => c.type === 1).length,
   };
 
   return (
@@ -142,6 +199,62 @@ const VaccinationPage = () => {
 
         {!isCreating && !isViewingDetails && (
           <>
+            <Paper sx={{ p: 2, mb: 3 }}>
+              <Stack
+                direction={{ xs: "column", sm: "row" }}
+                spacing={2}
+                alignItems={{ xs: "stretch", sm: "center" }}
+                justifyContent="space-between"
+              >
+                <Box>
+                  <Typography
+                    variant="subtitle2"
+                    color="text.secondary"
+                    sx={{ mb: 1 }}
+                  >
+                    <FilterAltIcon
+                      fontSize="small"
+                      sx={{ verticalAlign: "middle", mr: 0.5 }}
+                    />
+                    Lọc theo loại chương trình:
+                  </Typography>
+                  <ToggleButtonGroup
+                    value={typeFilter}
+                    exclusive
+                    onChange={handleTypeFilterChange}
+                    aria-label="campaign type filter"
+                    size="small"
+                  >
+                    <ToggleButton value="all" aria-label="all types">
+                      Tất cả ({countByType.all})
+                    </ToggleButton>
+                    <ToggleButton value={0} aria-label="vaccination programs">
+                      <VaccinesIcon fontSize="small" sx={{ mr: 0.5 }} />
+                      Tiêm chủng ({countByType.vaccination})
+                    </ToggleButton>
+                    <ToggleButton
+                      value={1}
+                      aria-label="health checkup programs"
+                    >
+                      <MedicalInformationIcon
+                        fontSize="small"
+                        sx={{ mr: 0.5 }}
+                      />
+                      Khám sức khỏe ({countByType.healthcheck})
+                    </ToggleButton>
+                  </ToggleButtonGroup>
+                </Box>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  startIcon={<AddIcon />}
+                  onClick={handleCreateClick}
+                >
+                  Tạo chương trình
+                </Button>
+              </Stack>
+            </Paper>
+
             <Box
               sx={{
                 display: "flex",
@@ -168,16 +281,21 @@ const VaccinationPage = () => {
                   <Tab label="Đã hủy" />
                 </Tabs>
               </Paper>
-              <Button
-                variant="contained"
-                color="primary"
-                startIcon={<AddIcon />}
-                onClick={handleCreateClick}
-                sx={{ ml: 2 }}
-              >
-                Tạo chương trình
-              </Button>
             </Box>
+
+            {typeFilter !== "all" && (
+              <Box sx={{ mb: 2 }}>
+                <Chip
+                  label={`Đang lọc: ${
+                    typeFilter === 0 ? "Tiêm chủng" : "Khám sức khỏe"
+                  }`}
+                  color="primary"
+                  variant="outlined"
+                  onDelete={() => setTypeFilter("all")}
+                  sx={{ mr: 1 }}
+                />
+              </Box>
+            )}
 
             {error && (
               <Alert severity="error" sx={{ mb: 2 }}>
@@ -190,12 +308,19 @@ const VaccinationPage = () => {
                 <CircularProgress />
               </Box>
             ) : (
-              <VaccinationProgramList
-                campaigns={campaigns}
-                onCampaignSelect={handleCampaignSelect}
-                getStatusLabel={getStatusLabel}
-                onRefresh={handleRefresh} // Thêm prop này
-              />
+              <>
+                {filteredCampaigns.length === 0 && !loading && (
+                  <Alert severity="info" sx={{ mb: 2 }}>
+                    Không có chương trình nào phù hợp với bộ lọc hiện tại.
+                  </Alert>
+                )}
+                <VaccinationProgramList
+                  campaigns={filteredCampaigns} // Sử dụng danh sách đã lọc
+                  onCampaignSelect={handleCampaignSelect}
+                  getStatusLabel={getStatusLabel}
+                  onRefresh={handleRefresh}
+                />
+              </>
             )}
           </>
         )}
@@ -212,7 +337,7 @@ const VaccinationPage = () => {
             campaign={selectedCampaign}
             onBack={handleBackToList}
             getStatusLabel={getStatusLabel}
-            onDeleteSuccess={() => handleBackToList(true)} // Thêm prop mới
+            onDeleteSuccess={() => handleBackToList(true)}
           />
         )}
       </Box>
