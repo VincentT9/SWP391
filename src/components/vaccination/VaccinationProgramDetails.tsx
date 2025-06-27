@@ -191,18 +191,18 @@ const VaccinationProgramDetails: React.FC<VaccinationProgramDetailsProps> = ({
   // Hàm xử lý thêm lịch mới
   const handleAddSchedule = () => {
     console.log("Adding schedule for campaign:", campaign);
-    
+
     if (!campaign?.id) {
       toast.error("Không thể thêm lịch: thiếu thông tin chương trình");
       return;
     }
-    
+
     // Kiểm tra campaignId có hợp lệ không
     if (typeof campaign.id !== "string" || campaign.id.trim() === "") {
       toast.error("ID chương trình không hợp lệ");
       return;
     }
-    
+
     setScheduleToEdit(null); // Đảm bảo không có schedule nào được chọn
     setIsScheduleDialogOpen(true);
   };

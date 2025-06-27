@@ -117,7 +117,12 @@ const EditScheduleDialog: React.FC<EditScheduleDialogProps> = ({
 
     try {
       // Log thêm thông tin campaignId khi submit để debug
-      console.log("Submitting with campaignId:", campaignId, "isEditMode:", isEditMode);
+      console.log(
+        "Submitting with campaignId:",
+        campaignId,
+        "isEditMode:",
+        isEditMode
+      );
 
       // Khai báo payload với kiểu được định nghĩa trước
       const payload: SchedulePayload = {
