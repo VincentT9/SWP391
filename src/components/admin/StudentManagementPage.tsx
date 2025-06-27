@@ -142,7 +142,7 @@ const StudentManagementPage: React.FC = () => {
       setStudents(studentsData);
     } catch (error) {
       console.error("Error fetching students:", error);
-      setError("Không thể tải dữ liệu học sinh. Vui lòng thử lại.");
+      setError("Chưa có dữ liệu học sinh hoặc có lỗi xảy ra khi tải dữ liệu.");
     } finally {
       setLoading(false);
     }

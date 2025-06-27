@@ -102,81 +102,87 @@ const menuCategories: MenuCategory[] = [
     path: "/",
   },
   {
-    name: "Sổ sức khỏe", // More friendly name for "Học sinh"
+    name: "Sổ sức khỏe & chăm sóc học sinh", // More friendly name for "Học sinh"
+    role: ["MedicalStaff", "Parent"],
     submenu: [
-     
       {
         text: "Khám sức khỏe định kỳ", // More descriptive for medical staff
         path: "/health-check",
         role: ["MedicalStaff"],
       },
       {
-        text: "Theo dõi sức khỏe con", // Caring name for parent view
+        text: "Khai báo & theo dõi sức khỏe học sinh", // Caring name for parent view
         path: "/health-records",
         role: ["Parent"],
       },
       {
-        text: "Quản lý thông tin học sinh", // More comprehensive for admin
-        path: "/admin/students",
-        role: ["Admin"],
+        text: "Gửi thuốc đến trường", // More action-oriented for parents
+        path: "/medication",
+        role: ["Parent"],
       },
-    ]
+    ],
   },
   {
     name: "Hoạt động y tế", // More comprehensive than "Sự kiện y tế"
+    role: ["MedicalStaff", "Admin", "Parent"],
     submenu: [
       {
-        text: "Sức khỏe học đường", // More specific description
-        path: "/medical-events",
-        role: ["MedicalStaff", "Admin", "Parent"],
-      },
-    ]
-  },
-  {
-    name: "Y dược học đường", // More educational term for "Thuốc & Vật tư"
-    submenu: [
-      {
-        text: "Danh mục thuốc", // Simplified name
+        text: "Danh mục thuốc từ phụ huynh", // Simplified name
         path: "/medication",
         role: ["MedicalStaff"],
       },
       {
-        text: "Đăng ký sử dụng thuốc", // More action-oriented for parents
-        path: "/medication",
-        role: ["Parent"],
+        text: "Sự kiện y tế học đường", // More specific description
+        path: "/medical-events",
+        role: ["MedicalStaff", "Admin", "Parent"],
       },
       {
-        text: "Thiết bị y tế trường học", // More educational context
-        path: "/medical-supplier",
+        text: "Quản lý tiêm phòng", // More specific description
+        path: "/vaccination",
         role: ["MedicalStaff", "Admin"],
-      }
-    ]
+      },
+    ],
+  },
+  {
+    name: "Quản lý vật tư, trang thiết bị", // More educational term for "Thuốc & Vật tư"
+    role: ["MedicalStaff", "Admin"],
+    path: "/medical-supplier",
   },
   {
     name: "Hệ thống", // Simpler than "Quản trị"
     role: ["Admin"],
     submenu: [
       {
+        text: "Quản lý thông tin học sinh", // More comprehensive for admin
+        path: "/admin/students",
+        role: ["Admin"],
+      },
+      {
         text: "Quản lý người dùng hệ thống", // More comprehensive
         path: "/user-management",
         role: ["Admin"],
       },
-    ]
+    ],
   },
 ];
 
 // Type guard for checking if a menu item has a badge
-const hasBadge = (item: MenuSubmenuItem): item is MenuSubmenuItem & { badge: number } => {
-  return item.badge !== undefined && typeof item.badge === 'number';
+const hasBadge = (
+  item: MenuSubmenuItem
+): item is MenuSubmenuItem & { badge: number } => {
+  return item.badge !== undefined && typeof item.badge === "number";
 };
 
 const MainLayout = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [menuAnchors, setMenuAnchors] = useState<{ [key: string]: HTMLElement | null }>({});
-  const [notificationAnchor, setNotificationAnchor] = useState<null | HTMLElement>(null);
-  
+  const [menuAnchors, setMenuAnchors] = useState<{
+    [key: string]: HTMLElement | null;
+  }>({});
+  const [notificationAnchor, setNotificationAnchor] =
+    useState<null | HTMLElement>(null);
+
   const location = useLocation();
   const navigate = useNavigate();
   const theme = useTheme();
@@ -189,14 +195,14 @@ const MainLayout = () => {
   // Set active tab based on current location
   useEffect(() => {
     const currentPath = location.pathname;
-    const tabIndex = menuCategories.findIndex(category => {
+    const tabIndex = menuCategories.findIndex((category) => {
       if (category.path === currentPath) return true;
       if (category.submenu) {
-        return category.submenu.some(item => item.path === currentPath);
+        return category.submenu.some((item) => item.path === currentPath);
       }
       return false;
     });
-    
+
     if (tabIndex !== -1) {
       setActiveTab(tabIndex);
     }
@@ -214,17 +220,20 @@ const MainLayout = () => {
     }
   };
 
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, menuName: string) => {
+  const handleMenuOpen = (
+    event: React.MouseEvent<HTMLElement>,
+    menuName: string
+  ) => {
     setMenuAnchors({
       ...menuAnchors,
-      [menuName]: event.currentTarget
+      [menuName]: event.currentTarget,
     });
   };
 
   const handleMenuClose = (menuName: string) => {
     setMenuAnchors({
       ...menuAnchors,
-      [menuName]: null
+      [menuName]: null,
     });
   };
 
@@ -261,10 +270,10 @@ const MainLayout = () => {
   return (
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
       <CssBaseline />
-      
+
       {/* Top Navigation Bar with gradient background */}
-      <AppBar 
-        position="fixed" 
+      <AppBar
+        position="fixed"
         elevation={0}
         sx={{
           boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
@@ -274,23 +283,23 @@ const MainLayout = () => {
         <Container maxWidth="xl">
           <Toolbar disableGutters sx={{ minHeight: { xs: 64, md: 70 } }}>
             {/* Logo - Just a styled circle with gradient */}
-            <Box 
+            <Box
               component={motion.div}
               whileHover={{ scale: 1.05 }}
-              sx={{ 
+              sx={{
                 mr: { xs: 2, md: 3 },
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
               }}
             >
               <Box
                 component="img"
                 src="https://musical-indigo-mongoose.myfilebase.com/ipfs/QmPfdMNtJhcNfztJtxK88SXCrqWm54KuSWHKBW4TNhPr3x"
                 alt="FPTMED"
-                sx={{ 
+                sx={{
                   height: { xs: 34, md: 40 },
-                  transition: 'all 0.2s ease',
+                  transition: "all 0.2s ease",
                 }}
               />
             </Box>
@@ -318,54 +327,58 @@ const MainLayout = () => {
                 sx={{
                   flexGrow: 1,
                   minHeight: 70,
-                  '& .MuiTab-root': {
+                  "& .MuiTab-root": {
                     minHeight: 70,
                     px: 3,
                     fontWeight: 500,
-                    fontSize: '0.95rem',
-                    color: 'rgba(255, 255, 255, 0.85)',
-                    textTransform: 'none',
-                    transition: 'all 0.2s ease',
-                    position: 'relative',
-                    '&:hover': {
-                      color: '#ffffff',
-                      background: 'rgba(255, 255, 255, 0.1)',
+                    fontSize: "0.95rem",
+                    color: "rgba(255, 255, 255, 0.85)",
+                    textTransform: "none",
+                    transition: "all 0.2s ease",
+                    position: "relative",
+                    "&:hover": {
+                      color: "#ffffff",
+                      background: "rgba(255, 255, 255, 0.1)",
                     },
-                    alignItems: 'center',
+                    alignItems: "center",
                   },
-                  '& .Mui-selected': {
-                    color: '#ffffff !important', // Ensure text remains visible when selected
+                  "& .Mui-selected": {
+                    color: "#ffffff !important", // Ensure text remains visible when selected
                     fontWeight: 600,
                     opacity: 1, // Make sure opacity is set to 1
-                    visibility: 'visible', // Explicitly set visibility
+                    visibility: "visible", // Explicitly set visibility
                     zIndex: 1, // Ensure it's on top
-                    '&::after': {
+                    "&::after": {
                       content: '""',
-                      position: 'absolute',
+                      position: "absolute",
                       bottom: 0,
-                      left: '50%',
-                      transform: 'translateX(-50%)',
-                      width: '30%',
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                      width: "30%",
                       height: 3,
                       borderRadius: 3,
-                      backgroundColor: '#ffffff',
-                    }
+                      backgroundColor: "#ffffff",
+                    },
                   },
-                  '& .MuiTabs-indicator': {
-                    display: 'none',
+                  "& .MuiTabs-indicator": {
+                    display: "none",
                   },
                 }}
               >
                 {menuCategories.map((category, index) => {
                   // Filter out menu categories based on user role
-                  if (category.role && !category.role.includes(user.role)) return null;
+                  if (category.role && !category.role.includes(user.role))
+                    return null;
 
                   return (
                     <Tab
                       key={category.name}
                       label={
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <Typography component="span" sx={{ fontWeight: 'inherit' }}>
+                        <Box sx={{ display: "flex", alignItems: "center" }}>
+                          <Typography
+                            component="span"
+                            sx={{ fontWeight: "inherit" }}
+                          >
                             {category.name}
                           </Typography>
                           {category.badge && (
@@ -376,9 +389,9 @@ const MainLayout = () => {
                                 ml: 1,
                                 height: 18,
                                 minWidth: 18,
-                                fontSize: '0.7rem',
+                                fontSize: "0.7rem",
                                 fontWeight: 700,
-                                bgcolor: 'rgba(255, 255, 255, 0.9)',
+                                bgcolor: "rgba(255, 255, 255, 0.9)",
                                 color: colors.primary,
                               }}
                             />
@@ -388,10 +401,14 @@ const MainLayout = () => {
                           )}
                         </Box>
                       }
-                      onClick={category.submenu ? (e) => {
-                        e.preventDefault();
-                        handleMenuOpen(e, category.name);
-                      } : undefined}
+                      onClick={
+                        category.submenu
+                          ? (e) => {
+                              e.preventDefault();
+                              handleMenuOpen(e, category.name);
+                            }
+                          : undefined
+                      }
                     />
                   );
                 })}
@@ -402,47 +419,47 @@ const MainLayout = () => {
             {!user?.isAuthenticated && <Box sx={{ flexGrow: 1 }} />}
 
             {/* Right side - notifications, user menu or auth buttons */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               {/* Show login/register buttons for unauthenticated users */}
               {!user?.isAuthenticated && (
                 <>
-                  <Button 
-                    component={Link} 
+                  <Button
+                    component={Link}
                     to="/register"
                     variant="outlined"
                     sx={{
                       borderRadius: 28,
-                      textTransform: 'none',
+                      textTransform: "none",
                       px: { xs: 2, md: 3 },
                       py: 1,
                       mr: 1,
-                      color: 'white',
-                      borderColor: 'rgba(255, 255, 255, 0.5)',
-                      '&:hover': {
-                        borderColor: 'white',
-                        background: 'rgba(255, 255, 255, 0.1)',
-                      }
+                      color: "white",
+                      borderColor: "rgba(255, 255, 255, 0.5)",
+                      "&:hover": {
+                        borderColor: "white",
+                        background: "rgba(255, 255, 255, 0.1)",
+                      },
                     }}
                   >
                     Đăng ký
                   </Button>
-                  <Button 
-                    component={Link} 
+                  <Button
+                    component={Link}
                     to="/login"
                     variant="contained"
                     sx={{
                       borderRadius: 28,
-                      textTransform: 'none',
+                      textTransform: "none",
                       px: { xs: 2, md: 3 },
                       py: 1,
-                      background: 'rgba(255, 255, 255, 0.9)',
+                      background: "rgba(255, 255, 255, 0.9)",
                       color: colors.primary,
                       fontWeight: 600,
-                      boxShadow: '0 4px 14px rgba(0, 0, 0, 0.1)',
-                      '&:hover': {
-                        background: 'white',
-                        boxShadow: '0 6px 20px rgba(0, 0, 0, 0.15)',
-                      }
+                      boxShadow: "0 4px 14px rgba(0, 0, 0, 0.1)",
+                      "&:hover": {
+                        background: "white",
+                        boxShadow: "0 6px 20px rgba(0, 0, 0, 0.15)",
+                      },
                     }}
                   >
                     Đăng nhập
@@ -457,19 +474,22 @@ const MainLayout = () => {
                   <IconButton
                     onClick={handleNotificationOpen}
                     size="medium"
-                    sx={{ 
-                      color: 'white',
-                      '&:hover': {
-                        background: 'rgba(255, 255, 255, 0.1)',
-                      }
+                    sx={{
+                      color: "white",
+                      "&:hover": {
+                        background: "rgba(255, 255, 255, 0.1)",
+                      },
                     }}
                   >
-                    <Badge badgeContent={3} sx={{
-                      '& .MuiBadge-badge': {
-                        bgcolor: colors.badge,
-                        boxShadow: '0 0 0 2px #1a73e8',
-                      }
-                    }}>
+                    <Badge
+                      badgeContent={3}
+                      sx={{
+                        "& .MuiBadge-badge": {
+                          bgcolor: colors.badge,
+                          boxShadow: "0 0 0 2px #1a73e8",
+                        },
+                      }}
+                    >
                       <NotificationsIcon />
                     </Badge>
                   </IconButton>
@@ -481,29 +501,29 @@ const MainLayout = () => {
                     onClick={handleUserMenuOpen}
                     sx={{
                       ml: 1,
-                      display: 'flex',
-                      alignItems: 'center',
-                      cursor: 'pointer',
+                      display: "flex",
+                      alignItems: "center",
+                      cursor: "pointer",
                       py: 0.5,
                       px: { xs: 0.5, md: 1.5 },
                       borderRadius: 28,
-                      background: 'rgba(255, 255, 255, 0.1)',
-                      backdropFilter: 'blur(10px)',
-                      border: '1px solid rgba(255, 255, 255, 0.18)',
-                      transition: 'all 0.2s',
-                      '&:hover': { 
-                        background: 'rgba(255, 255, 255, 0.18)',
-                      }
+                      background: "rgba(255, 255, 255, 0.1)",
+                      backdropFilter: "blur(10px)",
+                      border: "1px solid rgba(255, 255, 255, 0.18)",
+                      transition: "all 0.2s",
+                      "&:hover": {
+                        background: "rgba(255, 255, 255, 0.18)",
+                      },
                     }}
                   >
                     <Avatar
                       sx={{
                         width: 36,
                         height: 36,
-                        bgcolor: 'white',
+                        bgcolor: "white",
                         color: colors.primary,
-                        fontWeight: 'bold',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                        fontWeight: "bold",
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
                       }}
                       alt={user.name || "User"}
                     >
@@ -512,14 +532,23 @@ const MainLayout = () => {
                     {!isMobile && (
                       <>
                         <Box sx={{ ml: 1.5 }}>
-                          <Typography variant="body2" fontWeight={600} sx={{ lineHeight: 1.2, color: 'white' }}>
+                          <Typography
+                            variant="body2"
+                            fontWeight={600}
+                            sx={{ lineHeight: 1.2, color: "white" }}
+                          >
                             {user?.name}
                           </Typography>
-                          <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.8)' }}>
+                          <Typography
+                            variant="caption"
+                            sx={{ color: "rgba(255, 255, 255, 0.8)" }}
+                          >
                             {user?.role}
                           </Typography>
                         </Box>
-                        <KeyboardArrowDown sx={{ ml: 0.5, color: 'rgba(255, 255, 255, 0.7)' }} />
+                        <KeyboardArrowDown
+                          sx={{ ml: 0.5, color: "rgba(255, 255, 255, 0.7)" }}
+                        />
                       </>
                     )}
                   </Box>
@@ -534,9 +563,9 @@ const MainLayout = () => {
       {user?.isAuthenticated && (
         <>
           {/* Dropdown Menus for Navigation Categories */}
-          {menuCategories.map(category => {
+          {menuCategories.map((category) => {
             if (!category.submenu) return null;
-            
+
             return (
               <Popover
                 key={`menu-${category.name}`}
@@ -544,53 +573,54 @@ const MainLayout = () => {
                 anchorEl={menuAnchors[category.name]}
                 onClose={() => handleMenuClose(category.name)}
                 anchorOrigin={{
-                  vertical: 'bottom',
-                  horizontal: 'left',
+                  vertical: "bottom",
+                  horizontal: "left",
                 }}
                 transformOrigin={{
-                  vertical: 'top',
-                  horizontal: 'left',
+                  vertical: "top",
+                  horizontal: "left",
                 }}
                 sx={{
                   mt: 1,
-                  '& .MuiPaper-root': {
+                  "& .MuiPaper-root": {
                     borderRadius: 3,
                     minWidth: 220,
-                    overflow: 'hidden',
-                    boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
-                    background: 'rgba(255, 255, 255, 0.95)',
-                    backdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(0, 0, 0, 0.05)'
-                  }
+                    overflow: "hidden",
+                    boxShadow: "0 10px 40px rgba(0,0,0,0.1)",
+                    background: "rgba(255, 255, 255, 0.95)",
+                    backdropFilter: "blur(10px)",
+                    border: "1px solid rgba(0, 0, 0, 0.05)",
+                  },
                 }}
               >
                 <List sx={{ p: 1 }}>
-                  {category.submenu.map(item => {
+                  {category.submenu.map((item) => {
                     // Filter based on user role
-                    if (item.role && !item.role.includes(user.role)) return null;
-                    
+                    if (item.role && !item.role.includes(user.role))
+                      return null;
+
                     return (
                       <ListItem disablePadding key={item.text}>
-                        <ListItemButton 
+                        <ListItemButton
                           component={motion.div}
                           whileHover={{ x: 4 }}
                           whileTap={{ scale: 0.98 }}
                           onClick={() => navigateTo(item.path, category.name)}
-                          sx={{ 
-                            py: 1.2, 
+                          sx={{
+                            py: 1.2,
                             px: 2,
                             borderRadius: 2,
-                            transition: 'all 0.2s',
-                            '&:hover': {
-                              bgcolor: alpha(colors.primary, 0.08)
-                            }
+                            transition: "all 0.2s",
+                            "&:hover": {
+                              bgcolor: alpha(colors.primary, 0.08),
+                            },
                           }}
                         >
-                          <ListItemText 
-                            primary={item.text} 
+                          <ListItemText
+                            primary={item.text}
                             primaryTypographyProps={{
-                              fontSize: '0.95rem',
-                              fontWeight: 500
+                              fontSize: "0.95rem",
+                              fontWeight: 500,
                             }}
                           />
                           {hasBadge(item) && (
@@ -599,9 +629,9 @@ const MainLayout = () => {
                               label={item.badge}
                               sx={{
                                 bgcolor: colors.primary,
-                                color: 'white',
+                                color: "white",
                                 height: 22,
-                                fontSize: '0.75rem',
+                                fontSize: "0.75rem",
                                 fontWeight: 600,
                                 ml: 1,
                               }}
@@ -624,59 +654,61 @@ const MainLayout = () => {
             PaperProps={{
               sx: {
                 width: 340,
-                boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
+                boxShadow: "0 10px 40px rgba(0,0,0,0.1)",
                 borderRadius: 3,
                 mt: 1.5,
-                overflow: 'hidden',
-                background: 'rgba(255, 255, 255, 0.97)',
-                backdropFilter: 'blur(10px)',
-              }
+                overflow: "hidden",
+                background: "rgba(255, 255, 255, 0.97)",
+                backdropFilter: "blur(10px)",
+              },
             }}
-            transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-            anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+            transformOrigin={{ horizontal: "right", vertical: "top" }}
+            anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
           >
-            <Box 
-              sx={{ 
-                p: 2.5, 
-                pb: 2, 
-                display: 'flex', 
-                justifyContent: 'space-between', 
-                alignItems: 'center',
-                background: 'linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%)',
-                color: 'white'
+            <Box
+              sx={{
+                p: 2.5,
+                pb: 2,
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                background: "linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%)",
+                color: "white",
               }}
             >
               <Typography variant="subtitle1" fontWeight={600}>
                 Thông báo mới
               </Typography>
-              <Chip 
-                size="small" 
-                label="3 mới" 
-                sx={{ 
-                  bgcolor: 'rgba(255, 255, 255, 0.25)', 
-                  color: 'white',
+              <Chip
+                size="small"
+                label="3 mới"
+                sx={{
+                  bgcolor: "rgba(255, 255, 255, 0.25)",
+                  color: "white",
                   fontWeight: 600,
-                  fontSize: '0.7rem'
-                }} 
+                  fontSize: "0.7rem",
+                }}
               />
             </Box>
-            
-            <Box sx={{ maxHeight: 400, overflowY: 'auto' }}>
-              <MenuItem 
+
+            <Box sx={{ maxHeight: 400, overflowY: "auto" }}>
+              <MenuItem
                 component={motion.div}
                 whileHover={{ x: 3 }}
-                sx={{ py: 2 }} 
+                sx={{ py: 2 }}
                 onClick={handleNotificationClose}
               >
-                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
+                <Box
+                  sx={{ display: "flex", alignItems: "flex-start", gap: 1.5 }}
+                >
                   <Box
                     sx={{
                       width: 10,
                       height: 10,
-                      borderRadius: '50%',
+                      borderRadius: "50%",
                       bgcolor: colors.badge,
                       mt: 0.8,
-                      boxShadow: `0 0 0 3px ${alpha(colors.badge, 0.2)}`
+                      boxShadow: `0 0 0 3px ${alpha(colors.badge, 0.2)}`,
                     }}
                   />
                   <Box>
@@ -686,28 +718,37 @@ const MainLayout = () => {
                     <Typography variant="caption" color="text.secondary">
                       Lớp 10A3 sẽ được khám vào ngày 25/06
                     </Typography>
-                    <Typography variant="caption" sx={{ display: 'block', color: alpha(colors.textSecondary, 0.7), mt: 0.7 }}>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        display: "block",
+                        color: alpha(colors.textSecondary, 0.7),
+                        mt: 0.7,
+                      }}
+                    >
                       5 phút trước
                     </Typography>
                   </Box>
                 </Box>
               </MenuItem>
-              
-              <MenuItem 
+
+              <MenuItem
                 component={motion.div}
                 whileHover={{ x: 3 }}
-                sx={{ py: 2 }} 
+                sx={{ py: 2 }}
                 onClick={handleNotificationClose}
               >
-                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
+                <Box
+                  sx={{ display: "flex", alignItems: "flex-start", gap: 1.5 }}
+                >
                   <Box
                     sx={{
                       width: 10,
                       height: 10,
-                      borderRadius: '50%',
+                      borderRadius: "50%",
                       bgcolor: colors.badge,
                       mt: 0.8,
-                      boxShadow: `0 0 0 3px ${alpha(colors.badge, 0.2)}`
+                      boxShadow: `0 0 0 3px ${alpha(colors.badge, 0.2)}`,
                     }}
                   />
                   <Box>
@@ -717,28 +758,37 @@ const MainLayout = () => {
                     <Typography variant="caption" color="text.secondary">
                       Vui lòng cập nhật thông tin y tế mới nhất
                     </Typography>
-                    <Typography variant="caption" sx={{ display: 'block', color: alpha(colors.textSecondary, 0.7), mt: 0.7 }}>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        display: "block",
+                        color: alpha(colors.textSecondary, 0.7),
+                        mt: 0.7,
+                      }}
+                    >
                       3 giờ trước
                     </Typography>
                   </Box>
                 </Box>
               </MenuItem>
 
-              <MenuItem 
+              <MenuItem
                 component={motion.div}
                 whileHover={{ x: 3 }}
-                sx={{ py: 2 }} 
+                sx={{ py: 2 }}
                 onClick={handleNotificationClose}
               >
-                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
+                <Box
+                  sx={{ display: "flex", alignItems: "flex-start", gap: 1.5 }}
+                >
                   <Box
                     sx={{
                       width: 10,
                       height: 10,
-                      borderRadius: '50%',
+                      borderRadius: "50%",
                       bgcolor: colors.badge,
                       mt: 0.8,
-                      boxShadow: `0 0 0 3px ${alpha(colors.badge, 0.2)}`
+                      boxShadow: `0 0 0 3px ${alpha(colors.badge, 0.2)}`,
                     }}
                   />
                   <Box>
@@ -748,19 +798,26 @@ const MainLayout = () => {
                     <Typography variant="caption" color="text.secondary">
                       Có 3 học sinh cần được khám theo dõi
                     </Typography>
-                    <Typography variant="caption" sx={{ display: 'block', color: alpha(colors.textSecondary, 0.7), mt: 0.7 }}>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        display: "block",
+                        color: alpha(colors.textSecondary, 0.7),
+                        mt: 0.7,
+                      }}
+                    >
                       Hôm qua
                     </Typography>
                   </Box>
                 </Box>
               </MenuItem>
             </Box>
-            
-            <Box 
-              sx={{ 
+
+            <Box
+              sx={{
                 p: 2,
-                textAlign: 'center', 
-                borderTop: `1px solid ${alpha(colors.divider, 0.8)}`
+                textAlign: "center",
+                borderTop: `1px solid ${alpha(colors.divider, 0.8)}`,
               }}
             >
               <Button
@@ -769,16 +826,17 @@ const MainLayout = () => {
                 variant="contained"
                 size="small"
                 onClick={handleNotificationClose}
-                sx={{ 
-                  textTransform: 'none',
+                sx={{
+                  textTransform: "none",
                   borderRadius: 5,
                   px: 3,
                   py: 1,
-                  background: 'linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%)',
-                  boxShadow: '0 4px 12px rgba(26, 115, 232, 0.4)',
-                  '&:hover': {
-                    boxShadow: '0 6px 16px rgba(26, 115, 232, 0.6)',
-                  }
+                  background:
+                    "linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%)",
+                  boxShadow: "0 4px 12px rgba(26, 115, 232, 0.4)",
+                  "&:hover": {
+                    boxShadow: "0 6px 16px rgba(26, 115, 232, 0.6)",
+                  },
                 }}
               >
                 Xem tất cả thông báo
@@ -794,62 +852,77 @@ const MainLayout = () => {
             PaperProps={{
               sx: {
                 width: 250,
-                boxShadow: '0 10px 40px rgba(0,0,0,0.12)',
+                boxShadow: "0 10px 40px rgba(0,0,0,0.12)",
                 borderRadius: 3,
                 mt: 1.5,
-                overflow: 'hidden',
-                background: 'rgba(255, 255, 255, 0.97)',
-                backdropFilter: 'blur(10px)',
-              }
+                overflow: "hidden",
+                background: "rgba(255, 255, 255, 0.97)",
+                backdropFilter: "blur(10px)",
+              },
             }}
-            transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-            anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+            transformOrigin={{ horizontal: "right", vertical: "top" }}
+            anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
           >
-            <Box 
-              sx={{ 
-                p: 3, 
-                textAlign: 'center',
-                background: 'linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%)',
+            <Box
+              sx={{
+                p: 3,
+                textAlign: "center",
+                background: "linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%)",
               }}
             >
               <Avatar
                 sx={{
                   width: 70,
                   height: 70,
-                  margin: '0 auto',
-                  border: '4px solid rgba(255, 255, 255, 0.6)',
-                  bgcolor: 'white',
+                  margin: "0 auto",
+                  border: "4px solid rgba(255, 255, 255, 0.6)",
+                  bgcolor: "white",
                   color: colors.primary,
-                  fontSize: '1.8rem',
-                  fontWeight: 'bold',
+                  fontSize: "1.8rem",
+                  fontWeight: "bold",
                 }}
               >
                 {user?.name?.charAt(0) || "U"}
               </Avatar>
-              <Typography variant="subtitle1" sx={{ mt: 2, fontWeight: 600, color: 'white' }}>
+              <Typography
+                variant="subtitle1"
+                sx={{ mt: 2, fontWeight: 600, color: "white" }}
+              >
                 {user?.name}
               </Typography>
-              <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.8)' }}>
+              <Typography
+                variant="caption"
+                sx={{ color: "rgba(255, 255, 255, 0.8)" }}
+              >
                 {user?.role}
               </Typography>
             </Box>
-            
-            <MenuItem 
+
+            <MenuItem
               component={motion.div}
               whileHover={{ x: 3 }}
-              onClick={() => { navigate('/profile'); handleUserMenuClose(); }}
+              onClick={() => {
+                navigate("/profile");
+                handleUserMenuClose();
+              }}
               sx={{ py: 1.5, px: 2.5 }}
             >
               <ListItemIcon>
-                <AccountCircle fontSize="small" sx={{ color: colors.primary }} />
+                <AccountCircle
+                  fontSize="small"
+                  sx={{ color: colors.primary }}
+                />
               </ListItemIcon>
               <ListItemText primary="Trang cá nhân" />
             </MenuItem>
-            
-            <MenuItem 
+
+            <MenuItem
               component={motion.div}
               whileHover={{ x: 3 }}
-              onClick={() => { navigate('/settings'); handleUserMenuClose(); }}
+              onClick={() => {
+                navigate("/settings");
+                handleUserMenuClose();
+              }}
               sx={{ py: 1.5, px: 2.5 }}
             >
               <ListItemIcon>
@@ -857,10 +930,10 @@ const MainLayout = () => {
               </ListItemIcon>
               <ListItemText primary="Cài đặt" />
             </MenuItem>
-            
+
             <Divider sx={{ my: 1 }} />
-            
-            <MenuItem 
+
+            <MenuItem
               component={motion.div}
               whileHover={{ x: 3 }}
               onClick={handleLogout}
@@ -869,8 +942,8 @@ const MainLayout = () => {
               <ListItemIcon>
                 <Logout fontSize="small" sx={{ color: colors.error }} />
               </ListItemIcon>
-              <ListItemText 
-                primary="Đăng xuất" 
+              <ListItemText
+                primary="Đăng xuất"
                 primaryTypographyProps={{ color: colors.error }}
               />
             </MenuItem>
@@ -883,31 +956,41 @@ const MainLayout = () => {
             onClose={handleMobileMenuToggle}
             PaperProps={{
               sx: {
-                width: '100%',
-                maxWidth: '100%',
-                top: '64px !important',
-                left: '0px !important',
-                boxShadow: '0 10px 40px rgba(0,0,0,0.15)',
-                background: 'rgba(255, 255, 255, 0.97)',
-                backdropFilter: 'blur(10px)',
-              }
+                width: "100%",
+                maxWidth: "100%",
+                top: "64px !important",
+                left: "0px !important",
+                boxShadow: "0 10px 40px rgba(0,0,0,0.15)",
+                background: "rgba(255, 255, 255, 0.97)",
+                backdropFilter: "blur(10px)",
+              },
             }}
           >
             <List sx={{ py: 2 }}>
-              {menuCategories.flatMap(category => {
+              {menuCategories.flatMap((category) => {
                 // For categories with submenu, add title and then all items
                 if (category.submenu) {
                   return [
                     // Category heading
-                    <ListItem key={`category-${category.name}`} sx={{ py: 0.5, px: 3 }}>
-                      <Typography variant="overline" color={colors.primary} fontWeight={700} sx={{ letterSpacing: 1.5 }}>
+                    <ListItem
+                      key={`category-${category.name}`}
+                      sx={{ py: 0.5, px: 3 }}
+                    >
+                      <Typography
+                        variant="overline"
+                        color={colors.primary}
+                        fontWeight={700}
+                        sx={{ letterSpacing: 1.5 }}
+                      >
                         {category.name}
                       </Typography>
                     </ListItem>,
                     // Category items
                     ...category.submenu
-                      .filter(item => !item.role || item.role.includes(user.role))
-                      .map(item => (
+                      .filter(
+                        (item) => !item.role || item.role.includes(user.role)
+                      )
+                      .map((item) => (
                         <ListItem disablePadding key={item.text}>
                           <ListItemButton
                             component={motion.div}
@@ -917,20 +1000,24 @@ const MainLayout = () => {
                               navigate(item.path);
                               handleMobileMenuToggle();
                             }}
-                            sx={{ 
+                            sx={{
                               py: 1.5,
                               px: 3,
                               borderRadius: 2,
                               mx: 1.5,
                               my: 0.3,
-                              transition: 'all 0.2s'
+                              transition: "all 0.2s",
                             }}
                           >
                             <ListItemText
                               primary={item.text}
                               primaryTypographyProps={{
-                                fontWeight: location.pathname === item.path ? 600 : 400,
-                                color: location.pathname === item.path ? colors.primary : colors.text
+                                fontWeight:
+                                  location.pathname === item.path ? 600 : 400,
+                                color:
+                                  location.pathname === item.path
+                                    ? colors.primary
+                                    : colors.text,
                               }}
                             />
                             {hasBadge(item) && (
@@ -939,21 +1026,26 @@ const MainLayout = () => {
                                 label={item.badge}
                                 sx={{
                                   bgcolor: colors.primary,
-                                  color: 'white',
+                                  color: "white",
                                   height: 20,
-                                  fontSize: '0.75rem',
+                                  fontSize: "0.75rem",
                                   fontWeight: 600,
                                 }}
                               />
                             )}
                           </ListItemButton>
                         </ListItem>
-                      ))
+                      )),
                   ];
                 } else {
                   // For standalone categories without submenu
-                  if (category.role && Array.isArray(category.role) && !category.role.includes(user.role)) return [];
-                  
+                  if (
+                    category.role &&
+                    Array.isArray(category.role) &&
+                    !category.role.includes(user.role)
+                  )
+                    return [];
+
                   return [
                     <ListItem disablePadding key={category.name}>
                       <ListItemButton
@@ -961,23 +1053,30 @@ const MainLayout = () => {
                         whileHover={{ x: 5 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => {
-                          navigate(category.path || '/');
+                          navigate(category.path || "/");
                           handleMobileMenuToggle();
                         }}
-                        sx={{ 
+                        sx={{
                           py: 1.5,
                           px: 3,
                           borderRadius: 2,
                           mx: 1.5,
                           my: 0.3,
-                          bgcolor: location.pathname === category.path ? alpha(colors.primary, 0.1) : 'transparent',
+                          bgcolor:
+                            location.pathname === category.path
+                              ? alpha(colors.primary, 0.1)
+                              : "transparent",
                         }}
                       >
                         <ListItemText
                           primary={category.name}
                           primaryTypographyProps={{
-                            fontWeight: location.pathname === category.path ? 600 : 400,
-                            color: location.pathname === category.path ? colors.primary : colors.text
+                            fontWeight:
+                              location.pathname === category.path ? 600 : 400,
+                            color:
+                              location.pathname === category.path
+                                ? colors.primary
+                                : colors.text,
                           }}
                         />
                         {category.badge && (
@@ -986,15 +1085,15 @@ const MainLayout = () => {
                             label={category.badge}
                             sx={{
                               bgcolor: colors.primary,
-                              color: 'white',
+                              color: "white",
                               height: 24,
-                              fontSize: '0.75rem',
+                              fontSize: "0.75rem",
                               fontWeight: 600,
                             }}
                           />
                         )}
                       </ListItemButton>
-                    </ListItem>
+                    </ListItem>,
                   ];
                 }
               })}
@@ -1004,16 +1103,17 @@ const MainLayout = () => {
       )}
 
       {/* Main Content with background pattern */}
-      <Box 
-        component="main" 
-        sx={{ 
-          flexGrow: 1, 
-          pt: { xs: 8, sm: 10 }, 
-          pb: { xs: 4, sm: 6 }, 
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          pt: { xs: 8, sm: 10 },
+          pb: { xs: 4, sm: 6 },
           px: { xs: 2, sm: 4, md: 5 },
-          backgroundImage: 'radial-gradient(rgba(26, 115, 232, 0.04) 2px, transparent 0)',
-          backgroundSize: '30px 30px',
-          minHeight: '100vh',
+          backgroundImage:
+            "radial-gradient(rgba(26, 115, 232, 0.04) 2px, transparent 0)",
+          backgroundSize: "30px 30px",
+          minHeight: "100vh",
         }}
       >
         <AnimatePresence mode="wait">
@@ -1024,7 +1124,7 @@ const MainLayout = () => {
             exit="out"
             variants={pageVariants}
             transition={pageTransition}
-            style={{ height: '100%' }}
+            style={{ height: "100%" }}
           >
             <Outlet />
           </motion.div>

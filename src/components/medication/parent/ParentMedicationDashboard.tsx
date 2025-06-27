@@ -212,8 +212,6 @@ const ParentMedicationDashboard: React.FC<ParentMedicationDashboardProps> = ({
         } else {
           console.error("Error message:", error.message);
         }
-
-        setError("Không thể tải danh sách thuốc. Vui lòng thử lại sau.");
       }
     },
     [parentId]
@@ -269,7 +267,7 @@ const ParentMedicationDashboard: React.FC<ParentMedicationDashboardProps> = ({
   const handleViewLogs = async (requestId: string, studentId: string) => {
     setLoading(true);
     try {
-      const baseUrl = process.env.REACT_APP_BASE_URL || "http://localhost:5112";
+      const baseUrl = process.env.REACT_APP_BASE_URL;
 
       // Gọi API mới lấy danh sách nhật ký uống thuốc dựa vào studentId
       const response = await instance.get<MedicationDiaryEntry[]>(

@@ -13,13 +13,18 @@ import {
   Alert,
   Divider,
   CircularProgress,
+  Link,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { vi as viLocale } from "date-fns/locale";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import WarningIcon from "@mui/icons-material/Warning";
+import { Link as RouterLink } from "react-router-dom";
 import axios from "axios";
 import instance from "../../../utils/axiosConfig";
+import { startOfDay, isBefore } from "date-fns";
 
 interface MedicationRequestFormProps {
   parentId: string;
@@ -80,6 +85,12 @@ const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
     }
   };
 
+  // Thêm hàm kiểm tra ngày trong quá khứ
+  const isInPast = (date: Date) => {
+    const today = startOfDay(new Date());
+    return isBefore(date, today);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -92,6 +103,12 @@ const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
       !dosesPerDay
     ) {
       alert("Vui lòng điền đầy đủ các thông tin bắt buộc");
+      return;
+    }
+
+    // Kiểm tra ngày bắt đầu
+    if (startDate && isInPast(startDate)) {
+      setError("Ngày bắt đầu phải từ ngày hiện tại trở đi");
       return;
     }
 
@@ -144,212 +161,270 @@ const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
     setOpenSnackbar(false);
   };
 
+  // Kiểm tra xem có học sinh nào không sau khi đã tải xong
+  const noStudentsAvailable = !loading && studentOptions.length === 0;
+
   return (
     <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
       <Typography variant="h6" gutterBottom>
         Gửi thuốc đến trường
       </Typography>
 
-      <Alert severity="info" sx={{ mb: 2 }}>
-        Vui lòng nhập thành phần thuốc để nhà trường có thể kiểm tra.
-      </Alert>
-
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
+      {/* Hiển thị cảnh báo khi không có hồ sơ sức khỏe học sinh */}
+      {noStudentsAvailable ? (
+        <Alert
+          severity="warning"
+          icon={<WarningIcon />}
+          sx={{
+            mb: 2,
+            display: "flex",
+            alignItems: "flex-start",
+            "& .MuiAlert-message": { mt: 0.5 },
+          }}
+        >
+          <Box>
+            <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+              Chưa có hồ sơ sức khỏe học sinh nào được khai báo!
+            </Typography>
+            <Typography variant="body2" paragraph>
+              Để đảm bảo an toàn cho sức khỏe của trẻ, bạn cần khai báo hồ sơ
+              sức khỏe học sinh trước khi gửi thuốc đến trường. Hồ sơ sức khỏe
+              giúp nhà trường nắm được thông tin về tình trạng sức khỏe, dị ứng
+              và các lưu ý đặc biệt của trẻ.
+            </Typography>
+            <Button
+              component={RouterLink}
+              to="/health-records"
+              variant="contained"
+              color="primary"
+              size="small"
+            >
+              Khai báo hồ sơ sức khỏe ngay
+            </Button>
+          </Box>
         </Alert>
+      ) : (
+        <>
+          <Alert severity="info" sx={{ mb: 2 }}>
+            Vui lòng nhập thành phần thuốc để nhà trường có thể kiểm tra.
+          </Alert>
+
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+          )}
+        </>
       )}
 
-      <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
-        {loading ? (
-          <CircularProgress />
-        ) : (
-          <FormControl fullWidth sx={{ mb: 2 }}>
-            <InputLabel id="student-select-label">Tên học sinh *</InputLabel>
-            <Select
-              labelId="student-select-label"
-              id="student-select"
-              value={studentId}
-              label="Tên học sinh *"
-              onChange={(e) => setStudentId(e.target.value)}
-              required
-            >
-              {studentOptions.map((student) => (
-                <MenuItem key={student.id} value={student.id}>
-                  {student.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        )}
-
-        {/* Phần thông tin thuốc */}
-        <Box sx={{ mb: 3 }}>
-          <Typography variant="subtitle1" gutterBottom fontWeight="medium">
-            Thông tin thuốc
-          </Typography>
-          <Divider sx={{ mb: 2 }} />
-
-          {/* Phần nhập thành phần thuốc */}
-          <Box sx={{ mt: 2, mb: 2 }}>
-            {/* Thành phần thuốc */}
-            <Box sx={{ mb: 2 }}>
-              <TextField
+      {/* Chỉ hiển thị form khi có học sinh hoặc đang loading */}
+      {!noStudentsAvailable && (
+        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
+          {loading ? (
+            <CircularProgress />
+          ) : (
+            <FormControl fullWidth sx={{ mb: 2 }}>
+              <InputLabel id="student-select-label">Tên học sinh *</InputLabel>
+              <Select
+                labelId="student-select-label"
+                id="student-select"
+                value={studentId}
+                label="Tên học sinh *"
+                onChange={(e) => setStudentId(e.target.value)}
                 required
-                fullWidth
-                id="medication-components"
-                label="Tên thuốc và thành phần"
-                multiline
-                rows={4}
-                value={components}
-                onChange={(e) => setComponents(e.target.value)}
-                placeholder={`Ví dụ:
+              >
+                {studentOptions.map((student) => (
+                  <MenuItem key={student.id} value={student.id}>
+                    {student.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
+
+          {/* Phần thông tin thuốc */}
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="subtitle1" gutterBottom fontWeight="medium">
+              Thông tin thuốc
+            </Typography>
+            <Divider sx={{ mb: 2 }} />
+
+            {/* Phần nhập thành phần thuốc */}
+            <Box sx={{ mt: 2, mb: 2 }}>
+              {/* Thành phần thuốc */}
+              <Box sx={{ mb: 2 }}>
+                <TextField
+                  required
+                  fullWidth
+                  id="medication-components"
+                  label="Tên thuốc và thành phần"
+                  multiline
+                  rows={4}
+                  value={components}
+                  onChange={(e) => setComponents(e.target.value)}
+                  placeholder={`Ví dụ:
 1. Panadol Extra: Paracetamol 500mg, Caffeine 65mg
 2. Vitamin C DHG: Acid ascorbic 500mg
 3. Thuốc ho Bảo Thanh: Cao khô lá thuốc, Bạc hà 10mg`}
-                helperText={`Liệt kê tất cả các loại thuốc và thành phần chính. Mỗi thuốc ghi rõ tên và thành phần trên một dòng riêng.`}
-              />
+                  helperText={`Liệt kê tất cả các loại thuốc và thành phần chính. Mỗi thuốc ghi rõ tên và thành phần trên một dòng riêng.`}
+                />
+              </Box>
+
+              {/* Số lần uống trong ngày - Giữ nguyên */}
+              <Box sx={{ mb: 2 }}>
+                <TextField
+                  required
+                  fullWidth
+                  id="doses-per-day"
+                  label="Số lần uống trong ngày"
+                  type="number"
+                  InputProps={{ inputProps: { min: 1, max: 10 } }}
+                  value={dosesPerDay}
+                  onChange={(e) => setDosesPerDay(parseInt(e.target.value))}
+                  helperText="Nhập số lần uống thuốc trong ngày (1-10 lần)"
+                />
+              </Box>
             </Box>
 
-            {/* Số lần uống trong ngày - Giữ nguyên */}
-            <Box sx={{ mb: 2 }}>
-              <TextField
-                required
-                fullWidth
-                id="doses-per-day"
-                label="Số lần uống trong ngày"
-                type="number"
-                InputProps={{ inputProps: { min: 1, max: 10 } }}
-                value={dosesPerDay}
-                onChange={(e) => setDosesPerDay(parseInt(e.target.value))}
-                helperText="Nhập số lần uống thuốc trong ngày (1-10 lần)"
-              />
-            </Box>
-          </Box>
+            {/* Phần chụp hóa đơn thuốc (Optional) */}
+            <Box sx={{ mt: 3, mb: 2 }}>
+              <Typography variant="subtitle2" gutterBottom>
+                Chụp hóa đơn thuốc (Tùy chọn)
+              </Typography>
 
-          {/* Phần chụp hóa đơn thuốc (Optional) */}
-          <Box sx={{ mt: 3, mb: 2 }}>
-            <Typography variant="subtitle2" gutterBottom>
-              Chụp hóa đơn thuốc (Tùy chọn)
-            </Typography>
-
-            <Box
-              sx={{
-                mt: 1,
-                mb: 2,
-                border: "1px dashed #ccc",
-                p: 3,
-                borderRadius: 1,
-                textAlign: "center",
-              }}
-            >
-              <input
-                accept="image/*"
-                style={{ display: "none" }}
-                id="receipt-upload-button"
-                type="file"
-                onChange={handleFileChange}
-                disabled={uploadingImage}
-              />
-              <label htmlFor="receipt-upload-button">
-                <Button
-                  component="span"
-                  variant="outlined"
-                  startIcon={<CloudUploadIcon />}
-                  sx={{ mb: 2 }}
+              <Box
+                sx={{
+                  mt: 1,
+                  mb: 2,
+                  border: "1px dashed #ccc",
+                  p: 3,
+                  borderRadius: 1,
+                  textAlign: "center",
+                }}
+              >
+                <input
+                  accept="image/*"
+                  style={{ display: "none" }}
+                  id="receipt-upload-button"
+                  type="file"
+                  onChange={handleFileChange}
                   disabled={uploadingImage}
-                >
-                  {uploadingImage ? "Đang tải lên..." : "Tải lên hóa đơn thuốc"}
-                </Button>
-              </label>
+                />
+                <label htmlFor="receipt-upload-button">
+                  <Button
+                    component="span"
+                    variant="outlined"
+                    startIcon={<CloudUploadIcon />}
+                    sx={{ mb: 2 }}
+                    disabled={uploadingImage}
+                  >
+                    {uploadingImage
+                      ? "Đang tải lên..."
+                      : "Tải lên hóa đơn thuốc"}
+                  </Button>
+                </label>
 
-              {uploadingImage && (
-                <Box sx={{ mt: 2, display: "flex", justifyContent: "center" }}>
-                  <CircularProgress size={24} />
-                </Box>
-              )}
-
-              {receiptImage && receiptImageUrl && (
-                <Box sx={{ mt: 2 }}>
-                  <Typography variant="body2" color="textSecondary">
-                    Đã tải lên: {receiptImage.name}
-                  </Typography>
-                  <Box sx={{ mt: 1 }}>
-                    <img
-                      src={receiptImageUrl}
-                      alt="Hóa đơn thuốc"
-                      style={{ maxWidth: "100%", maxHeight: "200px" }}
-                    />
+                {uploadingImage && (
+                  <Box
+                    sx={{ mt: 2, display: "flex", justifyContent: "center" }}
+                  >
+                    <CircularProgress size={24} />
                   </Box>
-                </Box>
-              )}
+                )}
 
-              {!receiptImage && !uploadingImage && (
-                <Typography variant="body2" color="textSecondary">
-                  Bạn có thể chụp thêm hóa đơn thuốc để nhà trường tham khảo
-                </Typography>
-              )}
+                {receiptImage && receiptImageUrl && (
+                  <Box sx={{ mt: 2 }}>
+                    <Typography variant="body2" color="textSecondary">
+                      Đã tải lên: {receiptImage.name}
+                    </Typography>
+                    <Box sx={{ mt: 1 }}>
+                      <img
+                        src={receiptImageUrl}
+                        alt="Hóa đơn thuốc"
+                        style={{ maxWidth: "100%", maxHeight: "200px" }}
+                      />
+                    </Box>
+                  </Box>
+                )}
+
+                {!receiptImage && !uploadingImage && (
+                  <Typography variant="body2" color="textSecondary">
+                    Bạn có thể chụp thêm hóa đơn thuốc để nhà trường tham khảo
+                  </Typography>
+                )}
+              </Box>
             </Box>
           </Box>
-        </Box>
 
-        {/* Thông tin thời gian */}
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: { xs: "column", sm: "row" },
-            gap: 2,
-            mb: 2,
-          }}
-        >
-          <TextField
-            required
-            fullWidth
-            id="days-required"
-            label="Số ngày cần uống"
-            type="number"
-            InputProps={{ inputProps: { min: 1, max: 30 } }}
-            value={daysRequired}
-            onChange={(e) => setDaysRequired(parseInt(e.target.value))}
-          />
-
-          <LocalizationProvider dateAdapter={AdapterDateFns}>
-            <DatePicker
-              label="Ngày bắt đầu"
-              value={startDate}
-              onChange={(newValue) => setStartDate(newValue)}
-              slotProps={{ textField: { fullWidth: true, required: true } }}
-            />
-          </LocalizationProvider>
-        </Box>
-
-        {/* Đổi Ghi chú thành Hướng dẫn sử dụng và ghi chú */}
-        <Box sx={{ mb: 2 }}>
-          <TextField
-            fullWidth
-            id="notes"
-            label="Hướng dẫn sử dụng và ghi chú"
-            multiline
-            rows={3}
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="Ví dụ: Uống sau bữa ăn, không nhai viên thuốc, pha với nước ấm, uống trong bữa sáng..."
-            helperText="Nhập các lưu ý đặc biệt khi dùng thuốc và các thông tin bổ sung khác"
-          />
-        </Box>
-
-        <Box>
-          <Button
-            variant="contained"
-            color="primary"
-            type="submit"
-            fullWidth
-            disabled={isSubmitting}
+          {/* Thông tin thời gian */}
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: { xs: "column", sm: "row" },
+              gap: 2,
+              mb: 2,
+            }}
           >
-            {isSubmitting ? <CircularProgress size={24} /> : "Gửi yêu cầu"}
-          </Button>
+            <TextField
+              required
+              fullWidth
+              id="days-required"
+              label="Số ngày cần uống"
+              type="number"
+              InputProps={{ inputProps: { min: 1, max: 30 } }}
+              value={daysRequired}
+              onChange={(e) => setDaysRequired(parseInt(e.target.value))}
+            />
+
+            <LocalizationProvider
+              dateAdapter={AdapterDateFns}
+              adapterLocale={viLocale}
+            >
+              <DatePicker
+                label="Ngày bắt đầu"
+                value={startDate}
+                onChange={(newValue) => setStartDate(newValue)}
+                minDate={new Date()} // Thiết lập ngày tối thiểu là ngày hiện tại
+                shouldDisableDate={(date) => isInPast(date)} // Vô hiệu hóa ngày trong quá khứ
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    required: true,
+                    helperText: "Chỉ có thể chọn từ ngày hiện tại trở đi",
+                  },
+                }}
+              />
+            </LocalizationProvider>
+          </Box>
+
+          {/* Đổi Ghi chú thành Hướng dẫn sử dụng và ghi chú */}
+          <Box sx={{ mb: 2 }}>
+            <TextField
+              fullWidth
+              id="notes"
+              label="Hướng dẫn sử dụng và ghi chú"
+              multiline
+              rows={3}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Ví dụ: Uống sau bữa ăn, không nhai viên thuốc, pha với nước ấm, uống trong bữa sáng..."
+              helperText="Nhập các lưu ý đặc biệt khi dùng thuốc và các thông tin bổ sung khác"
+            />
+          </Box>
+
+          <Box>
+            <Button
+              variant="contained"
+              color="primary"
+              type="submit"
+              fullWidth
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? <CircularProgress size={24} /> : "Gửi yêu cầu"}
+            </Button>
+          </Box>
         </Box>
-      </Box>
+      )}
 
       <Snackbar
         open={openSnackbar}
