@@ -34,12 +34,14 @@ const VaccinationPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [campaigns, setCampaigns] = useState<any[]>([]);
-  const [filteredCampaigns, setFilteredCampaigns] = useState<any[]>([]);
   const [selectedCampaign, setSelectedCampaign] = useState<any>(null);
   const [refresh, setRefresh] = useState(0);
 
   // Thay đổi kiểu dữ liệu của state typeFilter từ number | null thành string | number
   const [typeFilter, setTypeFilter] = useState<string | number>("all"); // Sử dụng "all" thay vì null
+
+  // Thay đổi từ useMemo sang useState
+  const [filteredCampaigns, setFilteredCampaigns] = useState<any[]>([]);
 
   const navigate = useNavigate();
 
@@ -57,13 +59,15 @@ const VaccinationPage = () => {
         }
 
         const response = await instance.get(url);
+
+        // Đảm bảo dữ liệu nhận về là mảng
         const data = Array.isArray(response.data)
           ? response.data
           : [response.data];
-        setCampaigns(data);
 
-        // Áp dụng lọc theo loại chương trình
-        applyFilters(data);
+        // Không cần phải fetch thêm schedules vì đã được bao gồm trong response
+        // của mỗi campaign
+        setCampaigns(data);
 
         setError(null);
       } catch (err) {
@@ -72,7 +76,6 @@ const VaccinationPage = () => {
           "Không thể tải danh sách chương trình tiêm chủng. Vui lòng thử lại sau."
         );
         setCampaigns([]);
-        setFilteredCampaigns([]);
       } finally {
         setLoading(false);
       }
@@ -135,6 +138,7 @@ const VaccinationPage = () => {
         description: campaignData.description,
         status: 0, // Mặc định là "Đã lên kế hoạch"
         type: campaignData.type, // Sử dụng type đã chọn từ form
+        schedules: campaignData.schedules || [], // Thêm danh sách lịch nếu có
       };
 
       await instance.post("/api/Campaign/create-campaign", newCampaignData);
@@ -183,12 +187,15 @@ const VaccinationPage = () => {
     setRefresh((prev) => prev + 1);
   };
 
-  // Lấy tổng số chương trình theo từng loại
-  const countByType = {
-    all: campaigns.length,
-    vaccination: campaigns.filter((c) => c.type === 0).length,
-    healthcheck: campaigns.filter((c) => c.type === 1).length,
-  };
+  // Sử dụng useMemo để tính số lượng theo từng loại
+  const countByType = React.useMemo(
+    () => ({
+      all: campaigns.length,
+      vaccination: campaigns.filter((c) => c.type === 0).length,
+      healthcheck: campaigns.filter((c) => c.type === 1).length,
+    }),
+    [campaigns]
+  );
 
   return (
     <Container maxWidth="lg">

@@ -145,6 +145,7 @@ const VaccinationProgramList: React.FC<VaccinationProgramListProps> = ({
                 <TableCell sx={{ fontWeight: "bold" }}>Ngày tạo</TableCell>
                 <TableCell sx={{ fontWeight: "bold" }}>Người tạo</TableCell>
                 <TableCell sx={{ fontWeight: "bold" }}>Trạng thái</TableCell>
+                <TableCell sx={{ fontWeight: "bold" }}>Số lịch</TableCell>
                 <TableCell sx={{ fontWeight: "bold" }}>Thao tác</TableCell>
               </TableRow>
             </TableHead>
@@ -175,6 +176,11 @@ const VaccinationProgramList: React.FC<VaccinationProgramListProps> = ({
                       color={getStatusColor(campaign.status) as any}
                       size="small"
                     />
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">
+                      {campaign.schedules ? campaign.schedules.length : 0} lịch
+                    </Typography>
                   </TableCell>
                   <TableCell>
                     <Box sx={{ display: "flex" }}>
