@@ -62,14 +62,24 @@ const AddStudentToScheduleDialog: React.FC<AddStudentToScheduleDialogProps> = ({
       setLoading(true);
       setError(null);
 
-      // API để lấy danh sách học sinh chưa được đăng ký vào lịch này
-      const response = await instance.get(
-        `/api/Student/get-unassigned-students/${scheduleId}`
-      );
+      // Using the new API endpoint to get all students
+      const response = await instance.get("/api/Student/get-all-students");
 
-      setStudents(Array.isArray(response.data) ? response.data : []);
+      // Map response data to expected structure with correct field names
+      const formattedStudents = Array.isArray(response.data)
+        ? response.data.map((student) => ({
+            id: student.id,
+            studentName: student.fullName, // API returns fullName but component uses studentName
+            studentCode: student.studentCode,
+            className: student.class, // API returns class but component uses className
+            dateOfBirth: student.dateOfBirth,
+            gender: student.gender,
+          }))
+        : [];
+
+      setStudents(formattedStudents);
     } catch (err) {
-      console.error("Error fetching available students:", err);
+      console.error("Error fetching students:", err);
       setError("Không thể tải danh sách học sinh. Vui lòng thử lại sau.");
       setStudents([]);
     } finally {
@@ -107,13 +117,23 @@ const AddStudentToScheduleDialog: React.FC<AddStudentToScheduleDialogProps> = ({
 
     try {
       setSubmitting(true);
-
-      await instance.post(
-        `/api/Schedule/add-students-to-schedule/${scheduleId}`,
-        {
-          studentIds: selectedStudents,
-        }
-      );
+      
+      // Create an array of promises for all API calls
+      const promises = selectedStudents.map(async (studentId) => {
+        const requestBody = {
+          studentId: studentId,
+          scheduleId: scheduleId,
+          vaccinationDate: new Date().toISOString()
+        };
+        
+        return instance.post(
+          "/api/ScheduleDetail/create-schedule-detail", 
+          requestBody
+        );
+      });
+      
+      // Execute all requests in parallel
+      await Promise.all(promises);
 
       toast.success(
         `Đã thêm ${selectedStudents.length} học sinh vào lịch thành công`
@@ -142,6 +162,17 @@ const AddStudentToScheduleDialog: React.FC<AddStudentToScheduleDialogProps> = ({
       return format(new Date(dateString), "dd/MM/yyyy");
     } catch (error) {
       return "Invalid date";
+    }
+  };
+
+  const formatGender = (gender: number) => {
+    switch (gender) {
+      case 0:
+        return "Nữ";
+      case 1:
+        return "Nam";
+      default:
+        return "Khác";
     }
   };
 
@@ -200,6 +231,7 @@ const AddStudentToScheduleDialog: React.FC<AddStudentToScheduleDialogProps> = ({
                   <TableCell sx={{ fontWeight: "bold" }}>Mã học sinh</TableCell>
                   <TableCell sx={{ fontWeight: "bold" }}>Họ và tên</TableCell>
                   <TableCell sx={{ fontWeight: "bold" }}>Lớp</TableCell>
+                  <TableCell sx={{ fontWeight: "bold" }}>Giới tính</TableCell>
                   <TableCell sx={{ fontWeight: "bold" }}>Ngày sinh</TableCell>
                 </TableRow>
               </TableHead>
@@ -220,12 +252,13 @@ const AddStudentToScheduleDialog: React.FC<AddStudentToScheduleDialogProps> = ({
                       <TableCell>{student.studentCode}</TableCell>
                       <TableCell>{student.studentName}</TableCell>
                       <TableCell>{student.className}</TableCell>
+                      <TableCell>{formatGender(student.gender)}</TableCell>
                       <TableCell>{formatDate(student.dateOfBirth)}</TableCell>
                     </TableRow>
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={5} align="center">
+                    <TableCell colSpan={6} align="center">
                       <Typography variant="body1" sx={{ py: 2 }}>
                         {searchQuery
                           ? "Không tìm thấy học sinh phù hợp"

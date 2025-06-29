@@ -172,12 +172,17 @@ const VaccinationProgramDetails: React.FC<VaccinationProgramDetailsProps> = ({
       if (!campaign?.id) return;
 
       setIsLoading(true);
+      console.log("Refreshing campaign data for ID:", campaign.id);
+
       const response = await instance.get(
         `/api/Campaign/get-campaign-by-id/${campaign.id}`
       );
+
+      console.log("Refresh campaign response:", response.data);
+      console.log("Schedules in response:", response.data?.schedules);
+
       if (response.data) {
         setCampaign(response.data);
-        // Cập nhật schedules từ campaign
         setSchedules(response.data.schedules || []);
       }
     } catch (error) {
@@ -191,6 +196,8 @@ const VaccinationProgramDetails: React.FC<VaccinationProgramDetailsProps> = ({
   // Hàm xử lý thêm lịch mới
   const handleAddSchedule = () => {
     console.log("Adding schedule for campaign:", campaign);
+    console.log("Campaign ID:", campaign?.id);
+    console.log("Campaign ID type:", typeof campaign?.id);
 
     if (!campaign?.id) {
       toast.error("Không thể thêm lịch: thiếu thông tin chương trình");
@@ -203,7 +210,7 @@ const VaccinationProgramDetails: React.FC<VaccinationProgramDetailsProps> = ({
       return;
     }
 
-    setScheduleToEdit(null); // Đảm bảo không có schedule nào được chọn
+    setScheduleToEdit(null);
     setIsScheduleDialogOpen(true);
   };
 
@@ -273,17 +280,55 @@ const VaccinationProgramDetails: React.FC<VaccinationProgramDetailsProps> = ({
     }
   };
 
-  // Hàm xử lý thêm/sửa lịch thành công
-  const handleScheduleSuccess = (updatedSchedule: any, isNew: boolean) => {
-    // Optimistic update UI
-    if (isNew) {
-      // Thêm mới: cập nhật UI tạm thời
-      setSchedules((prev) => [...prev, updatedSchedule]);
+  // Thêm hàm refresh với retry
+  const refreshWithRetry = async (campaignId: string, maxRetries = 3, delay = 1000) => {
+    let retries = 0;
+    
+    const attemptRefresh = async () => {
+      try {
+        console.log(`Attempt ${retries + 1} to refresh campaign data`);
+        const response = await instance.get(`/api/Campaign/get-campaign-by-id/${campaignId}`);
+        
+        // Kiểm tra xem schedule mới có tồn tại không
+        const schedules = response.data?.schedules || [];
+        console.log(`Found ${schedules.length} schedules in refresh attempt ${retries + 1}`);
+        
+        setCampaign(response.data);
+        setSchedules(schedules);
+        
+        return true; // success
+      } catch (error) {
+        console.error(`Refresh attempt ${retries + 1} failed:`, error);
+        return false; // failed
+      }
+    };
+    
+    while (retries < maxRetries) {
+      const success = await attemptRefresh();
+      if (success) return;
+      
+      retries++;
+      if (retries < maxRetries) {
+        console.log(`Waiting ${delay}ms before retry ${retries + 1}...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        delay *= 1.5; // Increase delay for each retry
+      }
+    }
+    
+    toast.error("Không thể cập nhật dữ liệu sau nhiều lần thử");
+  };
 
-      // Đặt timeout để refresh campaign sau khi API xử lý xong
+  // Cập nhật handleScheduleSuccess để sử dụng hàm retry
+  const handleScheduleSuccess = (updatedSchedule: any, isNew: boolean) => {
+    if (isNew) {
+      setSchedules((prev) => [...prev, updatedSchedule]);
+      
+      // Sử dụng retry mechanism thay vì setTimeout đơn giản
       setTimeout(() => {
-        refreshCampaign();
-      }, 800);
+        if (campaign?.id) {
+          refreshWithRetry(campaign.id);
+        }
+      }, 1000);
     } else {
       // Cập nhật: cập nhật UI tạm thời
       setSchedules((prev) =>
@@ -578,7 +623,7 @@ const VaccinationProgramDetails: React.FC<VaccinationProgramDetailsProps> = ({
         onClose={() => setIsScheduleDialogOpen(false)}
         onSuccess={handleScheduleSuccess}
         schedule={scheduleToEdit}
-        campaignId={campaign?.id || ""} // Đảm bảo không truyền undefined
+        campaignId={campaign?.id || ""} // Đảm bảo truyền giá trị đúng
         onUpdateTempId={handleUpdateTempId}
         onRemoveTempItem={handleRemoveTempItem}
       />

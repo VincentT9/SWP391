@@ -27,6 +27,13 @@ interface EditScheduleDialogProps {
   onRemoveTempItem?: (tempId: string) => void;
 }
 
+interface SchedulePayload {
+  scheduledDate: string;
+  location: string;
+  notes: string;
+  campaignId: string;
+}
+
 const EditScheduleDialog: React.FC<EditScheduleDialogProps> = ({
   open,
   onClose,
@@ -47,8 +54,9 @@ const EditScheduleDialog: React.FC<EditScheduleDialogProps> = ({
 
   useEffect(() => {
     if (open) {
-      console.log("Dialog opened with campaignId:", campaignId);
-      console.log("Schedule to edit:", schedule);
+      if (!campaignId || campaignId.trim() === "") {
+        toast.error("Thiếu thông tin chương trình");
+      }
     }
 
     if (open && schedule) {
@@ -102,13 +110,6 @@ const EditScheduleDialog: React.FC<EditScheduleDialogProps> = ({
     }
   };
 
-  interface SchedulePayload {
-    scheduledDate: string;
-    location: string;
-    notes: string;
-    campaignId?: string; // Thuộc tính tùy chọn
-  }
-
   const handleSubmit = async () => {
     if (!validateForm()) return;
 
@@ -116,60 +117,37 @@ const EditScheduleDialog: React.FC<EditScheduleDialogProps> = ({
     let tempId = "";
 
     try {
-      // Log thêm thông tin campaignId khi submit để debug
-      console.log(
-        "Submitting with campaignId:",
-        campaignId,
-        "isEditMode:",
-        isEditMode
-      );
+      if (!campaignId || campaignId.trim() === "") {
+        throw new Error("Missing or empty campaignId for new schedule");
+      }
 
-      // Khai báo payload với kiểu được định nghĩa trước
       const payload: SchedulePayload = {
         scheduledDate: formData.scheduledDate.toISOString(),
         location: formData.location,
         notes: formData.notes,
+        campaignId: String(campaignId),
       };
 
-      // Kiểm tra chặt chẽ hơn cho campaignId
-      // Đảm bảo campaignId được thêm vào cho trường hợp thêm mới
-      if (!isEditMode) {
-        // Kiểm tra nghiêm ngặt hơn, đảm bảo campaignId không phải là chuỗi rỗng
-        if (!campaignId || campaignId.trim() === "") {
-          throw new Error("Missing or empty campaignId for new schedule");
-        }
-        payload.campaignId = campaignId;
-      }
-
-      // Tạo ID tạm thời
       tempId = isEditMode ? schedule.id : `temp-${Date.now()}`;
 
-      // Log rõ ràng hơn
-      console.log("Final payload before API call:", payload);
-
-      // Tạo bản preview
       const previewData = {
         id: tempId,
         scheduledDate: payload.scheduledDate,
         location: payload.location,
         notes: payload.notes,
-        campaignId: campaignId, // Đảm bảo campaignId luôn có
+        campaignId: campaignId,
         campaignName: schedule?.campaignName || "",
       };
 
-      // Cập nhật UI ngay
       onSuccess(previewData, !isEditMode);
 
       if (isEditMode) {
-        // Cập nhật lịch
         await instance.put(
           `/api/Schedule/update-schedule/${schedule.id}`,
           payload
         );
         toast.success("Cập nhật lịch tiêm thành công!");
       } else {
-        // Thêm lịch mới
-        console.log("Creating new schedule with payload:", payload); // Log để kiểm tra
         const response = await instance.post(
           "/api/Schedule/create-schedule",
           payload
