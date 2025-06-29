@@ -117,21 +117,21 @@ const AddStudentToScheduleDialog: React.FC<AddStudentToScheduleDialogProps> = ({
 
     try {
       setSubmitting(true);
-      
+
       // Create an array of promises for all API calls
       const promises = selectedStudents.map(async (studentId) => {
         const requestBody = {
           studentId: studentId,
           scheduleId: scheduleId,
-          vaccinationDate: new Date().toISOString()
+          vaccinationDate: new Date().toISOString(),
         };
-        
+
         return instance.post(
-          "/api/ScheduleDetail/create-schedule-detail", 
+          "/api/ScheduleDetail/create-schedule-detail",
           requestBody
         );
       });
-      
+
       // Execute all requests in parallel
       await Promise.all(promises);
 

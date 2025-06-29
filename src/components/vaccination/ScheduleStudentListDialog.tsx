@@ -50,6 +50,13 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddStudentDialogOpen, setIsAddStudentDialogOpen] = useState(false);
 
+  // Add these state variables at the top of your component, after other useState declarations
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingStudentId, setDeletingStudentId] = useState<string | null>(
+    null
+  );
+  const [deletingStudentName, setDeletingStudentName] = useState<string>("");
+
   // Fetch danh sách học sinh trong lịch
   useEffect(() => {
     if (open && schedule) {
@@ -62,12 +69,39 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
       setLoading(true);
       setError(null);
 
-      // API có thể khác nhau tùy vào loại chiến dịch
+      // Use the API endpoint to get students assigned to this schedule
       const response = await instance.get(
-        `/api/Schedule/get-students-by-schedule/${schedule.id}`
+        `/api/ScheduleDetail/get-schedule-details-by-schedule-id/${schedule.id}`
       );
 
-      setStudents(Array.isArray(response.data) ? response.data : []);
+      // Map the response data to match the expected structure
+      const formattedStudents = Array.isArray(response.data)
+        ? response.data.map((item) => ({
+            id: item.id, // This is the schedule detail ID
+            studentId: item.student.id, // The actual student ID
+            studentName: item.student.fullName,
+            studentCode: item.student.studentCode,
+            className: item.student.class,
+            dateOfBirth: item.student.dateOfBirth,
+            gender: item.student.gender,
+            status: item.vaccinationResult ? 1 : 0, // 1 = completed, 0 = not done
+            vaccinationDate: item.vaccinationDate,
+          }))
+        : [];
+
+      // Sort students by studentCode
+      formattedStudents.sort((a, b) => {
+        // Extract numeric part if student codes are in format "STUxxx"
+        const codeA = a.studentCode || "";
+        const codeB = b.studentCode || "";
+
+        return codeA.localeCompare(codeB, undefined, {
+          numeric: true, // Use numeric collation so "STU2" comes before "STU10"
+          sensitivity: "base",
+        });
+      });
+
+      setStudents(formattedStudents);
     } catch (err) {
       console.error("Error fetching students:", err);
       setError("Không thể tải danh sách học sinh. Vui lòng thử lại sau.");
@@ -90,29 +124,44 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
     fetchStudents();
   };
 
-  const handleRemoveStudent = async (studentId: string) => {
-    if (!window.confirm("Bạn có chắc chắn muốn xóa học sinh này khỏi lịch?")) {
-      return;
-    }
+  // Replace the handleRemoveStudent function with this improved version
+  const handleRemoveStudent = (studentId: string, studentName: string) => {
+    setDeletingStudentId(studentId);
+    setDeletingStudentName(studentName);
+    setDeleteDialogOpen(true);
+  };
+
+  // Add this new function to perform the actual deletion
+  const confirmRemoveStudent = async () => {
+    if (!deletingStudentId) return;
 
     try {
+      // Using the correct API endpoint for schedule detail deletion
       await instance.delete(
-        `/api/Schedule/remove-student-from-schedule/${schedule.id}/${studentId}`
+        `/api/ScheduleDetail/delete-schedule-detail/${deletingStudentId}`
       );
       toast.success("Xóa học sinh khỏi lịch thành công");
-      fetchStudents(); // Refresh list
+      fetchStudents(); // Refresh the list
     } catch (err) {
       console.error("Error removing student:", err);
       toast.error("Không thể xóa học sinh. Vui lòng thử lại.");
+    } finally {
+      // Close the dialog and reset state
+      setDeleteDialogOpen(false);
+      setDeletingStudentId(null);
+      setDeletingStudentName("");
     }
   };
 
-  // Lọc học sinh theo từ khóa tìm kiếm
-  const filteredStudents = students.filter(
-    (student) =>
-      student.studentName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      student.studentId?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Lọc học sinh theo từ khóa tìm kiếm - cập nhật để tìm theo mã học sinh, tên hoặc lớp
+  const filteredStudents = students.filter((student) => {
+    const query = searchQuery.toLowerCase().trim();
+    return (
+      student.studentName?.toLowerCase().includes(query) ||
+      student.studentCode?.toLowerCase().includes(query) ||
+      student.className?.toLowerCase().includes(query)
+    );
+  });
 
   const formatDate = (dateString: string) => {
     if (!dateString) return "N/A";
@@ -120,6 +169,17 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
       return format(new Date(dateString), "dd/MM/yyyy");
     } catch (error) {
       return "Invalid date";
+    }
+  };
+
+  const formatGender = (gender: number) => {
+    switch (gender) {
+      case 0:
+        return "Nữ";
+      case 1:
+        return "Nam";
+      default:
+        return "Khác";
     }
   };
 
@@ -160,16 +220,35 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
               </Typography>
             </Box>
 
+            {/* Add this box to show student count */}
+            <Box
+              sx={{
+                display: "flex",
+                backgroundColor: "#f5f5f5",
+                padding: "8px 16px",
+                borderRadius: "4px",
+                mb: 2,
+                alignItems: "center",
+              }}
+            >
+              <Typography
+                variant="subtitle1"
+                sx={{ fontWeight: "medium", color: "#3f51b5" }}
+              >
+                Tổng số học sinh: <strong>{students.length}</strong>
+              </Typography>
+            </Box>
+
             <Box
               sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}
             >
               <TextField
-                placeholder="Tìm kiếm học sinh..."
+                placeholder="Tìm kiếm theo mã, tên học sinh hoặc lớp..."
                 variant="outlined"
                 size="small"
                 value={searchQuery}
                 onChange={handleSearchChange}
-                sx={{ width: "300px" }}
+                sx={{ width: "350px" }}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -204,10 +283,13 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
                   <TableHead>
                     <TableRow>
                       <TableCell sx={{ fontWeight: "bold" }}>
-                        ID học sinh
+                        Mã học sinh
                       </TableCell>
                       <TableCell sx={{ fontWeight: "bold" }}>Họ tên</TableCell>
                       <TableCell sx={{ fontWeight: "bold" }}>Lớp</TableCell>
+                      <TableCell sx={{ fontWeight: "bold" }}>
+                        Giới tính
+                      </TableCell>
                       <TableCell sx={{ fontWeight: "bold" }}>
                         Ngày sinh
                       </TableCell>
@@ -223,9 +305,10 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
                     {filteredStudents.length > 0 ? (
                       filteredStudents.map((student) => (
                         <TableRow key={student.id} hover>
-                          <TableCell>{student.studentId}</TableCell>
+                          <TableCell>{student.studentCode}</TableCell>
                           <TableCell>{student.studentName}</TableCell>
                           <TableCell>{student.className || "N/A"}</TableCell>
+                          <TableCell>{formatGender(student.gender)}</TableCell>
                           <TableCell>
                             {student.dateOfBirth
                               ? formatDate(student.dateOfBirth)
@@ -250,7 +333,10 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
                                 size="small"
                                 color="error"
                                 onClick={() =>
-                                  handleRemoveStudent(student.studentId)
+                                  handleRemoveStudent(
+                                    student.id,
+                                    student.studentName
+                                  )
                                 }
                               >
                                 <DeleteIcon />
@@ -261,7 +347,7 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={6} align="center">
+                        <TableCell colSpan={7} align="center">
                           <Typography variant="body1" sx={{ py: 2 }}>
                             {searchQuery
                               ? "Không tìm thấy học sinh phù hợp"
@@ -290,6 +376,48 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
         onSuccess={handleAddStudentSuccess}
         scheduleId={schedule?.id}
       />
+
+      {/* Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        aria-labelledby="delete-dialog-title"
+        aria-describedby="delete-dialog-description"
+      >
+        <DialogTitle id="delete-dialog-title" sx={{ pb: 1 }}>
+          {"Xác nhận xóa học sinh"}
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+            <DeleteIcon color="error" sx={{ mr: 1.5 }} />
+            <Typography id="delete-dialog-description">
+              Bạn có chắc chắn muốn xóa học sinh{" "}
+              <strong>{deletingStudentName}</strong> khỏi lịch tiêm này không?
+            </Typography>
+          </Box>
+          <Typography variant="body2" color="text.secondary">
+            Hành động này không thể hoàn tác.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setDeleteDialogOpen(false)}
+            color="primary"
+            variant="outlined"
+          >
+            Hủy
+          </Button>
+          <Button
+            onClick={confirmRemoveStudent}
+            color="error"
+            variant="contained"
+            startIcon={<DeleteIcon />}
+            autoFocus
+          >
+            Xóa
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 };
