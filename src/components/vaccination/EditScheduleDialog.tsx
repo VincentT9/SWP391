@@ -80,9 +80,13 @@ const EditScheduleDialog: React.FC<EditScheduleDialogProps> = ({
 
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset time part for proper date comparison
 
     if (!formData.scheduledDate) {
       newErrors.scheduledDate = "Ngày tiêm là bắt buộc";
+    } else if (formData.scheduledDate < today) {
+      newErrors.scheduledDate = "Ngày tiêm phải từ hôm nay trở đi";
     }
 
     if (!formData.location.trim()) {
@@ -193,6 +197,7 @@ const EditScheduleDialog: React.FC<EditScheduleDialogProps> = ({
               label="Ngày"
               value={formData.scheduledDate}
               onChange={handleDateChange}
+              minDate={new Date()} // Add this line to restrict to current date or future
               slotProps={{
                 textField: {
                   fullWidth: true,

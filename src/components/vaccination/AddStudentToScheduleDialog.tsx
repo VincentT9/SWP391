@@ -27,11 +27,13 @@ import { toast } from "react-toastify";
 import instance from "../../utils/axiosConfig";
 import { format } from "date-fns";
 
+// First, update the props interface to accept existing student IDs
 interface AddStudentToScheduleDialogProps {
   open: boolean;
   onClose: () => void;
   onSuccess: () => void;
   scheduleId: string;
+  existingStudentIds?: string[]; // New prop to receive existing student IDs
 }
 
 const AddStudentToScheduleDialog: React.FC<AddStudentToScheduleDialogProps> = ({
@@ -39,6 +41,7 @@ const AddStudentToScheduleDialog: React.FC<AddStudentToScheduleDialogProps> = ({
   onClose,
   onSuccess,
   scheduleId,
+  existingStudentIds = [], // Default to empty array if not provided
 }) => {
   const [students, setStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -62,22 +65,32 @@ const AddStudentToScheduleDialog: React.FC<AddStudentToScheduleDialogProps> = ({
       setLoading(true);
       setError(null);
 
-      // Using the new API endpoint to get all students
+      // Using the API endpoint to get all students
       const response = await instance.get("/api/Student/get-all-students");
 
       // Map response data to expected structure with correct field names
-      const formattedStudents = Array.isArray(response.data)
+      const allStudents = Array.isArray(response.data)
         ? response.data.map((student) => ({
             id: student.id,
-            studentName: student.fullName, // API returns fullName but component uses studentName
+            studentName: student.fullName,
             studentCode: student.studentCode,
-            className: student.class, // API returns class but component uses className
+            className: student.class,
             dateOfBirth: student.dateOfBirth,
             gender: student.gender,
           }))
         : [];
 
-      setStudents(formattedStudents);
+      // Filter out students that are already in the schedule
+      const availableStudents = allStudents.filter(
+        (student) => !existingStudentIds.includes(student.id)
+      );
+
+      setStudents(availableStudents);
+
+      // Show message if all students have already been added
+      if (allStudents.length > 0 && availableStudents.length === 0) {
+        setError("Tất cả học sinh đã được thêm vào lịch này.");
+      }
     } catch (err) {
       console.error("Error fetching students:", err);
       setError("Không thể tải danh sách học sinh. Vui lòng thử lại sau.");

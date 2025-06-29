@@ -116,6 +116,8 @@ const VaccinationProgramForm: React.FC<VaccinationProgramFormProps> = ({
     schedules.forEach((schedule, index) => {
       const itemErrors: any = {};
       let hasError = false;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Reset time part for proper date comparison
 
       if (!schedule.location.trim()) {
         itemErrors.location = "Địa điểm là bắt buộc";
@@ -124,6 +126,9 @@ const VaccinationProgramForm: React.FC<VaccinationProgramFormProps> = ({
 
       if (!schedule.scheduledDate) {
         itemErrors.scheduledDate = "Ngày là bắt buộc";
+        hasError = true;
+      } else if (schedule.scheduledDate < today) {
+        itemErrors.scheduledDate = "Ngày phải từ hôm nay trở đi";
         hasError = true;
       }
 
@@ -247,17 +252,13 @@ const VaccinationProgramForm: React.FC<VaccinationProgramFormProps> = ({
                         label="Ngày"
                         value={schedule.scheduledDate}
                         onChange={(date) =>
-                          handleScheduleChange(
-                            index,
-                            "scheduledDate",
-                            date || new Date()
-                          )
+                          handleScheduleChange(index, "scheduledDate", date)
                         }
+                        minDate={new Date()} // Add this line to restrict to current date or future
                         slotProps={{
                           textField: {
                             fullWidth: true,
-                            margin: "normal",
-                            size: "small",
+                            margin: "dense",
                             error: !!(
                               errors.schedules &&
                               errors.schedules[index]?.scheduledDate

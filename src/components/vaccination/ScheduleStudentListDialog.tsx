@@ -57,6 +57,9 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
   );
   const [deletingStudentName, setDeletingStudentName] = useState<string>("");
 
+  // Add these new state variables next to other state variables
+  const [deleteAllDialogOpen, setDeleteAllDialogOpen] = useState(false);
+
   // Fetch danh sách học sinh trong lịch
   useEffect(() => {
     if (open && schedule) {
@@ -150,6 +153,38 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
       setDeleteDialogOpen(false);
       setDeletingStudentId(null);
       setDeletingStudentName("");
+    }
+  };
+
+  // Add this new function to handle deleting all students
+  const handleDeleteAllStudents = () => {
+    if (students.length === 0) {
+      toast.warning("Không có học sinh nào để xóa");
+      return;
+    }
+    setDeleteAllDialogOpen(true);
+  };
+
+  // Add this function to perform the actual deletion of all students
+  const confirmDeleteAllStudents = async () => {
+    try {
+      // If there's a bulk delete endpoint, use it
+      // Otherwise, delete each student one by one
+      const promises = students.map((student) =>
+        instance.delete(
+          `/api/ScheduleDetail/delete-schedule-detail/${student.id}`
+        )
+      );
+
+      await Promise.all(promises);
+
+      toast.success(`Đã xóa tất cả ${students.length} học sinh khỏi lịch`);
+      setStudents([]);
+    } catch (err) {
+      console.error("Error removing all students:", err);
+      toast.error("Không thể xóa tất cả học sinh. Vui lòng thử lại.");
+    } finally {
+      setDeleteAllDialogOpen(false);
     }
   };
 
@@ -257,14 +292,26 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
                   ),
                 }}
               />
-              <Button
-                variant="contained"
-                color="primary"
-                startIcon={<PersonAddIcon />}
-                onClick={handleAddStudent}
-              >
-                Thêm học sinh
-              </Button>
+              <Box sx={{ display: "flex", gap: 2 }}>
+                {students.length > 0 && (
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    startIcon={<DeleteIcon />}
+                    onClick={handleDeleteAllStudents}
+                  >
+                    Xóa tất cả
+                  </Button>
+                )}
+                <Button
+                  variant="contained"
+                  color="primary"
+                  startIcon={<PersonAddIcon />}
+                  onClick={handleAddStudent}
+                >
+                  Thêm học sinh
+                </Button>
+              </Box>
             </Box>
 
             {error && (
@@ -375,6 +422,7 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
         onClose={() => setIsAddStudentDialogOpen(false)}
         onSuccess={handleAddStudentSuccess}
         scheduleId={schedule?.id}
+        existingStudentIds={students.map((student) => student.studentId)} // Pass student IDs of existing students
       />
 
       {/* Confirmation Dialog */}
@@ -415,6 +463,54 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
             autoFocus
           >
             Xóa
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete All Confirmation Dialog */}
+      <Dialog
+        open={deleteAllDialogOpen}
+        onClose={() => setDeleteAllDialogOpen(false)}
+        aria-labelledby="delete-all-dialog-title"
+        aria-describedby="delete-all-dialog-description"
+      >
+        <DialogTitle id="delete-all-dialog-title" sx={{ pb: 1 }}>
+          {"Xác nhận xóa tất cả học sinh"}
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+            <DeleteIcon color="error" sx={{ mr: 1.5 }} />
+            <Typography id="delete-all-dialog-description">
+              Bạn có chắc chắn muốn xóa{" "}
+              <strong>tất cả {students.length} học sinh</strong> khỏi lịch này
+              không?
+            </Typography>
+          </Box>
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ color: "error.main" }}
+          >
+            Hành động này không thể hoàn tác và sẽ xóa toàn bộ học sinh đã thêm
+            vào lịch.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setDeleteAllDialogOpen(false)}
+            color="primary"
+            variant="outlined"
+          >
+            Hủy
+          </Button>
+          <Button
+            onClick={confirmDeleteAllStudents}
+            color="error"
+            variant="contained"
+            startIcon={<DeleteIcon />}
+            autoFocus
+          >
+            Xóa tất cả
           </Button>
         </DialogActions>
       </Dialog>
