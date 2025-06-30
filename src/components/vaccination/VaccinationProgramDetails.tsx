@@ -34,6 +34,7 @@ import instance from "../../utils/axiosConfig";
 import { toast } from "react-toastify";
 import EditScheduleDialog from "./EditScheduleDialog";
 import { isAdmin } from "../../utils/roleUtils";
+import { useNavigate } from "react-router-dom";
 
 // Cập nhật interface để thêm prop onDeleteSuccess
 interface VaccinationProgramDetailsProps {
@@ -49,6 +50,8 @@ const VaccinationProgramDetails: React.FC<VaccinationProgramDetailsProps> = ({
   getStatusLabel,
   onDeleteSuccess,
 }) => {
+  const navigate = useNavigate();
+
   // Lưu trữ bản sao của campaign để có thể cập nhật nội bộ
   const [campaign, setCampaign] = useState(initialCampaign);
 
@@ -108,9 +111,10 @@ const VaccinationProgramDetails: React.FC<VaccinationProgramDetailsProps> = ({
     // Có thể thêm logic refresh dữ liệu nếu cần
   };
 
+  // Thay đổi hàm handleViewStudentsClick
   const handleViewStudentsClick = (schedule: any) => {
-    setSelectedSchedule(schedule);
-    setIsStudentListDialogOpen(true);
+    // Thay vì mở dialog, chuyển hướng đến trang quản lý học sinh
+    navigate(`/vaccination/schedule/${schedule.id}/students`);
   };
 
   const handleDeleteClick = () => {

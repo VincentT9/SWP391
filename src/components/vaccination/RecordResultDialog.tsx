@@ -201,10 +201,10 @@ const RecordResultDialog: React.FC<RecordResultDialogProps> = ({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>
+      <DialogTitle id="record-result-dialog-title">
         {campaignType === 0
-          ? "Ghi nhận kết quả tiêm phòng"
-          : "Ghi nhận kết quả khám sức khỏe"}
+          ? `Ghi nhận kết quả tiêm phòng - ${studentName}`
+          : `Ghi nhận kết quả khám sức khỏe - ${studentName}`}
       </DialogTitle>
 
       <DialogContent>
