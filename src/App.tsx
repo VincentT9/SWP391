@@ -46,6 +46,9 @@ function App() {
                 element={<HealthDeclarationFormPage />}
               />
               <Route path="medication" element={<MedicationPage />} />
+
+              <Route path="medication/nurse" element={<MedicationPage />} />
+              <Route path="medication/parent" element={<MedicationPage />} />
               <Route path="medical-events" element={<MedicalEventsPage />} />
               <Route path="vaccination" element={<VaccinationPage />} />
               <Route path="health-check" element={<HealthCheckPage />} />
