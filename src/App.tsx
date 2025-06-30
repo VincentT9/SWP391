@@ -39,11 +39,10 @@ function App() {
             <Route path="/" element={<MainLayout />}>
               <Route index element={<HomePage />} />
               <Route path="health-records" element={<HealthRecordsPage />} />
-              <Route
-                path="health-declaration"
-                element={<HealthDeclarationFormPage />}
-              />
+              <Route path="health-declaration" element={<HealthDeclarationFormPage />} />
               <Route path="medication" element={<MedicationPage />} />
+              <Route path="medication/nurse" element={<MedicationPage />} />
+              <Route path="medication/parent" element={<MedicationPage />} />
               <Route path="medical-events" element={<MedicalEventsPage />} />
               <Route path="vaccination" element={<VaccinationPage />} />
               <Route path="health-check" element={<HealthCheckPage />} />
@@ -52,10 +51,7 @@ function App() {
               <Route path="profile" element={<UserProfilePage />} />
               <Route path="user-management" element={<AdminPage />} />
               <Route path="medical-supplier" element={<MedicalSupplier />} />
-              <Route
-                path="admin/students"
-                element={<StudentManagementPage />}
-              />
+              <Route path="admin/students" element={<StudentManagementPage />} />
             </Route>
           </Routes>
         </Router>

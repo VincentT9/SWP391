@@ -102,6 +102,8 @@ const menuCategories: MenuCategory[] = [
     path: "/",
   },
   {
+    
+       
     name: "Sổ sức khỏe & chăm sóc học sinh", // More friendly name for "Học sinh"
     role: ["MedicalStaff", "Parent"],
     submenu: [
@@ -117,7 +119,7 @@ const menuCategories: MenuCategory[] = [
       },
       {
         text: "Gửi thuốc đến trường", // More action-oriented for parents
-        path: "/medication",
+        path: "/medication/parent",
         role: ["Parent"],
       },
     ],
@@ -128,7 +130,7 @@ const menuCategories: MenuCategory[] = [
     submenu: [
       {
         text: "Danh mục thuốc từ phụ huynh", // Simplified name
-        path: "/medication",
+        path: "/medication/nurse",
         role: ["MedicalStaff"],
       },
       {
@@ -192,10 +194,15 @@ const MainLayout = () => {
   // Use AuthContext
   const { user, logout } = useAuth();
 
+  // Filter menu categories based on user role
+  const visibleCategories = menuCategories.filter(category => 
+    !category.role || category.role.includes(user?.role || '')
+  );
+
   // Set active tab based on current location
   useEffect(() => {
     const currentPath = location.pathname;
-    const tabIndex = menuCategories.findIndex((category) => {
+    const tabIndex = visibleCategories.findIndex((category) => {
       if (category.path === currentPath) return true;
       if (category.submenu) {
         return category.submenu.some((item) => item.path === currentPath);
@@ -206,7 +213,7 @@ const MainLayout = () => {
     if (tabIndex !== -1) {
       setActiveTab(tabIndex);
     }
-  }, [location.pathname]);
+  }, [location.pathname, visibleCategories]);
 
   const handleMobileMenuToggle = () => {
     setMobileMenuOpen(!mobileMenuOpen);
@@ -214,7 +221,7 @@ const MainLayout = () => {
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
-    const category = menuCategories[newValue];
+    const category = visibleCategories[newValue]; // Use visibleCategories instead of menuCategories
     if (category.path) {
       navigate(category.path);
     }
@@ -365,53 +372,47 @@ const MainLayout = () => {
                   },
                 }}
               >
-                {menuCategories.map((category, index) => {
-                  // Filter out menu categories based on user role
-                  if (category.role && !category.role.includes(user.role))
-                    return null;
-
-                  return (
-                    <Tab
-                      key={category.name}
-                      label={
-                        <Box sx={{ display: "flex", alignItems: "center" }}>
-                          <Typography
-                            component="span"
-                            sx={{ fontWeight: "inherit" }}
-                          >
-                            {category.name}
-                          </Typography>
-                          {category.badge && (
-                            <Chip
-                              size="small"
-                              label={category.badge}
-                              sx={{
-                                ml: 1,
-                                height: 18,
-                                minWidth: 18,
-                                fontSize: "0.7rem",
-                                fontWeight: 700,
-                                bgcolor: "rgba(255, 255, 255, 0.9)",
-                                color: colors.primary,
-                              }}
-                            />
-                          )}
-                          {category.submenu && (
-                            <ArrowDropDown sx={{ ml: 0.5 }} />
-                          )}
-                        </Box>
-                      }
-                      onClick={
-                        category.submenu
-                          ? (e) => {
-                              e.preventDefault();
-                              handleMenuOpen(e, category.name);
-                            }
-                          : undefined
-                      }
-                    />
-                  );
-                })}
+                {visibleCategories.map((category, index) => ( // Use visibleCategories instead of filtering inline
+                  <Tab
+                    key={category.name}
+                    label={
+                      <Box sx={{ display: "flex", alignItems: "center" }}>
+                        <Typography
+                          component="span"
+                          sx={{ fontWeight: "inherit" }}
+                        >
+                          {category.name}
+                        </Typography>
+                        {category.badge && (
+                          <Chip
+                            size="small"
+                            label={category.badge}
+                            sx={{
+                              ml: 1,
+                              height: 18,
+                              minWidth: 18,
+                              fontSize: "0.7rem",
+                              fontWeight: 700,
+                              bgcolor: "rgba(255, 255, 255, 0.9)",
+                              color: colors.primary,
+                            }}
+                          />
+                        )}
+                        {category.submenu && (
+                          <ArrowDropDown sx={{ ml: 0.5 }} />
+                        )}
+                      </Box>
+                    }
+                    onClick={
+                      category.submenu
+                        ? (e) => {
+                            e.preventDefault();
+                            handleMenuOpen(e, category.name);
+                          }
+                        : undefined
+                    }
+                  />
+                ))}
               </Tabs>
             )}
 
