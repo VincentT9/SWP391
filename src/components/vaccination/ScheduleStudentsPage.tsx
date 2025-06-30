@@ -45,6 +45,7 @@ import RecordResultDialog from "./RecordResultDialog";
 import Link from "@mui/material/Link";
 import { Link as RouterLink } from "react-router-dom";
 import WarningIcon from "@mui/icons-material/Warning";
+import { isAdmin, isMedicalStaff } from "../../utils/roleUtils";
 
 // Interface definitions
 interface Student {
@@ -753,36 +754,51 @@ const ScheduleStudentsPage: React.FC = () => {
         </Box>
 
         <Box sx={{ display: "flex", gap: 1 }}>
-          <Button
-            variant="outlined"
-            startIcon={<AddIcon />}
-            onClick={handleAddStudent}
-            size="medium"
-          >
-            Thêm học sinh
-          </Button>
+          {/* Action Buttons - Only show to Admin users */}
+          {isAdmin() && (
+            <Box
+              sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}
+            >
+              <Box>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  startIcon={<AddIcon />}
+                  onClick={handleAddStudent}
+                >
+                  Thêm học sinh
+                </Button>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  startIcon={<DescriptionIcon />}
+                  onClick={handleCreateConsentForms}
+                  sx={{ ml: 2 }}
+                  disabled={consentFormExists || isCreatingConsentForms}
+                >
+                  {isCreatingConsentForms ? (
+                    <>
+                      <CircularProgress size={20} sx={{ mr: 1 }} />
+                      Đang tạo...
+                    </>
+                  ) : (
+                    "Tạo phiếu đồng ý"
+                  )}
+                </Button>
+              </Box>
 
-          <Button
-            variant="outlined"
-            startIcon={<DescriptionIcon />}
-            onClick={handleCreateConsentForms}
-            disabled={consentFormExists}
-            size="medium"
-            color="secondary"
-          >
-            Tạo phiếu đồng ý
-          </Button>
-
-          <Button
-            variant="outlined"
-            color="error"
-            startIcon={<DeleteIcon />}
-            onClick={handleDeleteAllStudents}
-            disabled={students.length === 0}
-            size="medium"
-          >
-            Xóa tất cả
-          </Button>
+              {students.length > 0 && (
+                <Button
+                  variant="outlined"
+                  color="error"
+                  startIcon={<DeleteIcon />}
+                  onClick={handleDeleteAllStudents}
+                >
+                  Xóa tất cả
+                </Button>
+              )}
+            </Box>
+          )}
         </Box>
       </Paper>
 
@@ -868,6 +884,7 @@ const ScheduleStudentsPage: React.FC = () => {
                             gap: 1,
                           }}
                         >
+                          {/* Record result button - Available to both Admin and MedicalStaff */}
                           <Tooltip
                             title={
                               schedule?.campaignType === 0
@@ -883,20 +900,24 @@ const ScheduleStudentsPage: React.FC = () => {
                               <AssignmentIcon />
                             </IconButton>
                           </Tooltip>
-                          <Tooltip title="Xóa khỏi lịch">
-                            <IconButton
-                              size="small"
-                              color="error"
-                              onClick={() =>
-                                handleRemoveStudent(
-                                  student.id,
-                                  student.studentName
-                                )
-                              }
-                            >
-                              <DeleteIcon />
-                            </IconButton>
-                          </Tooltip>
+
+                          {/* Delete button - Only for Admin */}
+                          {isAdmin() && (
+                            <Tooltip title="Xóa khỏi lịch">
+                              <IconButton
+                                size="small"
+                                color="error"
+                                onClick={() =>
+                                  handleRemoveStudent(
+                                    student.id,
+                                    student.studentName
+                                  )
+                                }
+                              >
+                                <DeleteIcon />
+                              </IconButton>
+                            </Tooltip>
+                          )}
                         </Box>
                       </TableCell>
                     </TableRow>

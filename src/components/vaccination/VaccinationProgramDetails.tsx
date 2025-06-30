@@ -401,28 +401,36 @@ const VaccinationProgramDetails: React.FC<VaccinationProgramDetailsProps> = ({
           </span>
         </Tooltip>
 
-        {/* Only admins can edit/delete schedules */}
+        {/* Only admins can edit/delete */}
         {isAdmin() && (
           <>
-            <Tooltip title={isTemporary ? "Đang xử lý..." : "Chỉnh sửa lịch"}>
+            <Tooltip title={isTemporary ? "Đang xử lý..." : "Sửa lịch"}>
               <span>
                 <IconButton
                   size="small"
-                  color="info"
-                  onClick={(e) => handleEditSchedule(e, schedule)}
+                  color="primary"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (!isTemporary) {
+                      handleEditSchedule(e, schedule);
+                    }
+                  }}
                   disabled={isTemporary}
                 >
-                  {isTemporary ? <CircularProgress size={20} /> : <EditIcon />}
+                  <EditIcon />
                 </IconButton>
               </span>
             </Tooltip>
-
             <Tooltip title={isTemporary ? "Đang xử lý..." : "Xóa lịch"}>
               <span>
                 <IconButton
                   size="small"
                   color="error"
-                  onClick={(e) => handleDeleteSchedule(e, schedule)}
+                  onClick={(e) => {
+                    if (!isTemporary) {
+                      handleDeleteSchedule(e, schedule);
+                    }
+                  }}
                   disabled={isTemporary}
                 >
                   <DeleteIcon />

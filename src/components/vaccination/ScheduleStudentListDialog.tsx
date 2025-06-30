@@ -36,6 +36,7 @@ import { toast } from "react-toastify";
 import AddStudentToScheduleDialog from "./AddStudentToScheduleDialog";
 import RecordResultDialog from "./RecordResultDialog";
 import { AxiosError } from "axios";
+import { isAdmin, isMedicalStaff } from "../../utils/roleUtils";
 
 interface ScheduleStudentListDialogProps {
   open: boolean;
@@ -550,7 +551,7 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
                 }}
               />
               <Box sx={{ display: "flex", gap: 2 }}>
-                {students.length > 0 && (
+                {students.length > 0 && isAdmin() && (
                   <Button
                     variant="outlined"
                     color="primary"
@@ -562,12 +563,12 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
                       )
                     }
                     onClick={handleCreateConsentForms}
-                    disabled={isCreatingConsentForms || consentFormExists}
-                    title={
-                      consentFormExists
-                        ? "Phiếu đồng ý đã được tạo cho chiến dịch này"
-                        : ""
+                    disabled={
+                      consentFormExists ||
+                      isCreatingConsentForms ||
+                      students.length === 0
                     }
+                    sx={{ mr: 1 }}
                   >
                     {isCreatingConsentForms
                       ? "Đang tạo phiếu..."
@@ -577,7 +578,7 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
                   </Button>
                 )}
 
-                {students.length > 0 && (
+                {students.length > 0 && isAdmin() && (
                   <Button
                     variant="outlined"
                     color="error"
@@ -587,14 +588,16 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
                     Xóa tất cả
                   </Button>
                 )}
-                <Button
-                  variant="contained"
-                  color="primary"
-                  startIcon={<PersonAddIcon />}
-                  onClick={handleAddStudent}
-                >
-                  Thêm học sinh
-                </Button>
+                {isAdmin() && (
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    startIcon={<PersonAddIcon />}
+                    onClick={handleAddStudent}
+                  >
+                    Thêm học sinh
+                  </Button>
+                )}
               </Box>
             </Box>
 
@@ -686,22 +689,24 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
                                 </IconButton>
                               </Tooltip>
 
-                              {/* Existing delete button */}
-                              <Tooltip title="Xóa khỏi lịch">
-                                <IconButton
-                                  size="small"
-                                  color="error"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleRemoveStudent(
-                                      student.id,
-                                      student.studentName
-                                    );
-                                  }}
-                                >
-                                  <DeleteIcon />
-                                </IconButton>
-                              </Tooltip>
+                              {/* Delete button - Only for Admin */}
+                              {isAdmin() && (
+                                <Tooltip title="Xóa khỏi lịch">
+                                  <IconButton
+                                    size="small"
+                                    color="error"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleRemoveStudent(
+                                        student.id,
+                                        student.studentName
+                                      );
+                                    }}
+                                  >
+                                    <DeleteIcon />
+                                  </IconButton>
+                                </Tooltip>
+                              )}
                             </Box>
                           </TableCell>
                         </TableRow>
