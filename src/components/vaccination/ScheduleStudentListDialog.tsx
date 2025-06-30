@@ -45,6 +45,12 @@ interface ScheduleStudentListDialogProps {
   campaignType: number; // 0 cho tiêm chủng, 1 cho khám sức khỏe
 }
 
+interface SelectedStudent {
+  id: string;
+  studentName: string;
+  studentId: string; // Add this field
+}
+
 const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
   open,
   onClose,
@@ -270,7 +276,11 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
 
   // Add this function to handle opening the result dialog
   const handleRecordResult = (student: any) => {
-    setSelectedStudentForResult(student);
+    setSelectedStudentForResult({
+      id: student.id,
+      studentName: student.studentName,
+      studentId: student.studentId, // Include studentId
+    });
     setIsRecordResultDialogOpen(true);
   };
 
@@ -843,6 +853,7 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
           studentName={selectedStudentForResult.studentName}
           scheduleDetailId={selectedStudentForResult.id}
           campaignType={campaignType}
+          studentId={selectedStudentForResult.studentId} // Add this prop
         />
       )}
 

@@ -61,6 +61,13 @@ interface Student {
   hasResult: boolean;
 }
 
+interface SelectedStudent {
+  id: string;
+  studentName: string;
+  campaignType?: number;
+  studentId: string; // Add this field
+}
+
 interface Schedule {
   id: string;
   campaignId: string;
@@ -468,6 +475,7 @@ const ScheduleStudentsPage: React.FC = () => {
       id: student.id,
       studentName: student.studentName,
       campaignType: schedule?.campaignType || 0,
+      studentId: student.studentId, // Pass the studentId
     });
 
     setIsRecordResultDialogOpen(true);
@@ -1071,6 +1079,7 @@ const ScheduleStudentsPage: React.FC = () => {
           campaignType={
             selectedStudentForResult.campaignType || schedule?.campaignType || 0
           }
+          studentId={selectedStudentForResult.studentId} // Add this prop
         />
       )}
 
