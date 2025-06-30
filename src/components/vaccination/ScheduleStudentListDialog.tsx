@@ -21,15 +21,21 @@ import {
   Chip,
   CircularProgress,
   Alert,
+  FormControlLabel,
+  Radio,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
+import AssignmentIcon from "@mui/icons-material/Assignment";
+import DescriptionIcon from "@mui/icons-material/Description";
 import { format } from "date-fns";
 import instance from "../../utils/axiosConfig";
 import { toast } from "react-toastify";
 import AddStudentToScheduleDialog from "./AddStudentToScheduleDialog";
+import RecordResultDialog from "./RecordResultDialog";
+import { AxiosError } from "axios";
 
 interface ScheduleStudentListDialogProps {
   open: boolean;
@@ -49,8 +55,12 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddStudentDialogOpen, setIsAddStudentDialogOpen] = useState(false);
+  const [isRecordResultDialogOpen, setIsRecordResultDialogOpen] =
+    useState(false);
+  const [selectedStudentForResult, setSelectedStudentForResult] =
+    useState<any>(null);
 
-  // Add these state variables at the top of your component, after other useState declarations
+  // Add these state variables to track dialog open state and selected student
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingStudentId, setDeletingStudentId] = useState<string | null>(
     null
@@ -60,10 +70,23 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
   // Add these new state variables next to other state variables
   const [deleteAllDialogOpen, setDeleteAllDialogOpen] = useState(false);
 
+  // Thêm các state để quản lý việc tạo mẫu đồng ý
+  const [consentFormDialogOpen, setConsentFormDialogOpen] = useState(false);
+  const [isCreatingConsentForms, setIsCreatingConsentForms] = useState(false);
+  const [consentFormData, setConsentFormData] = useState({
+    isApproved: "false", // Mặc định là false
+    consentDate: new Date().toISOString().split("T")[0],
+    reasonForDecline: "",
+  });
+
+  // Thêm state để theo dõi trạng thái phiếu đồng ý
+  const [consentFormExists, setConsentFormExists] = useState(false);
+
   // Fetch danh sách học sinh trong lịch
   useEffect(() => {
     if (open && schedule) {
       fetchStudents();
+      checkExistingConsentForms();
     }
   }, [open, schedule]);
 
@@ -87,8 +110,9 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
             className: item.student.class,
             dateOfBirth: item.student.dateOfBirth,
             gender: item.student.gender,
-            status: item.vaccinationResult ? 1 : 0, // 1 = completed, 0 = not done
+            status: item.vaccinationResult || item.healthCheckupResult ? 1 : 0, // 1 = completed, 0 = not done
             vaccinationDate: item.vaccinationDate,
+            hasResult: !!item.vaccinationResult || !!item.healthCheckupResult,
           }))
         : [];
 
@@ -111,6 +135,31 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
       setStudents([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Hàm kiểm tra phiếu đồng ý đã tồn tại chưa
+  const checkExistingConsentForms = async () => {
+    try {
+      if (!schedule || !schedule.campaignId) return;
+
+      const campaignId = schedule.campaignId;
+
+      // Gọi API để kiểm tra phiếu đồng ý
+      const response = await instance.get(
+        `/api/ConsentForm/check-consent-forms-by-campaign/${campaignId}`
+      );
+
+      // Nếu API trả về dữ liệu cho biết đã có phiếu đồng ý
+      if (response.data && response.data.exists === true) {
+        setConsentFormExists(true);
+      } else {
+        setConsentFormExists(false);
+      }
+    } catch (error) {
+      console.error("Error checking existing consent forms:", error);
+      // Giả định rằng không có lỗi nghĩa là không có phiếu đồng ý
+      setConsentFormExists(false);
     }
   };
 
@@ -218,6 +267,214 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
     }
   };
 
+  // Add this function to handle opening the result dialog
+  const handleRecordResult = (student: any) => {
+    setSelectedStudentForResult(student);
+    setIsRecordResultDialogOpen(true);
+  };
+
+  // Add this function to handle result submission success
+  const handleResultSuccess = () => {
+    // Refresh the student list to show updated status
+    fetchStudents();
+  };
+
+  // Hàm mở dialog tạo phiếu đồng ý
+  const handleCreateConsentForms = async () => {
+    if (students.length === 0) {
+      toast.warning("Không có học sinh nào để tạo phiếu đồng ý");
+      return;
+    }
+
+    // Kiểm tra nếu đã tạo phiếu đồng ý rồi
+    if (consentFormExists) {
+      toast.warning(
+        "Phiếu đồng ý đã được tạo cho chiến dịch này. Không thể tạo lại."
+      );
+      return;
+    }
+
+    try {
+      setIsCreatingConsentForms(true);
+
+      // Lấy campaignId từ schedule
+      const campaignId = schedule.campaignId;
+
+      // Kiểm tra campaignId
+      if (!campaignId) {
+        toast.error("Không tìm thấy ID chiến dịch. Vui lòng kiểm tra lại.");
+        return;
+      }
+
+      // Hiển thị toast thông báo đang tạo
+      toast.info("Đang tạo phiếu đồng ý cho các học sinh...");
+
+      let successCount = 0;
+      let existingCount = 0;
+
+      // Xử lý từng học sinh - sử dụng giá trị mặc định
+      for (const student of students) {
+        try {
+          const requestBody = {
+            campaignId: campaignId,
+            studentId: student.studentId,
+            isApproved: false, // Sử dụng giá trị mặc định là false
+            consentDate: new Date().toISOString(),
+            reasonForDecline: "", // Không có lý do từ chối mặc định
+          };
+
+          await instance.post(
+            "/api/ConsentForm/create-consent-form",
+            requestBody
+          );
+          successCount++;
+        } catch (err: any) {
+          // Kiểm tra nếu lỗi là do đã tồn tại phiếu đồng ý
+          if (
+            err?.response?.status === 400 &&
+            err?.response?.data?.message?.includes("đã tồn tại")
+          ) {
+            existingCount++;
+          } else {
+            console.error(
+              `Lỗi khi tạo phiếu đồng ý cho học sinh ${student.studentId}:`,
+              err
+            );
+          }
+        }
+      }
+
+      if (successCount > 0) {
+        toast.success(
+          `Đã tạo ${successCount}/${students.length} phiếu đồng ý cho học sinh`
+        );
+        // Cập nhật trạng thái để biết rằng đã có phiếu đồng ý
+        setConsentFormExists(true);
+      } else if (existingCount > 0) {
+        toast.warning(
+          `${existingCount} học sinh đã có phiếu đồng ý từ trước. Không thể tạo lại.`
+        );
+        setConsentFormExists(true);
+      } else {
+        toast.error(
+          "Không thể tạo phiếu đồng ý. Vui lòng kiểm tra lại thông tin."
+        );
+      }
+    } catch (error: unknown) {
+      console.error("Lỗi khi tạo phiếu đồng ý:", error);
+
+      // Xử lý hiển thị lỗi
+      const err = error as any;
+      if (
+        err &&
+        typeof err === "object" &&
+        "response" in err &&
+        err.response?.data
+      ) {
+        console.error("Chi tiết lỗi API:", err.response.data);
+        const errorMessage =
+          err.response.data.message || (err.message ? String(err.message) : "");
+        toast.error(`Không thể tạo phiếu đồng ý: ${errorMessage}`);
+      } else {
+        toast.error("Không thể tạo phiếu đồng ý. Vui lòng thử lại.");
+      }
+    } finally {
+      setIsCreatingConsentForms(false);
+    }
+  };
+
+  // Hàm xử lý thay đổi giá trị trong form đồng ý
+  const handleConsentFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setConsentFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  // Hàm xác nhận và gửi request tạo phiếu đồng ý
+  const confirmCreateConsentForms = async () => {
+    try {
+      setIsCreatingConsentForms(true);
+
+      // Lấy campaignId từ schedule
+      const campaignId = schedule.campaignId;
+
+      // Kiểm tra campaignId
+      if (!campaignId) {
+        toast.error("Không tìm thấy ID chiến dịch. Vui lòng kiểm tra lại.");
+        return;
+      }
+
+      // Chuyển đổi giá trị isApproved
+      let isApproved: boolean = false;
+      if (consentFormData.isApproved === "true") isApproved = true;
+
+      // Đếm số phiếu tạo thành công
+      let successCount = 0;
+
+      // Xử lý từng học sinh
+      for (const student of students) {
+        try {
+          const requestBody = {
+            campaignId: campaignId,
+            studentId: student.studentId,
+            isApproved: isApproved,
+            consentDate: new Date(consentFormData.consentDate).toISOString(),
+            reasonForDecline:
+              consentFormData.isApproved === "false" &&
+              consentFormData.reasonForDecline
+                ? consentFormData.reasonForDecline
+                : "",
+          };
+
+          await instance.post(
+            "/api/ConsentForm/create-consent-form",
+            requestBody
+          );
+
+          successCount++;
+        } catch (err) {
+          console.error(
+            `Lỗi khi tạo phiếu đồng ý cho học sinh ${student.studentId}:`,
+            err
+          );
+        }
+      }
+
+      if (successCount > 0) {
+        toast.success(
+          `Đã tạo ${successCount}/${students.length} phiếu đồng ý cho học sinh`
+        );
+        setConsentFormDialogOpen(false);
+      } else {
+        toast.error(
+          "Không thể tạo phiếu đồng ý. Vui lòng kiểm tra lại thông tin."
+        );
+      }
+    } catch (error: unknown) {
+      console.error("Lỗi khi tạo phiếu đồng ý:", error);
+
+      // Xử lý hiển thị lỗi
+      const err = error as any;
+      if (
+        err &&
+        typeof err === "object" &&
+        "response" in err &&
+        err.response?.data
+      ) {
+        console.error("Chi tiết lỗi API:", err.response.data);
+        const errorMessage =
+          err.response.data.message || (err.message ? String(err.message) : "");
+        toast.error(`Không thể tạo phiếu đồng ý: ${errorMessage}`);
+      } else {
+        toast.error("Không thể tạo phiếu đồng ý. Vui lòng thử lại.");
+      }
+    } finally {
+      setIsCreatingConsentForms(false);
+    }
+  };
+
   return (
     <>
       <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
@@ -296,6 +553,33 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
                 {students.length > 0 && (
                   <Button
                     variant="outlined"
+                    color="primary"
+                    startIcon={
+                      isCreatingConsentForms ? (
+                        <CircularProgress size={20} />
+                      ) : (
+                        <DescriptionIcon />
+                      )
+                    }
+                    onClick={handleCreateConsentForms}
+                    disabled={isCreatingConsentForms || consentFormExists}
+                    title={
+                      consentFormExists
+                        ? "Phiếu đồng ý đã được tạo cho chiến dịch này"
+                        : ""
+                    }
+                  >
+                    {isCreatingConsentForms
+                      ? "Đang tạo phiếu..."
+                      : consentFormExists
+                      ? "Đã tạo phiếu đồng ý"
+                      : "Tạo phiếu đồng ý"}
+                  </Button>
+                )}
+
+                {students.length > 0 && (
+                  <Button
+                    variant="outlined"
                     color="error"
                     startIcon={<DeleteIcon />}
                     onClick={handleDeleteAllStudents}
@@ -365,30 +649,60 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
                             <Chip
                               size="small"
                               label={
-                                student.status === 1
-                                  ? "Đã hoàn thành"
+                                student.hasResult
+                                  ? campaignType === 0
+                                    ? "Đã tiêm"
+                                    : "Đã khám"
                                   : "Chưa thực hiện"
                               }
-                              color={
-                                student.status === 1 ? "success" : "warning"
-                              }
+                              color={student.hasResult ? "success" : "warning"}
                             />
                           </TableCell>
                           <TableCell align="center">
-                            <Tooltip title="Xóa khỏi lịch">
-                              <IconButton
-                                size="small"
-                                color="error"
-                                onClick={() =>
-                                  handleRemoveStudent(
-                                    student.id,
-                                    student.studentName
-                                  )
+                            <Box
+                              sx={{
+                                display: "flex",
+                                justifyContent: "center",
+                                gap: 1,
+                              }}
+                            >
+                              {/* Record result button */}
+                              <Tooltip
+                                title={
+                                  campaignType === 0
+                                    ? "Ghi nhận kết quả tiêm"
+                                    : "Ghi nhận kết quả khám"
                                 }
                               >
-                                <DeleteIcon />
-                              </IconButton>
-                            </Tooltip>
+                                <IconButton
+                                  size="small"
+                                  color="primary"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleRecordResult(student);
+                                  }}
+                                >
+                                  <AssignmentIcon />
+                                </IconButton>
+                              </Tooltip>
+
+                              {/* Existing delete button */}
+                              <Tooltip title="Xóa khỏi lịch">
+                                <IconButton
+                                  size="small"
+                                  color="error"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleRemoveStudent(
+                                      student.id,
+                                      student.studentName
+                                    );
+                                  }}
+                                >
+                                  <DeleteIcon />
+                                </IconButton>
+                              </Tooltip>
+                            </Box>
                           </TableCell>
                         </TableRow>
                       ))
@@ -511,6 +825,124 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
             autoFocus
           >
             Xóa tất cả
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Record Result Dialog */}
+      {selectedStudentForResult && (
+        <RecordResultDialog
+          open={isRecordResultDialogOpen}
+          onClose={() => setIsRecordResultDialogOpen(false)}
+          onSuccess={handleResultSuccess}
+          studentName={selectedStudentForResult.studentName}
+          scheduleDetailId={selectedStudentForResult.id}
+          campaignType={campaignType}
+        />
+      )}
+
+      {/* Dialog tạo phiếu đồng ý */}
+      <Dialog
+        open={consentFormDialogOpen}
+        onClose={() => setConsentFormDialogOpen(false)}
+        aria-labelledby="consent-form-dialog-title"
+      >
+        <DialogTitle id="consent-form-dialog-title">
+          Tạo phiếu đồng ý cho {students.length} học sinh
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ pt: 1 }}>
+            <Typography variant="subtitle1" gutterBottom>
+              Thông tin phiếu đồng ý
+            </Typography>
+
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                Trạng thái phê duyệt
+              </Typography>
+              <Box sx={{ display: "flex", gap: 3 }}>
+                <FormControlLabel
+                  control={
+                    <Radio
+                      checked={consentFormData.isApproved === "false"}
+                      onChange={handleConsentFormChange}
+                      name="isApproved"
+                      value="false"
+                    />
+                  }
+                  label="Không đồng ý"
+                />
+                <FormControlLabel
+                  control={
+                    <Radio
+                      checked={consentFormData.isApproved === "true"}
+                      onChange={handleConsentFormChange}
+                      name="isApproved"
+                      value="true"
+                    />
+                  }
+                  label="Đồng ý"
+                />
+              </Box>
+            </Box>
+
+            <Box sx={{ mb: 2 }}>
+              <TextField
+                label="Ngày tạo phiếu"
+                type="date"
+                name="consentDate"
+                value={consentFormData.consentDate}
+                onChange={handleConsentFormChange}
+                InputLabelProps={{ shrink: true }}
+                fullWidth
+                margin="normal"
+              />
+            </Box>
+
+            {consentFormData.isApproved === "false" && (
+              <Box sx={{ mb: 2 }}>
+                <TextField
+                  label="Lý do từ chối"
+                  name="reasonForDecline"
+                  value={consentFormData.reasonForDecline}
+                  onChange={handleConsentFormChange}
+                  fullWidth
+                  multiline
+                  rows={2}
+                  margin="normal"
+                />
+              </Box>
+            )}
+
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+              Thông tin này sẽ được áp dụng cho tất cả {students.length} học
+              sinh trong danh sách.
+            </Typography>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setConsentFormDialogOpen(false)}
+            color="primary"
+            variant="outlined"
+            disabled={isCreatingConsentForms}
+          >
+            Hủy
+          </Button>
+          <Button
+            onClick={confirmCreateConsentForms}
+            color="primary"
+            variant="contained"
+            startIcon={
+              isCreatingConsentForms ? (
+                <CircularProgress size={20} />
+              ) : (
+                <DescriptionIcon />
+              )
+            }
+            disabled={isCreatingConsentForms}
+          >
+            {isCreatingConsentForms ? "Đang tạo..." : "Tạo phiếu đồng ý"}
           </Button>
         </DialogActions>
       </Dialog>

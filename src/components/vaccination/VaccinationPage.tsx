@@ -26,6 +26,7 @@ import VaccinationProgramList from "./VaccinationProgramList";
 import VaccinationProgramForm from "./VaccinationProgramForm";
 import VaccinationProgramDetails from "./VaccinationProgramDetails";
 import instance from "../../utils/axiosConfig";
+import { isAdmin } from "../../utils/roleUtils";
 
 const VaccinationPage = () => {
   const [tabValue, setTabValue] = useState(0);
@@ -200,9 +201,34 @@ const VaccinationPage = () => {
   return (
     <Container maxWidth="lg">
       <Box sx={{ my: 4 }}>
-        <Typography variant="h4" component="h1" sx={{ mb: 2 }}>
+        {/* <Typography variant="h4" component="h1" sx={{ mb: 2 }}>
           Quản lý chương trình tiêm chủng
-        </Typography>
+        </Typography> */}
+
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 3,
+          }}
+        >
+          <Typography variant="h5" component="h1">
+            Quản lý chương trình tiêm chủng
+          </Typography>
+
+          {/* Only show the Create Program button if user is admin */}
+          {isAdmin() && (
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<AddIcon />}
+              onClick={handleCreateClick}
+            >
+              Tạo chương trình
+            </Button>
+          )}
+        </Box>
 
         {!isCreating && !isViewingDetails && (
           <>
@@ -251,14 +277,6 @@ const VaccinationPage = () => {
                     </ToggleButton>
                   </ToggleButtonGroup>
                 </Box>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  startIcon={<AddIcon />}
-                  onClick={handleCreateClick}
-                >
-                  Tạo chương trình
-                </Button>
               </Stack>
             </Paper>
 

@@ -33,6 +33,7 @@ import ScheduleStudentListDialog from "./ScheduleStudentListDialog";
 import instance from "../../utils/axiosConfig";
 import { toast } from "react-toastify";
 import EditScheduleDialog from "./EditScheduleDialog";
+import { isAdmin } from "../../utils/roleUtils";
 
 // Cập nhật interface để thêm prop onDeleteSuccess
 interface VaccinationProgramDetailsProps {
@@ -281,40 +282,50 @@ const VaccinationProgramDetails: React.FC<VaccinationProgramDetailsProps> = ({
   };
 
   // Thêm hàm refresh với retry
-  const refreshWithRetry = async (campaignId: string, maxRetries = 3, delay = 1000) => {
+  const refreshWithRetry = async (
+    campaignId: string,
+    maxRetries = 3,
+    delay = 1000
+  ) => {
     let retries = 0;
-    
+
     const attemptRefresh = async () => {
       try {
         console.log(`Attempt ${retries + 1} to refresh campaign data`);
-        const response = await instance.get(`/api/Campaign/get-campaign-by-id/${campaignId}`);
-        
+        const response = await instance.get(
+          `/api/Campaign/get-campaign-by-id/${campaignId}`
+        );
+
         // Kiểm tra xem schedule mới có tồn tại không
         const schedules = response.data?.schedules || [];
-        console.log(`Found ${schedules.length} schedules in refresh attempt ${retries + 1}`);
-        
+        console.log(
+          `Found ${schedules.length} schedules in refresh attempt ${
+            retries + 1
+          }`
+        );
+
         setCampaign(response.data);
         setSchedules(schedules);
-        
+
         return true; // success
       } catch (error) {
         console.error(`Refresh attempt ${retries + 1} failed:`, error);
         return false; // failed
       }
     };
-    
+
     while (retries < maxRetries) {
       const success = await attemptRefresh();
       if (success) return;
-      
+
       retries++;
       if (retries < maxRetries) {
         console.log(`Waiting ${delay}ms before retry ${retries + 1}...`);
-        await new Promise(resolve => setTimeout(resolve, delay));
+        await new Promise((resolve) => setTimeout(resolve, delay));
         delay *= 1.5; // Increase delay for each retry
       }
     }
-    
+
     toast.error("Không thể cập nhật dữ liệu sau nhiều lần thử");
   };
 
@@ -322,7 +333,7 @@ const VaccinationProgramDetails: React.FC<VaccinationProgramDetailsProps> = ({
   const handleScheduleSuccess = (updatedSchedule: any, isNew: boolean) => {
     if (isNew) {
       setSchedules((prev) => [...prev, updatedSchedule]);
-      
+
       // Sử dụng retry mechanism thay vì setTimeout đơn giản
       setTimeout(() => {
         if (campaign?.id) {
@@ -365,12 +376,11 @@ const VaccinationProgramDetails: React.FC<VaccinationProgramDetailsProps> = ({
 
     return (
       <Box sx={{ display: "flex" }}>
+        {/* All users can view students */}
         <Tooltip
           title={isTemporary ? "Đang xử lý..." : "Xem danh sách học sinh"}
         >
           <span>
-            {" "}
-            {/* Bọc trong span để Tooltip hoạt động khi button disabled */}
             <IconButton
               size="small"
               color="primary"
@@ -386,30 +396,37 @@ const VaccinationProgramDetails: React.FC<VaccinationProgramDetailsProps> = ({
             </IconButton>
           </span>
         </Tooltip>
-        <Tooltip title={isTemporary ? "Đang xử lý..." : "Chỉnh sửa lịch"}>
-          <span>
-            <IconButton
-              size="small"
-              color="info"
-              onClick={(e) => handleEditSchedule(e, schedule)}
-              disabled={isTemporary}
-            >
-              {isTemporary ? <CircularProgress size={20} /> : <EditIcon />}
-            </IconButton>
-          </span>
-        </Tooltip>
-        <Tooltip title={isTemporary ? "Đang xử lý..." : "Xóa lịch"}>
-          <span>
-            <IconButton
-              size="small"
-              color="error"
-              onClick={(e) => handleDeleteSchedule(e, schedule)}
-              disabled={isTemporary}
-            >
-              <DeleteIcon />
-            </IconButton>
-          </span>
-        </Tooltip>
+
+        {/* Only admins can edit/delete schedules */}
+        {isAdmin() && (
+          <>
+            <Tooltip title={isTemporary ? "Đang xử lý..." : "Chỉnh sửa lịch"}>
+              <span>
+                <IconButton
+                  size="small"
+                  color="info"
+                  onClick={(e) => handleEditSchedule(e, schedule)}
+                  disabled={isTemporary}
+                >
+                  {isTemporary ? <CircularProgress size={20} /> : <EditIcon />}
+                </IconButton>
+              </span>
+            </Tooltip>
+
+            <Tooltip title={isTemporary ? "Đang xử lý..." : "Xóa lịch"}>
+              <span>
+                <IconButton
+                  size="small"
+                  color="error"
+                  onClick={(e) => handleDeleteSchedule(e, schedule)}
+                  disabled={isTemporary}
+                >
+                  <DeleteIcon />
+                </IconButton>
+              </span>
+            </Tooltip>
+          </>
+        )}
       </Box>
     );
   };
@@ -467,22 +484,27 @@ const VaccinationProgramDetails: React.FC<VaccinationProgramDetailsProps> = ({
                 width: { xs: "100%", md: "30%" },
               }}
             >
-              <Button
-                variant="outlined"
-                startIcon={<EditIcon />}
-                sx={{ mr: 1 }}
-                onClick={handleEditClick}
-              >
-                Chỉnh sửa
-              </Button>
-              <Button
-                variant="outlined"
-                color="error"
-                startIcon={<DeleteIcon />}
-                onClick={handleDeleteClick}
-              >
-                Xóa
-              </Button>
+              {/* Only show edit/delete buttons for admins */}
+              {isAdmin() && (
+                <Box sx={{ display: "flex" }}>
+                  <Button
+                    variant="outlined"
+                    startIcon={<EditIcon />}
+                    sx={{ mr: 1 }}
+                    onClick={handleEditClick}
+                  >
+                    Chỉnh sửa
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    startIcon={<DeleteIcon />}
+                    onClick={handleDeleteClick}
+                  >
+                    Xóa
+                  </Button>
+                </Box>
+              )}
             </Box>
           </Box>
         </Box>
@@ -508,16 +530,19 @@ const VaccinationProgramDetails: React.FC<VaccinationProgramDetailsProps> = ({
             </Typography>
           </Box>
 
-          <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
-            <Button
-              variant="contained"
-              size="small"
-              startIcon={<AddIcon />}
-              onClick={handleAddSchedule}
-            >
-              Thêm lịch {campaign.type === 0 ? "tiêm" : "khám"}
-            </Button>
-          </Box>
+          {/* Only admins can see the Add Schedule button */}
+          {isAdmin() && (
+            <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
+              <Button
+                variant="contained"
+                size="small"
+                startIcon={<AddIcon />}
+                onClick={handleAddSchedule}
+              >
+                Thêm lịch {campaign.type === 0 ? "tiêm" : "khám"}
+              </Button>
+            </Box>
+          )}
 
           {isLoading ? (
             <Box sx={{ display: "flex", justifyContent: "center", my: 3 }}>
