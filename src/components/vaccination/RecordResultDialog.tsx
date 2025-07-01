@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -86,6 +86,9 @@ const RecordResultDialog: React.FC<RecordResultDialogProps> = ({
 
   // Add validation state
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
+
+  // Add new state to track form validity
+  const [isFormValid, setIsFormValid] = useState<boolean>(false);
 
   // New state for consultation feature
   const [showConsultation, setShowConsultation] = useState<boolean>(false);
@@ -322,6 +325,39 @@ const RecordResultDialog: React.FC<RecordResultDialogProps> = ({
       status: event.target.value as number,
     });
   };
+
+  // Validate vaccination form
+  const validateVaccinationForm = useCallback(() => {
+    // Check if the required dosage field is filled
+    if (!vaccForm.dosageGiven || vaccForm.dosageGiven.trim() === "") {
+      setIsFormValid(false);
+      return false;
+    }
+    setIsFormValid(true);
+    return true;
+  }, [vaccForm.dosageGiven]);
+
+  // Validate health checkup form
+  const validateHealthForm = useCallback(() => {
+    // Define required fields - adjust as needed based on your requirements
+    const required = [
+      "height",
+      "weight",
+      "bloodPressureSys",
+      "bloodPressureDia",
+      "heartRate",
+    ];
+
+    // Check if all required fields are filled
+    const allRequiredFilled = required.every(
+      (field) =>
+        healthForm[field as keyof HealthFormData] &&
+        healthForm[field as keyof HealthFormData].trim() !== ""
+    );
+
+    setIsFormValid(allRequiredFilled);
+    return allRequiredFilled;
+  }, [healthForm]);
 
   // Get current date for date picker min date
   const today = new Date();
