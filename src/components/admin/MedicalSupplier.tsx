@@ -38,10 +38,13 @@ import {
   Warning as WarningIcon,
   Image as ImageIcon,
   Lock as LockIcon,
+  ArrowBackIos as ArrowBackIosIcon,
+  ArrowForwardIos as ArrowForwardIosIcon,
 } from "@mui/icons-material";
-import { useAuth } from "../auth/AuthContext"; // Fix import path
+import { useAuth } from "../auth/AuthContext";
 import axios from "axios";
-import instance from "../../utils/axiosConfig"; // Import axios instance
+import instance from "../../utils/axiosConfig";
+import { toast } from "react-toastify"; // Import toast
 
 // SupplyType enum mapping
 enum SupplyType {
@@ -50,9 +53,15 @@ enum SupplyType {
   ConsumableSupply = 2,
 }
 
+// Danh sách đơn vị
+const UNIT_OPTIONS = [
+  "viên", "hộp", "lọ", "túi", "chai", "ống", "gói", "vỉ", "kg", "gram", 
+  "lít", "ml", "cái", "chiếc", "bộ", "đôi", "thùng", "lon", "tuýp", "miếng"
+];
+
 const MedicalSupplierPage = () => {
   const navigate = useNavigate();
-  const { user, loading } = useAuth(); // Use AuthContext với user và loading
+  const { user, loading } = useAuth();
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [formData, setFormData] = useState<any>({});
@@ -60,6 +69,13 @@ const MedicalSupplierPage = () => {
   const [medicalSuppliers, setMedicalSuppliers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  
+  // Thêm state cho detail dialog
+  const [openDetailDialog, setOpenDetailDialog] = useState(false);
+  const [selectedDetailItem, setSelectedDetailItem] = useState<any>(null);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   // Fetch suppliers from API
   const fetchSuppliers = async () => {
@@ -73,6 +89,7 @@ const MedicalSupplierPage = () => {
     } catch (err) {
       console.error("Error fetching suppliers:", err);
       setError("Không thể tải dữ liệu vật tư y tế. Vui lòng thử lại sau.");
+      toast.error("Không thể tải dữ liệu vật tư y tế");
     } finally {
       setIsLoading(false);
     }
@@ -87,6 +104,7 @@ const MedicalSupplierPage = () => {
       return response.data;
     } catch (err) {
       console.error(`Error fetching supplier with ID ${id}:`, err);
+      toast.error("Không thể tải thông tin vật tư");
       throw new Error("Không thể tải thông tin vật tư");
     }
   };
@@ -101,6 +119,7 @@ const MedicalSupplierPage = () => {
       return response.data;
     } catch (err) {
       console.error("Error creating supplier:", err);
+      toast.error("Không thể tạo vật tư mới");
       throw new Error("Không thể tạo vật tư mới");
     }
   };
@@ -115,6 +134,7 @@ const MedicalSupplierPage = () => {
       return response.data;
     } catch (err) {
       console.error(`Error updating supplier with ID ${id}:`, err);
+      toast.error("Không thể cập nhật vật tư");
       throw new Error("Không thể cập nhật vật tư");
     }
   };
@@ -128,8 +148,82 @@ const MedicalSupplierPage = () => {
       return response.data;
     } catch (err) {
       console.error(`Error deleting supplier with ID ${id}:`, err);
+      toast.error("Không thể xóa vật tư");
       throw new Error("Không thể xóa vật tư");
     }
+  };
+
+  // Add image upload function
+  const uploadImage = async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await fetch('http://localhost:5112/image', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload image');
+      }
+
+      const imageUrl = await response.text();
+      return imageUrl;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast.error('Không thể tải lên hình ảnh');
+      throw error;
+    }
+  };
+
+  // Handle multiple image uploads
+  const handleImageUpload = async (files: FileList) => {
+    if (files.length === 0) return;
+
+    setIsUploadingImage(true);
+    const uploadedUrls: string[] = [];
+
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+          toast.error(`File ${file.name} không phải là hình ảnh`);
+          continue;
+        }
+
+        // Validate file size (e.g., max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+          toast.error(`File ${file.name} quá lớn (tối đa 5MB)`);
+          continue;
+        }
+
+        const imageUrl = await uploadImage(file);
+        uploadedUrls.push(imageUrl);
+      }
+
+      if (uploadedUrls.length > 0) {
+        const currentImages = formData.image || [];
+        setFormData({ 
+          ...formData, 
+          image: [...currentImages, ...uploadedUrls] 
+        });
+        toast.success(`Đã tải lên ${uploadedUrls.length} hình ảnh`);
+      }
+    } catch (error) {
+      console.error('Error uploading images:', error);
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+  // Remove image from form data
+  const handleRemoveImage = (indexToRemove: number) => {
+    const currentImages = formData.image || [];
+    const updatedImages = currentImages.filter((_item: string, index: number) => index !== indexToRemove);
+    setFormData({ ...formData, image: updatedImages });
   };
 
   // Load suppliers on component mount
@@ -318,7 +412,6 @@ const MedicalSupplierPage = () => {
         setSelectedItem(supplierData);
         setFormData(supplierData);
       } catch (err) {
-        alert("Không thể tải thông tin vật tư. Vui lòng thử lại.");
         return;
       }
     } else {
@@ -343,37 +436,69 @@ const MedicalSupplierPage = () => {
 
   const handleSave = async () => {
     try {
-      setIsLoading(true);
+      setIsSaving(true);
       if (selectedItem) {
         await updateSupplier(selectedItem.id, formData);
-        alert("Cập nhật vật tư thành công!");
+        toast.success("Cập nhật vật tư thành công!");
       } else {
         await createSupplier(formData);
-        alert("Thêm vật tư thành công!");
+        toast.success("Thêm vật tư thành công!");
       }
       handleCloseDialog();
       fetchSuppliers();
     } catch (error) {
       console.error("Error saving medical supplier:", error);
-      alert("Có lỗi xảy ra khi lưu vật tư!");
+      // Error toast already handled in create/update functions
     } finally {
-      setIsLoading(false);
+      setIsSaving(false);
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa vật tư này?")) {
+    // Use a custom confirm dialog or MUI dialog instead of window.confirm
+    const confirmed = window.confirm("Bạn có chắc chắn muốn xóa vật tư này?");
+    if (confirmed) {
       try {
         setIsLoading(true);
         await deleteSupplier(id);
-        alert("Xóa vật tư thành công!");
+        toast.success("Xóa vật tư thành công!");
         fetchSuppliers();
       } catch (error) {
         console.error("Error deleting medical supplier:", error);
-        alert("Có lỗi xảy ra khi xóa vật tư!");
+        // Error toast already handled in deleteSupplier function
       } finally {
         setIsLoading(false);
       }
+    }
+  };
+
+  // Thêm function để handle click vào hình ảnh
+  const handleImageClick = async (item: any) => {
+    try {
+      const supplierData = await fetchSupplierById(item.id);
+      setSelectedDetailItem(supplierData);
+      setSelectedImageIndex(0);
+      setOpenDetailDialog(true);
+    } catch (err) {
+      console.error("Error fetching supplier details:", err);
+    }
+  };
+
+  const handleCloseDetailDialog = () => {
+    setOpenDetailDialog(false);
+    setSelectedDetailItem(null);
+    setSelectedImageIndex(0);
+  };
+
+  const handleNextImage = () => {
+    if (selectedDetailItem?.image && selectedImageIndex < selectedDetailItem.image.length - 1) {
+      setSelectedImageIndex(selectedImageIndex + 1);
+    }
+  };
+
+  const handlePrevImage = () => {
+    if (selectedImageIndex > 0) {
+      setSelectedImageIndex(selectedImageIndex - 1);
     }
   };
 
@@ -570,8 +695,20 @@ const MedicalSupplierPage = () => {
                                   .map((img: string, index: number) => (
                                     <Avatar
                                       key={index}
-                                      src={`/images/${img}`}
-                                      sx={{ width: 40, height: 40 }}
+                                      src={img}
+                                      sx={{ 
+                                        width: 40, 
+                                        height: 40,
+                                        cursor: 'pointer',
+                                        transition: 'transform 0.2s',
+                                        '&:hover': {
+                                          transform: 'scale(1.1)'
+                                        }
+                                      }}
+                                      onClick={() => handleImageClick(item)}
+                                      onError={(e) => {
+                                        (e.target as HTMLImageElement).style.display = 'none';
+                                      }}
                                     >
                                       <ImageIcon />
                                     </Avatar>
@@ -583,7 +720,13 @@ const MedicalSupplierPage = () => {
                                       height: 40,
                                       bgcolor: "#f5f5f5",
                                       color: "#666",
+                                      cursor: 'pointer',
+                                      transition: 'transform 0.2s',
+                                      '&:hover': {
+                                        transform: 'scale(1.1)'
+                                      }
                                     }}
+                                    onClick={() => handleImageClick(item)}
                                   >
                                     +{item.image.length - 2}
                                   </Avatar>
@@ -595,7 +738,9 @@ const MedicalSupplierPage = () => {
                                   width: 40,
                                   height: 40,
                                   bgcolor: "#f5f5f5",
+                                  cursor: 'pointer',
                                 }}
+                                onClick={() => handleImageClick(item)}
                               >
                                 <ImageIcon sx={{ color: "#999" }} />
                               </Avatar>
@@ -720,129 +865,566 @@ const MedicalSupplierPage = () => {
         <Dialog
           open={openDialog}
           onClose={handleCloseDialog}
-          maxWidth="md"
+          maxWidth="lg"
           fullWidth
         >
           <DialogTitle>
             {selectedItem ? "Chỉnh sửa vật tư" : "Thêm vật tư mới"}
           </DialogTitle>
           <DialogContent>
-            <Box
-              sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 2 }}
-            >
-              <TextField
-                label="Tên vật tư"
-                value={formData.supplyName || ""}
-                onChange={(e) =>
-                  setFormData({ ...formData, supplyName: e.target.value })
-                }
-                fullWidth
-                required
-                error={!formData.supplyName}
-                helperText={
-                  !formData.supplyName ? "Tên vật tư là bắt buộc" : ""
-                }
-              />
-
-              <FormControl fullWidth required>
-                <InputLabel>Loại vật tư</InputLabel>
-                <Select
-                  value={formData.supplyType ?? SupplyType.Medication}
-                  onChange={(e) =>
-                    setFormData({ ...formData, supplyType: e.target.value })
-                  }
-                  label="Loại vật tư"
-                >
-                  <MenuItem value={SupplyType.Medication}>Thuốc</MenuItem>
-                  <MenuItem value={SupplyType.Equipment}>Thiết bị</MenuItem>
-                  <MenuItem value={SupplyType.ConsumableSupply}>
-                    Vật tư tiêu hao
-                  </MenuItem>
-                </Select>
-              </FormControl>
-
-              <Box sx={{ display: "flex", gap: 2 }}>
-                <TextField
-                  label="Số lượng"
-                  type="number"
-                  value={formData.quantity || ""}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      quantity: Number(e.target.value),
-                    })
-                  }
-                  sx={{ flex: 2 }}
-                  required
-                  inputProps={{ min: 0 }}
-                  error={formData.quantity < 0}
-                  helperText={formData.quantity < 0 ? "Số lượng phải >= 0" : ""}
-                />
-                <TextField
-                  label="Đơn vị"
-                  value={formData.unit || ""}
-                  onChange={(e) =>
-                    setFormData({ ...formData, unit: e.target.value })
-                  }
-                  sx={{ flex: 1 }}
-                  required
-                  error={!formData.unit}
-                />
-              </Box>
-
-              <TextField
-                label="Nhà cung cấp"
-                value={formData.supplier || ""}
-                onChange={(e) =>
-                  setFormData({ ...formData, supplier: e.target.value })
-                }
-                fullWidth
-              />
-
-              <Box>
-                <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                  Hình ảnh (tùy chọn)
+            <Box sx={{ display: 'flex', gap: 3, pt: 2 }}>
+              {/* Phần hình ảnh - Cột trái */}
+              <Box sx={{ flex: 1 }}>
+                <Typography variant="h6" gutterBottom sx={{ color: '#1976d2', fontWeight: 'bold' }}>
+                  Hình ảnh vật tư
                 </Typography>
+                
+                {/* Upload Button */}
                 <Button
                   variant="outlined"
                   component="label"
-                  startIcon={<ImageIcon />}
+                  startIcon={
+                    isUploadingImage ? (
+                      <CircularProgress size={20} />
+                    ) : (
+                      <ImageIcon />
+                    )
+                  }
                   fullWidth
+                  disabled={isUploadingImage}
+                  sx={{ mb: 2, py: 1.5 }}
                 >
-                  Chọn hình ảnh
+                  {isUploadingImage ? "Đang tải lên..." : "Chọn và tải lên hình ảnh"}
                   <input
                     type="file"
                     hidden
                     multiple
                     accept="image/*"
                     onChange={(e) => {
-                      const files = Array.from(e.target.files || []);
-                      const fileNames = files.map((file) => file.name);
-                      setFormData({ ...formData, image: fileNames });
+                      if (e.target.files) {
+                        handleImageUpload(e.target.files);
+                      }
                     }}
                   />
                 </Button>
-                {formData.image && formData.image.length > 0 && (
-                  <Box sx={{ mt: 1 }}>
-                    <Typography variant="caption" color="text.secondary">
-                      Đã chọn {formData.image.length} ảnh:{" "}
-                      {formData.image.join(", ")}
+
+                {/* Display uploaded images */}
+                {formData.image && formData.image.length > 0 ? (
+                  <Box>
+                    {/* Main image preview */}
+                    <Box
+                      sx={{
+                        position: 'relative',
+                        width: '100%',
+                        height: 300,
+                        border: '2px solid #ddd',
+                        borderRadius: 2,
+                        overflow: 'hidden',
+                        mb: 2,
+                        bgcolor: '#f9f9f9'
+                      }}
+                    >
+                      <img
+                        src={formData.image[0]}
+                        alt="Preview"
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'contain'
+                        }}
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = '/placeholder-image.png';
+                        }}
+                      />
+                      
+                      {/* Remove button for main image */}
+                      <IconButton
+                        size="small"
+                        onClick={() => handleRemoveImage(0)}
+                        sx={{
+                          position: 'absolute',
+                          top: 8,
+                          right: 8,
+                          bgcolor: 'rgba(0,0,0,0.7)',
+                          color: 'white',
+                          '&:hover': { bgcolor: 'rgba(0,0,0,0.9)' }
+                        }}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Box>
+
+                    {/* Additional images thumbnails */}
+                    {formData.image.length > 1 && (
+                      <Box>
+                        <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                          Hình ảnh khác ({formData.image.length - 1}):
+                        </Typography>
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                          {formData.image.slice(1).map((imageUrl: string, index: number) => (
+                            <Box
+                              key={index + 1}
+                              sx={{
+                                position: 'relative',
+                                width: 60,
+                                height: 60,
+                                border: '1px solid #ddd',
+                                borderRadius: 1,
+                                overflow: 'hidden'
+                              }}
+                            >
+                              <img
+                                src={imageUrl}
+                                alt={`Thumbnail ${index + 2}`}
+                                style={{
+                                  width: '100%',
+                                  height: '100%',
+                                  objectFit: 'cover'
+                                }}
+                              />
+                              <IconButton
+                                size="small"
+                                onClick={() => handleRemoveImage(index + 1)}
+                                sx={{
+                                  position: 'absolute',
+                                  top: -2,
+                                  right: -2,
+                                  bgcolor: 'rgba(0,0,0,0.7)',
+                                  color: 'white',
+                                  width: 20,
+                                  height: 20,
+                                  '&:hover': { bgcolor: 'rgba(0,0,0,0.9)' }
+                                }}
+                              >
+                                <DeleteIcon sx={{ fontSize: 12 }} />
+                              </IconButton>
+                            </Box>
+                          ))}
+                        </Box>
+                      </Box>
+                    )}
+
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+                      Đã tải lên {formData.image.length} hình ảnh
                     </Typography>
                   </Box>
+                ) : (
+                  <Box
+                    sx={{
+                      width: '100%',
+                      height: 300,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      bgcolor: '#f5f5f5',
+                      borderRadius: 2,
+                      border: '2px dashed #ddd'
+                    }}
+                  >
+                    <Box sx={{ textAlign: 'center', color: '#999' }}>
+                      <ImageIcon sx={{ fontSize: 48, mb: 1 }} />
+                      <Typography variant="body2">
+                        Chưa có hình ảnh
+                      </Typography>
+                      <Typography variant="caption">
+                        Hãy chọn hình ảnh để tải lên
+                      </Typography>
+                    </Box>
+                  </Box>
                 )}
+              </Box>
+
+              {/* Phần thông tin - Cột phải */}
+              <Box sx={{ flex: 1 }}>
+                <Card sx={{ p: 3, height: 'fit-content' }}>
+                  <Typography variant="h6" gutterBottom sx={{ color: '#1976d2', fontWeight: 'bold' }}>
+                    Thông tin vật tư
+                  </Typography>
+                  
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    <TextField
+                      label="Tên vật tư"
+                      value={formData.supplyName || ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, supplyName: e.target.value })
+                      }
+                      fullWidth
+                      required
+                      error={!formData.supplyName}
+                      helperText={
+                        !formData.supplyName ? "Tên vật tư là bắt buộc" : ""
+                      }
+                      variant="outlined"
+                    />
+
+                    <FormControl fullWidth required>
+                      <InputLabel>Loại vật tư</InputLabel>
+                      <Select
+                        value={formData.supplyType ?? SupplyType.Medication}
+                        onChange={(e) =>
+                          setFormData({ ...formData, supplyType: e.target.value })
+                        }
+                        label="Loại vật tư"
+                      >
+                        <MenuItem value={SupplyType.Medication}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Chip label="Thuốc" color="primary" size="small" />
+                          </Box>
+                        </MenuItem>
+                        <MenuItem value={SupplyType.Equipment}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Chip label="Thiết bị" color="secondary" size="small" />
+                          </Box>
+                        </MenuItem>
+                        <MenuItem value={SupplyType.ConsumableSupply}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Chip label="Vật tư tiêu hao" color="warning" size="small" />
+                          </Box>
+                        </MenuItem>
+                      </Select>
+                    </FormControl>
+
+                    <Box sx={{ display: "flex", gap: 2 }}>
+                      <TextField
+                        label="Số lượng"
+                        type="number"
+                        value={formData.quantity || ""}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            quantity: Number(e.target.value),
+                          })
+                        }
+                        sx={{ flex: 1 }}
+                        required
+                        inputProps={{ min: 0 }}
+                        error={formData.quantity < 0}
+                        helperText={formData.quantity < 0 ? "Số lượng phải >= 0" : ""}
+                        variant="outlined"
+                      />
+                      <FormControl sx={{ flex: 1 }} required>
+                        <InputLabel>Đơn vị</InputLabel>
+                        <Select
+                          value={formData.unit || ""}
+                          onChange={(e) =>
+                            setFormData({ ...formData, unit: e.target.value })
+                          }
+                          label="Đơn vị"
+                          error={!formData.unit}
+                        >
+                          {UNIT_OPTIONS.map((unit) => (
+                            <MenuItem key={unit} value={unit}>
+                              {unit}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Box>
+
+                    <TextField
+                      label="Nhà cung cấp"
+                      value={formData.supplier || ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, supplier: e.target.value })
+                      }
+                      fullWidth
+                      variant="outlined"
+                      placeholder="Nhập tên nhà cung cấp (tùy chọn)"
+                    />
+
+                    {/* Preview thông tin */}
+                    <Box sx={{ mt: 2, p: 2, bgcolor: '#f8f9fa', borderRadius: 1 }}>
+                      <Typography variant="subtitle2" color="primary" gutterBottom>
+                        📋 Xem trước thông tin:
+                      </Typography>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                        <Typography variant="body2">
+                          <strong>Tên:</strong> {formData.supplyName || "Chưa nhập"}
+                        </Typography>
+                        <Typography variant="body2">
+                          <strong>Loại:</strong> {getSupplyTypeText(formData.supplyType ?? SupplyType.Medication)}
+                        </Typography>
+                        <Typography variant="body2">
+                          <strong>Số lượng:</strong> {formData.quantity || 0} {formData.unit || "đơn vị"}
+                        </Typography>
+                        <Typography variant="body2">
+                          <strong>Nhà cung cấp:</strong> {formData.supplier || "Chưa cập nhật"}
+                        </Typography>
+                        <Typography variant="body2">
+                          <strong>Hình ảnh:</strong> {formData.image?.length || 0} ảnh
+                        </Typography>
+                      </Box>
+                    </Box>
+
+                    {/* Validation summary */}
+                    {(!formData.supplyName || !formData.unit || formData.quantity < 0) && (
+                      <Alert severity="error" sx={{ mt: 2 }}>
+                        <Typography variant="body2">
+                          Vui lòng kiểm tra lại thông tin vật tư. Các trường có dấu
+                          sao đỏ là bắt buộc.
+                        </Typography>
+                      </Alert>
+                    )}
+                  </Box>
+                </Card>
               </Box>
             </Box>
           </DialogContent>
           <DialogActions>
-            <Button onClick={handleCloseDialog}>Hủy</Button>
+            <Button onClick={handleCloseDialog} disabled={isSaving || isUploadingImage}>
+              Hủy
+            </Button>
             <Button
               onClick={handleSave}
               variant="contained"
               disabled={
-                !formData.supplyName || !formData.unit || formData.quantity < 0
+                !formData.supplyName || 
+                !formData.unit || 
+                formData.quantity < 0 || 
+                isSaving || 
+                isUploadingImage
               }
+              startIcon={isSaving ? <CircularProgress size={20} /> : null}
             >
-              {selectedItem ? "Cập nhật" : "Tạo mới"}
+              {isSaving 
+                ? "Đang lưu..." 
+                : selectedItem 
+                ? "Cập nhật" 
+                : "Tạo mới"
+              }
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Detail Dialog với hình ảnh phóng to */}
+        <Dialog
+          open={openDetailDialog}
+          onClose={handleCloseDetailDialog}
+          maxWidth="lg"
+          fullWidth
+        >
+          <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography variant="h5" component="div">
+              Chi tiết vật tư: {selectedDetailItem?.supplyName}
+            </Typography>
+            <IconButton onClick={handleCloseDetailDialog}>
+              <DeleteIcon />
+            </IconButton>
+          </DialogTitle>
+          <DialogContent>
+            <Box sx={{ display: 'flex', gap: 3, pt: 2 }}>
+              {/* Phần hình ảnh */}
+              <Box sx={{ flex: 1 }}>
+                {selectedDetailItem?.image && selectedDetailItem.image.length > 0 ? (
+                  <Box>
+                    {/* Hình ảnh chính */}
+                    <Box
+                      sx={{
+                        position: 'relative',
+                        width: '100%',
+                        height: 400,
+                        border: '2px solid #ddd',
+                        borderRadius: 2,
+                        overflow: 'hidden',
+                        mb: 2
+                      }}
+                    >
+                      <img
+                        src={selectedDetailItem.image[selectedImageIndex]}
+                        alt={`${selectedDetailItem.supplyName} - ${selectedImageIndex + 1}`}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'contain',
+                          backgroundColor: '#f9f9f9'
+                        }}
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = '/placeholder-image.png';
+                        }}
+                      />
+                      
+                      {/* Navigation arrows */}
+                      {selectedDetailItem.image.length > 1 && (
+                        <>
+                          <IconButton
+                            onClick={handlePrevImage}
+                            disabled={selectedImageIndex === 0}
+                            sx={{
+                              position: 'absolute',
+                              left: 8,
+                              top: '50%',
+                              transform: 'translateY(-50%)',
+                              bgcolor: 'rgba(0,0,0,0.5)',
+                              color: 'white',
+                              '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' }
+                            }}
+                          >
+                            <ArrowBackIosIcon />
+                          </IconButton>
+                          <IconButton
+                            onClick={handleNextImage}
+                            disabled={selectedImageIndex === selectedDetailItem.image.length - 1}
+                            sx={{
+                              position: 'absolute',
+                              right: 8,
+                              top: '50%',
+                              transform: 'translateY(-50%)',
+                              bgcolor: 'rgba(0,0,0,0.5)',
+                              color: 'white',
+                              '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' }
+                            }}
+                          >
+                            <ArrowForwardIosIcon />
+                          </IconButton>
+                        </>
+                      )}
+                      
+                      {/* Image counter */}
+                      <Box
+                        sx={{
+                          position: 'absolute',
+                          bottom: 8,
+                          right: 8,
+                          bgcolor: 'rgba(0,0,0,0.7)',
+                          color: 'white',
+                          px: 1,
+                          py: 0.5,
+                          borderRadius: 1,
+                          fontSize: '0.875rem'
+                        }}
+                      >
+                        {selectedImageIndex + 1} / {selectedDetailItem.image.length}
+                      </Box>
+                    </Box>
+                    
+                    {/* Thumbnail navigation */}
+                    {selectedDetailItem.image.length > 1 && (
+                      <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
+                        {selectedDetailItem.image.map((img: string, index: number) => (
+                          <Avatar
+                            key={index}
+                            src={img}
+                            sx={{
+                              width: 60,
+                              height: 60,
+                              cursor: 'pointer',
+                              border: selectedImageIndex === index ? '3px solid #1976d2' : '2px solid #ddd',
+                              transition: 'all 0.2s',
+                              '&:hover': {
+                                transform: 'scale(1.1)'
+                              }
+                            }}
+                            onClick={() => setSelectedImageIndex(index)}
+                          >
+                            <ImageIcon />
+                          </Avatar>
+                        ))}
+                      </Box>
+                    )}
+                  </Box>
+                ) : (
+                  <Box
+                    sx={{
+                      width: '100%',
+                      height: 400,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      bgcolor: '#f5f5f5',
+                      borderRadius: 2,
+                      border: '2px dashed #ddd'
+                    }}
+                  >
+                    <Box sx={{ textAlign: 'center', color: '#999' }}>
+                      <ImageIcon sx={{ fontSize: 64, mb: 1 }} />
+                      <Typography>Chưa có hình ảnh</Typography>
+                    </Box>
+                  </Box>
+                )}
+              </Box>
+
+              {/* Phần thông tin chi tiết */}
+              <Box sx={{ flex: 1 }}>
+                <Card sx={{ p: 3 }}>
+                  <Typography variant="h6" gutterBottom sx={{ color: '#1976d2', fontWeight: 'bold' }}>
+                    Thông tin chi tiết
+                  </Typography>
+                  
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <Box>
+                      <Typography variant="subtitle2" color="text.secondary">
+                        Tên vật tư
+                      </Typography>
+                      <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
+                        {selectedDetailItem?.supplyName}
+                      </Typography>
+                    </Box>
+
+                    <Box>
+                      <Typography variant="subtitle2" color="text.secondary">
+                        Loại vật tư
+                      </Typography>
+                      <Chip
+                        label={getSupplyTypeText(selectedDetailItem?.supplyType)}
+                        color={getSupplyTypeColor(selectedDetailItem?.supplyType) as any}
+                        size="small"
+                      />
+                    </Box>
+
+                    <Box sx={{ display: 'flex', gap: 3 }}>
+                      <Box sx={{ flex: 1 }}>
+                        <Typography variant="subtitle2" color="text.secondary">
+                          Số lượng
+                        </Typography>
+                        <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#2e7d32' }}>
+                          {selectedDetailItem?.quantity}
+                        </Typography>
+                      </Box>
+                      <Box sx={{ flex: 1 }}>
+                        <Typography variant="subtitle2" color="text.secondary">
+                          Đơn vị
+                        </Typography>
+                        <Typography variant="body1">
+                          {selectedDetailItem?.unit}
+                        </Typography>
+                      </Box>
+                    </Box>
+
+                    <Box>
+                      <Typography variant="subtitle2" color="text.secondary">
+                        Nhà cung cấp
+                      </Typography>
+                      <Typography variant="body1">
+                        {selectedDetailItem?.supplier || 'Chưa cập nhật'}
+                      </Typography>
+                    </Box>
+
+                    {/* Kiểm tra tồn kho */}
+                    {lowStockItems.some(low => low.id === selectedDetailItem?.id) && (
+                      <Alert severity="warning" sx={{ mt: 2 }}>
+                        <Typography variant="subtitle2">
+                          ⚠️ Cảnh báo: Vật tư sắp hết hàng!
+                        </Typography>
+                      </Alert>
+                    )}
+                  </Box>
+                </Card>
+              </Box>
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button 
+              onClick={() => {
+                handleCloseDetailDialog();
+                handleOpenDialog(selectedDetailItem);
+              }}
+              variant="outlined"
+              startIcon={<EditIcon />}
+            >
+              Chỉnh sửa
+            </Button>
+            <Button onClick={handleCloseDetailDialog}>
+              Đóng
             </Button>
           </DialogActions>
         </Dialog>

@@ -191,8 +191,8 @@ const MedicationRequestList: React.FC<MedicationRequestListProps> = ({
   };
 
   const handleSubmitReject = async () => {
-    if (!currentRequest || !rejectionReason.trim()) {
-      toast.error("Vui lòng nhập lý do từ chối");
+    if (!currentRequest) {
+      toast.error("Không tìm thấy yêu cầu");
       return;
     }
 
@@ -207,13 +207,38 @@ const MedicationRequestList: React.FC<MedicationRequestListProps> = ({
       setProcessingRequestId(requestId);
       pendingRequests.current.add(requestId);
 
-      // Make the API call
-      const apiUrl = `${BASE_API}/api/MedicationRequest/delete-medication-request/${requestId}`;
-      const response = await instance.delete(apiUrl);
+      // First get the actual student ID by student code
+      const studentResponse = await instance.get(
+        `${BASE_API}/api/Student/get-student-by-student-code/${currentRequest.studentCode}`
+      );
+
+      if (studentResponse.status !== 200) {
+        throw new Error("Failed to get student information");
+      }
+
+      const studentId = studentResponse.data.id;
+
+      // Update status to rejected (3) instead of deleting
+      const updateData = {
+        studentId: studentId,
+        medicationName: currentRequest.medicationName,
+        dosage: currentRequest.dosage,
+        numberOfDayToTake: currentRequest.numberOfDayToTake,
+        instructions: currentRequest.instructions,
+        imagesMedicalInvoice: Array.isArray(currentRequest.imagesMedicalInvoice)
+          ? currentRequest.imagesMedicalInvoice
+          : [],
+        startDate: new Date(currentRequest.startDate).toISOString(),
+        status: 3, // Set status to 3 for rejected/cancelled
+        medicalStaffId: nurseId,
+      };
+
+      const apiUrl = `${BASE_API}/api/MedicationRequest/update-medication-request/${requestId}`;
+      const response = await instance.put(apiUrl, updateData);
 
       if (response.status === 200) {
         toast.success("Yêu cầu đã bị từ chối");
-        onReject(requestId, rejectionReason);
+        onReject(requestId, "");
         handleCloseRejectDialog();
       }
     } catch (error) {
@@ -368,27 +393,26 @@ const MedicationRequestList: React.FC<MedicationRequestListProps> = ({
         </TableContainer>
       )}
 
-      {/* Rejection Reason Dialog */}
+      {/* Rejection Confirmation Dialog */}
       <Dialog open={rejectDialogOpen} onClose={handleCloseRejectDialog}>
-        <DialogTitle>Lý do từ chối yêu cầu thuốc</DialogTitle>
+        <DialogTitle>Xác nhận từ chối yêu cầu thuốc</DialogTitle>
         <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            id="reason"
-            label="Lý do từ chối"
-            type="text"
-            fullWidth
-            multiline
-            rows={4}
-            value={rejectionReason}
-            onChange={(e) => setRejectionReason(e.target.value)}
-          />
+          <Typography>
+            Bạn có chắc chắn muốn từ chối yêu cầu thuốc này không?
+          </Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseRejectDialog}>Hủy</Button>
-          <Button onClick={handleSubmitReject} color="error">
-            Xác nhận từ chối
+          <Button
+            onClick={handleSubmitReject}
+            color="error"
+            disabled={processingRequestId === currentRequest?.id}
+          >
+            {processingRequestId === currentRequest?.id ? (
+              <CircularProgress size={20} color="inherit" />
+            ) : (
+              "Xác nhận từ chối"
+            )}
           </Button>
         </DialogActions>
       </Dialog>
