@@ -25,6 +25,8 @@ import MedicalSupplier from "./components/admin/MedicalSupplier";
 import StudentManagementPage from "./components/admin/StudentManagementPage";
 import VaccinationPage from "./components/vaccination/VaccinationPage";
 import ParentMedicationDashboard from "./components/medication/parent/ParentMedicationDashboard";
+import VaccinationProgramDetailsPage from "./components/vaccination/VaccinationProgramDetailsPage";
+import ScheduleStudentsPage from "./components/vaccination/ScheduleStudentsPage";
 
 function App() {
   return (
@@ -51,7 +53,18 @@ function App() {
               <Route path="profile" element={<UserProfilePage />} />
               <Route path="user-management" element={<AdminPage />} />
               <Route path="medical-supplier" element={<MedicalSupplier />} />
-              <Route path="admin/students" element={<StudentManagementPage />} />
+              <Route
+                path="admin/students"
+                element={<StudentManagementPage />}
+              />
+              <Route
+                path="/vaccination/:campaignId"
+                element={<VaccinationProgramDetailsPage />}
+              />
+              <Route
+                path="/vaccination/schedule/:scheduleId/students"
+                element={<ScheduleStudentsPage />}
+              />
             </Route>
           </Routes>
         </Router>

@@ -195,8 +195,10 @@ const MainLayout = () => {
   const { user, logout } = useAuth();
 
   // Filter menu categories based on user role
-  const visibleCategories = menuCategories.filter(category => 
-    !category.role || category.role.includes(user?.role || '')
+
+  const visibleCategories = menuCategories.filter(
+    (category) => !category.role || category.role.includes(user?.role || "")
+
   );
 
   // Set active tab based on current location
@@ -372,6 +374,7 @@ const MainLayout = () => {
                   },
                 }}
               >
+
                 {visibleCategories.map((category, index) => ( // Use visibleCategories instead of filtering inline
                   <Tab
                     key={category.name}
@@ -413,7 +416,68 @@ const MainLayout = () => {
                     }
                   />
                 ))}
+
               </Tabs>
+            )}
+
+            {/* Navigation for unauthenticated users */}
+            {!user?.isAuthenticated && !isMobile && (
+              <Box sx={{ display: "flex", alignItems: "center", ml: 4 }}>
+                <Button
+                  component={Link}
+                  to="/promo/medication"
+                  sx={{
+                    color: "white",
+                    textTransform: "none",
+                    px: 2,
+                    py: 1,
+                    mx: 1,
+                    fontWeight: 500,
+                    "&:hover": {
+                      bgcolor: "rgba(255, 255, 255, 0.1)",
+                      borderRadius: 2,
+                    },
+                  }}
+                >
+                  Gửi thuốc đến trường
+                </Button>
+                <Button
+                  component={Link}
+                  to="/promo/vaccination"
+                  sx={{
+                    color: "white",
+                    textTransform: "none",
+                    px: 2,
+                    py: 1,
+                    mx: 1,
+                    fontWeight: 500,
+                    "&:hover": {
+                      bgcolor: "rgba(255, 255, 255, 0.1)",
+                      borderRadius: 2,
+                    },
+                  }}
+                >
+                  Tiêm phòng
+                </Button>
+                <Button
+                  component={Link}
+                  to="/promo/health-check"
+                  sx={{
+                    color: "white",
+                    textTransform: "none",
+                    px: 2,
+                    py: 1,
+                    mx: 1,
+                    fontWeight: 500,
+                    "&:hover": {
+                      bgcolor: "rgba(255, 255, 255, 0.1)",
+                      borderRadius: 2,
+                    },
+                  }}
+                >
+                  Kiểm tra sức khỏe
+                </Button>
+              </Box>
             )}
 
             {/* Spacer when not authenticated to push auth buttons to the right */}
