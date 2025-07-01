@@ -26,6 +26,11 @@ import StudentManagementPage from "./components/admin/StudentManagementPage";
 import VaccinationPage from "./components/vaccination/VaccinationPage";
 import ParentMedicationDashboard from "./components/medication/parent/ParentMedicationDashboard";
 
+// Promotional Pages
+import MedicationPromoPage from "./components/promo/MedicationPromoPage";
+import VaccinationPromoPage from "./components/promo/VaccinationPromoPage";
+import HealthCheckPromoPage from "./components/promo/HealthCheckPromoPage";
+
 function App() {
   return (
     <AuthProvider>
@@ -36,6 +41,12 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/homepage" element={<HomePage />} />
+            
+            {/* Promotional pages - accessible without authentication */}
+            <Route path="/promo/medication" element={<MedicationPromoPage />} />
+            <Route path="/promo/vaccination" element={<VaccinationPromoPage />} />
+            <Route path="/promo/health-check" element={<HealthCheckPromoPage />} />
+            
             <Route path="/" element={<MainLayout />}>
               <Route index element={<HomePage />} />
               <Route path="health-records" element={<HealthRecordsPage />} />

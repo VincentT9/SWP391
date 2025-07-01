@@ -416,6 +416,66 @@ const MainLayout = () => {
               </Tabs>
             )}
 
+            {/* Navigation for unauthenticated users */}
+            {!user?.isAuthenticated && !isMobile && (
+              <Box sx={{ display: 'flex', alignItems: 'center', ml: 4 }}>
+                <Button
+                  component={Link}
+                  to="/promo/medication"
+                  sx={{
+                    color: 'white',
+                    textTransform: 'none',
+                    px: 2,
+                    py: 1,
+                    mx: 1,
+                    fontWeight: 500,
+                    '&:hover': {
+                      bgcolor: 'rgba(255, 255, 255, 0.1)',
+                      borderRadius: 2,
+                    },
+                  }}
+                >
+                  Gửi thuốc đến trường
+                </Button>
+                <Button
+                  component={Link}
+                  to="/promo/vaccination"
+                  sx={{
+                    color: 'white',
+                    textTransform: 'none',
+                    px: 2,
+                    py: 1,
+                    mx: 1,
+                    fontWeight: 500,
+                    '&:hover': {
+                      bgcolor: 'rgba(255, 255, 255, 0.1)',
+                      borderRadius: 2,
+                    },
+                  }}
+                >
+                  Tiêm phòng
+                </Button>
+                <Button
+                  component={Link}
+                  to="/promo/health-check"
+                  sx={{
+                    color: 'white',
+                    textTransform: 'none',
+                    px: 2,
+                    py: 1,
+                    mx: 1,
+                    fontWeight: 500,
+                    '&:hover': {
+                      bgcolor: 'rgba(255, 255, 255, 0.1)',
+                      borderRadius: 2,
+                    },
+                  }}
+                >
+                  Kiểm tra sức khỏe
+                </Button>
+              </Box>
+            )}
+
             {/* Spacer when not authenticated to push auth buttons to the right */}
             {!user?.isAuthenticated && <Box sx={{ flexGrow: 1 }} />}
 
@@ -915,21 +975,6 @@ const MainLayout = () => {
                 />
               </ListItemIcon>
               <ListItemText primary="Trang cá nhân" />
-            </MenuItem>
-
-            <MenuItem
-              component={motion.div}
-              whileHover={{ x: 3 }}
-              onClick={() => {
-                navigate("/settings");
-                handleUserMenuClose();
-              }}
-              sx={{ py: 1.5, px: 2.5 }}
-            >
-              <ListItemIcon>
-                <SettingsIcon fontSize="small" sx={{ color: colors.primary }} />
-              </ListItemIcon>
-              <ListItemText primary="Cài đặt" />
             </MenuItem>
 
             <Divider sx={{ my: 1 }} />
