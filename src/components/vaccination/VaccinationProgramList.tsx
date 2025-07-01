@@ -24,6 +24,7 @@ import DeleteIcon from "@mui/icons-material/Delete"; // Thêm import
 import { format } from "date-fns";
 import instance from "../../utils/axiosConfig"; // Thêm import
 import { toast } from "react-toastify"; // Thêm import
+import { isAdmin } from "../../utils/roleUtils";
 
 interface VaccinationProgramListProps {
   campaigns: any[];
@@ -195,14 +196,18 @@ const VaccinationProgramList: React.FC<VaccinationProgramListProps> = ({
                           <VisibilityIcon />
                         </IconButton>
                       </Tooltip>
-                      <Tooltip title="Xóa chương trình">
-                        <IconButton
-                          color="error"
-                          onClick={(e) => handleDeleteClick(e, campaign)}
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </Tooltip>
+
+                      {/* Only show delete button for admins */}
+                      {isAdmin() && (
+                        <Tooltip title="Xóa chương trình">
+                          <IconButton
+                            color="error"
+                            onClick={(e) => handleDeleteClick(e, campaign)}
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </Tooltip>
+                      )}
                     </Box>
                   </TableCell>
                 </TableRow>
