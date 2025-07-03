@@ -208,13 +208,9 @@ const NurseMedicationDashboard: React.FC<NurseMedicationDashboardProps> = ({
     description: string  // Simplified to just take a description string instead of object
   ) => {
     try {
-      // Create medication diary entry using the exact API schema
-      await instance.post(`${API_BASE_URL}/api/MedicaDiary/create`, {
-        medicationReqId: requestId,
-        status: wasAdministered ? 1 : 0, // 1 for administered, 0 for not administered
-        description: description
-      });
-
+      // Don't create diary entry here since MedicationAdministrationForm already creates it
+      // Just show success message and refresh the list
+      console.log('Medication administered callback called for request:', requestId);
       
       if (wasAdministered) {
         toast.success("Đã ghi nhận thông tin dùng thuốc của học sinh");
@@ -222,11 +218,11 @@ const NurseMedicationDashboard: React.FC<NurseMedicationDashboardProps> = ({
         toast.info("Đã ghi nhận thông tin hủy lần uống thuốc");
       }
       
-      // Refresh the medications list
+      // Refresh the medications list to get updated data
       await fetchTodayMedications();
     } catch (error) {
-      console.error("Error logging medication administration:", error);
-      toast.error("Không thể cập nhật thông tin dùng thuốc. Vui lòng thử lại sau.");
+      console.error("Error refreshing medication list:", error);
+      toast.error("Không thể cập nhật danh sách thuốc. Vui lòng làm mới trang.");
     }
   };
 
