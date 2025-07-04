@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Container, Box, Typography, Tabs, Tab, Divider } from "@mui/material";
 import { format, addDays, parseISO } from "date-fns";
 import NurseMedicationList from "./NurseMedicationList";
 import MedicationAdministrationForm from "./MedicationAdministrationForm";
+import DailyMedicationManager from "./DailyMedicationManager";
 import { MedicationRequest } from "../../../models/types";
 import MedicationRequestList from "./MedicationRequestList";
+import CompletedExpiredRequestsList from "./CompletedExpiredRequestsList";
 import axios from "axios";
 import { toast } from "react-toastify";
 import instance from "../../../utils/axiosConfig";
@@ -56,12 +58,28 @@ const NurseMedicationDashboard: React.FC<NurseMedicationDashboardProps> = ({
   );
   const [apiMedicationRequests, setApiMedicationRequests] = useState<ApiMedicationRequest[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // Load all medication requests
   useEffect(() => {
     // Fetch medication requests from API
     fetchMedicationRequests();
     fetchTodayMedications();
+  }, [refreshKey]);
+
+  // Auto refresh every 30 seconds to keep data updated
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (tabValue === 0) { // Only refresh if on medication administration tab
+        fetchTodayMedications();
+      }
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(interval);
+  }, [tabValue]);
+
+  const refreshData = useCallback(() => {
+    setRefreshKey(prev => prev + 1);
   }, []);
 
   const fetchMedicationRequests = async () => {
@@ -228,6 +246,7 @@ const NurseMedicationDashboard: React.FC<NurseMedicationDashboardProps> = ({
             <Tab label="Thuốc cần cho uống" />
             <Tab label="Yêu cầu đã xác nhận" />
             <Tab label="Yêu cầu chờ xử lý" />
+            <Tab label="Yêu cầu hoàn thành & quá hạn" />
           </Tabs>
         </Box>
 
@@ -285,6 +304,13 @@ const NurseMedicationDashboard: React.FC<NurseMedicationDashboardProps> = ({
             }}
             isLoading={isLoading}
             nurseId={nurseId}
+          />
+        )}
+
+        {tabValue === 3 && (
+          <CompletedExpiredRequestsList
+            nurseId={nurseId}
+            isLoading={isLoading}
           />
         )}
       </Box>

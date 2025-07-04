@@ -102,6 +102,8 @@ const menuCategories: MenuCategory[] = [
     path: "/",
   },
   {
+    
+       
     name: "Sổ sức khỏe & chăm sóc học sinh", // More friendly name for "Học sinh"
     role: ["MedicalStaff", "Parent"],
     submenu: [
@@ -193,8 +195,10 @@ const MainLayout = () => {
   const { user, logout } = useAuth();
 
   // Filter menu categories based on user role
+
   const visibleCategories = menuCategories.filter(
     (category) => !category.role || category.role.includes(user?.role || "")
+
   );
 
   // Set active tab based on current location
@@ -370,52 +374,49 @@ const MainLayout = () => {
                   },
                 }}
               >
-                {visibleCategories.map(
-                  (
-                    category,
-                    index // Use visibleCategories instead of filtering inline
-                  ) => (
-                    <Tab
-                      key={category.name}
-                      label={
-                        <Box sx={{ display: "flex", alignItems: "center" }}>
-                          <Typography
-                            component="span"
-                            sx={{ fontWeight: "inherit" }}
-                          >
-                            {category.name}
-                          </Typography>
-                          {category.badge && (
-                            <Chip
-                              size="small"
-                              label={category.badge}
-                              sx={{
-                                ml: 1,
-                                height: 18,
-                                minWidth: 18,
-                                fontSize: "0.7rem",
-                                fontWeight: 700,
-                                bgcolor: "rgba(255, 255, 255, 0.9)",
-                                color: colors.primary,
-                              }}
-                            />
-                          )}
-                          {category.submenu && (
-                            <ArrowDropDown sx={{ ml: 0.5 }} />
-                          )}
-                        </Box>
-                      }
-                      onClick={
-                        category.submenu
-                          ? (e) => {
-                              e.preventDefault();
-                              handleMenuOpen(e, category.name);
-                            }
-                          : undefined
-                      }
-                    />
-                  )
-                )}
+
+                {visibleCategories.map((category, index) => ( // Use visibleCategories instead of filtering inline
+                  <Tab
+                    key={category.name}
+                    label={
+                      <Box sx={{ display: "flex", alignItems: "center" }}>
+                        <Typography
+                          component="span"
+                          sx={{ fontWeight: "inherit" }}
+                        >
+                          {category.name}
+                        </Typography>
+                        {category.badge && (
+                          <Chip
+                            size="small"
+                            label={category.badge}
+                            sx={{
+                              ml: 1,
+                              height: 18,
+                              minWidth: 18,
+                              fontSize: "0.7rem",
+                              fontWeight: 700,
+                              bgcolor: "rgba(255, 255, 255, 0.9)",
+                              color: colors.primary,
+                            }}
+                          />
+                        )}
+                        {category.submenu && (
+                          <ArrowDropDown sx={{ ml: 0.5 }} />
+                        )}
+                      </Box>
+                    }
+                    onClick={
+                      category.submenu
+                        ? (e) => {
+                            e.preventDefault();
+                            handleMenuOpen(e, category.name);
+                          }
+                        : undefined
+                    }
+                  />
+                ))}
+
               </Tabs>
             )}
 

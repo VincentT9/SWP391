@@ -41,10 +41,7 @@ function App() {
             <Route path="/" element={<MainLayout />}>
               <Route index element={<HomePage />} />
               <Route path="health-records" element={<HealthRecordsPage />} />
-              <Route
-                path="health-declaration"
-                element={<HealthDeclarationFormPage />}
-              />
+              <Route path="health-declaration" element={<HealthDeclarationFormPage />} />
               <Route path="medication" element={<MedicationPage />} />
               <Route path="medication/nurse" element={<MedicationPage />} />
               <Route path="medication/parent" element={<MedicationPage />} />

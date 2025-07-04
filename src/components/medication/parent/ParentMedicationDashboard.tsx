@@ -149,6 +149,11 @@ interface ParentMedicationDashboardProps {
 const ParentMedicationDashboard: React.FC<ParentMedicationDashboardProps> = ({
   parentId,
 }) => {
+  // Component sử dụng các API sau:
+  // 1. /api/Student/get-student-by-parent-id/{parentID} - Lấy danh sách học sinh theo phụ huynh
+  // 2. /api/MedicationRequest/get-medication-requests-by-student-id/{studentID} - Lấy yêu cầu thuốc theo học sinh
+  // 3. /api/MedicaDiary/student/{studentId} - Lấy nhật ký uống thuốc theo học sinh
+
   const [tabValue, setTabValue] = useState(0);
   const [requests, setRequests] = useState<MedicationRequestType[]>([]);
   const [logModalOpen, setLogModalOpen] = useState(false);
@@ -157,17 +162,17 @@ const ParentMedicationDashboard: React.FC<ParentMedicationDashboardProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshData, setRefreshData] = useState(0);
-  const [detailModalOpen, setDetailModalOpen] = useState(false); // Thêm state để lưu chi tiết yêu cầu và trạng thái modal
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] =
     useState<MedicationRequestFromAPI | null>(null);
   const [allApiRequests, setAllApiRequests] = useState<
     MedicationRequestFromAPI[]
-  >([]); // Thêm state để lưu phản hồi API gốc
+  >([]);
   const [medicationDiaries, setMedicationDiaries] = useState<
     MedicationDiaryEntry[]
-  >([]); // Cập nhật state để lưu dữ liệu nhật ký mới
+  >([]);
 
-  // Fetch medication requests for all students
+  // Fetch medication requests for all students using the specified API
   const fetchMedicationRequests = useCallback(
     async (students: Student[]) => {
       const baseUrl = process.env.REACT_APP_BASE_URL;
@@ -175,62 +180,72 @@ const ParentMedicationDashboard: React.FC<ParentMedicationDashboardProps> = ({
       let allApiData: MedicationRequestFromAPI[] = [];
 
       try {
-        // Fetch medication requests for each student
+        // Fetch medication requests for each student using the specified API endpoint
         for (const student of students) {
-          const response = await instance.get<MedicationRequestFromAPI[]>(
-            `${baseUrl}/api/MedicationRequest/get-medication-requests-by-student-id/${student.id}`
-          );
+          try {
+            const response = await instance.get<MedicationRequestFromAPI[]>(
+              `${baseUrl}/api/MedicationRequest/get-medication-requests-by-student-id/${student.id}`
+            );
 
-          console.log(
-            `Received medication data for student ${student.fullName}:`,
-            response.data
-          );
+            console.log(
+              `Received medication requests for student ${student.fullName} (ID: ${student.id}):`,
+              response.data
+            );
 
-          // Lưu dữ liệu API gốc
-          allApiData = [...allApiData, ...response.data];
+            // Store original API data
+            allApiData = [...allApiData, ...response.data];
 
-          // Map API response to our component's format
-          const studentRequests = response.data.map((req) =>
-            adaptApiToInternalMedicationRequest(req, student, parentId)
-          );
+            // Map API response to our component's format with proper status handling
+            const studentRequests = response.data.map((req) =>
+              adaptApiToInternalMedicationRequest(req, student, parentId)
+            );
 
-          allRequests.push(...studentRequests);
+            allRequests.push(...studentRequests);
+          } catch (studentError: any) {
+            // Xử lý trường hợp không có yêu cầu thuốc cho học sinh này (HTTP 500 hoặc lỗi khác)
+            console.log(
+              `No medication requests found for student ${student.fullName} (ID: ${student.id}):`,
+              studentError.response?.status || studentError.message
+            );
+            // Không thêm gì vào allRequests cho học sinh này, tiếp tục với học sinh tiếp theo
+          }
         }
+
+        console.log("All medication requests loaded:", allRequests);
+        console.log("Requests by status:", {
+          requested: allRequests.filter(r => r.status === 'requested').length,
+          received: allRequests.filter(r => r.status === 'received').length,
+          completed: allRequests.filter(r => r.status === 'completed').length,
+          cancelled: allRequests.filter(r => r.status === 'cancelled').length
+        });
 
         setAllApiRequests(allApiData);
         setRequests(allRequests);
       } catch (error: any) {
-        // Enhanced error logging
+        // Chỉ báo lỗi nếu có lỗi nghiêm trọng khác (không phải lỗi không tìm thấy dữ liệu)
         console.error("Error fetching medication requests:", error);
-
-        // Log more detailed error information if available
-        if (error.response) {
-          console.error("Error response data:", error.response.data);
-          console.error("Error response status:", error.response.status);
-        } else if (error.request) {
-          console.error("Error request:", error.request);
-        } else {
-          console.error("Error message:", error.message);
-        }
+        setError("Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại sau.");
       }
     },
     [parentId]
   );
 
-  // Fetch parent information and students
+  // Fetch students by parent ID and their medication requests
   useEffect(() => {
-    const fetchParentInfo = async () => {
+    const fetchStudentsAndMedicationRequests = async () => {
       try {
         setLoading(true);
         setError(null);
 
         const baseUrl = process.env.REACT_APP_BASE_URL;
-        const response = await instance.get<User>(
-          `${baseUrl}/api/User/get-user-by-id/${parentId}`
+        
+        // Fetch students using the specified API
+        const studentsResponse = await instance.get<Student[]>(
+          `${baseUrl}/api/Student/get-student-by-parent-id/${parentId}`
         );
 
-        // Extract student options from response
-        const options: StudentOption[] = response.data.students.map(
+        console.log("Fetched students for parent:", studentsResponse.data);
+        const options: StudentOption[] = studentsResponse.data.map(
           (student) => ({
             id: student.id,
             name: student.fullName,
@@ -239,17 +254,17 @@ const ParentMedicationDashboard: React.FC<ParentMedicationDashboardProps> = ({
 
         setStudentOptions(options);
 
-        // Fetch medication requests for each student
-        await fetchMedicationRequests(response.data.students);
+        // Fetch medication requests for each student using the specified API
+        await fetchMedicationRequests(studentsResponse.data);
       } catch (error) {
-        console.error("Error fetching parent information:", error);
-        setError("Không thể tải thông tin phụ huynh. Vui lòng thử lại sau.");
+        console.error("Error fetching students and medication requests:", error);
+        setError("Không thể tải danh sách học sinh và yêu cầu thuốc. Vui lòng thử lại sau.");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchParentInfo();
+    fetchStudentsAndMedicationRequests();
   }, [parentId, refreshData, fetchMedicationRequests]);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
@@ -269,23 +284,27 @@ const ParentMedicationDashboard: React.FC<ParentMedicationDashboardProps> = ({
     try {
       const baseUrl = process.env.REACT_APP_BASE_URL;
 
-      // Gọi API mới lấy danh sách nhật ký uống thuốc dựa vào studentId
+      // Gọi API lấy danh sách nhật ký uống thuốc dựa vào studentId
       const response = await instance.get<MedicationDiaryEntry[]>(
         `${baseUrl}/api/MedicaDiary/student/${studentId}`
       );
 
-      console.log("Medication diary data:", response.data);
+      console.log("Medication diary data for student:", studentId, response.data);
 
       // Lưu dữ liệu nhật ký vào state
       setMedicationDiaries(response.data);
 
       // Mở modal để hiển thị nhật ký
       setLogModalOpen(true);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching medication diaries:", error);
-      setError(
-        "Không thể lấy dữ liệu nhật ký uống thuốc. Vui lòng thử lại sau."
-      );
+      // Xử lý trường hợp không có nhật ký uống thuốc
+      if (error.response?.status === 500) {
+        setMedicationDiaries([]);
+        setLogModalOpen(true);
+      } else {
+        setError("Không thể lấy dữ liệu nhật ký uống thuốc. Vui lòng thử lại sau.");
+      }
     } finally {
       setLoading(false);
     }
@@ -345,15 +364,55 @@ const ParentMedicationDashboard: React.FC<ParentMedicationDashboardProps> = ({
 
         {tabValue === 1 && (
           <Box>
+            {/* Hiển thị thống kê trạng thái yêu cầu thuốc */}
+            {!loading && requests.length > 0 && (
+              <Box sx={{ mb: 3, p: 2, bgcolor: 'background.paper', borderRadius: 1 }}>
+                <Typography variant="h6" gutterBottom>
+                  Tổng quan yêu cầu thuốc
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                  <Box sx={{ minWidth: 120 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      Đã gửi: {requests.filter(r => r.status === 'requested').length}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ minWidth: 120 }}>
+                    <Typography variant="body2" color="success.main">
+                      Đã nhận: {requests.filter(r => r.status === 'received').length}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ minWidth: 120 }}>
+                    <Typography variant="body2" color="info.main">
+                      Hoàn thành: {requests.filter(r => r.status === 'completed').length}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ minWidth: 120 }}>
+                    <Typography variant="body2" color="error.main">
+                      Đã hủy: {requests.filter(r => r.status === 'cancelled').length}
+                    </Typography>
+                  </Box>
+                </Box>
+              </Box>
+            )}
+
             {loading ? (
               <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
                 <CircularProgress />
+              </Box>
+            ) : requests.length === 0 ? (
+              <Box sx={{ textAlign: "center", my: 4 }}>
+                <Typography variant="h6" color="text.secondary">
+                  Hiện không có yêu cầu thuốc nào
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                  Bạn có thể tạo yêu cầu thuốc mới ở tab "Gửi thuốc"
+                </Typography>
               </Box>
             ) : (
               <MedicationRequestList
                 requests={requests}
                 onViewLogs={handleViewLogs}
-                onViewDetail={handleViewDetail} // Thêm prop mới
+                onViewDetail={handleViewDetail}
               />
             )}
           </Box>
@@ -418,6 +477,12 @@ const ParentMedicationDashboard: React.FC<ParentMedicationDashboardProps> = ({
             {loading ? (
               <Box sx={{ display: "flex", justifyContent: "center", my: 2 }}>
                 <CircularProgress />
+              </Box>
+            ) : medicationDiaries.length === 0 ? (
+              <Box sx={{ textAlign: "center", my: 2 }}>
+                <Typography variant="body1" color="text.secondary">
+                  Hiện chưa có nhật ký uống thuốc nào
+                </Typography>
               </Box>
             ) : (
               <MedicationDiaryView diaries={medicationDiaries} />
