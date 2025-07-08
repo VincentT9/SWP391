@@ -28,6 +28,12 @@ import ParentMedicationDashboard from "./components/medication/parent/ParentMedi
 import VaccinationProgramDetailsPage from "./components/vaccination/VaccinationProgramDetailsPage";
 import ScheduleStudentsPage from "./components/vaccination/ScheduleStudentsPage";
 
+// Promo Pages
+import MedicationDeliveryPromo from "./components/promo/MedicationDeliveryPromo";
+import VaccinationPromo from "./components/promo/VaccinationPromo";
+import HealthCheckPromo from "./components/promo/HealthCheckPromo";
+import LandingPage from "./components/promo/LandingPage";
+
 function App() {
   return (
     <AuthProvider>
@@ -40,6 +46,10 @@ function App() {
             <Route path="/homepage" element={<HomePage />} />
             <Route path="/" element={<MainLayout />}>
               <Route index element={<HomePage />} />
+              <Route path="landing" element={<LandingPage />} />
+              <Route path="promo/medication-delivery" element={<MedicationDeliveryPromo />} />
+              <Route path="promo/vaccination" element={<VaccinationPromo />} />
+              <Route path="promo/health-check" element={<HealthCheckPromo />} />
               <Route path="health-records" element={<HealthRecordsPage />} />
               <Route path="health-declaration" element={<HealthDeclarationFormPage />} />
               <Route path="medication" element={<MedicationPage />} />
