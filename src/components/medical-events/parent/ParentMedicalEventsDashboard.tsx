@@ -15,7 +15,7 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { format, parseISO } from "date-fns";
-import { MedicalIncident } from "../../../models/types";
+import { MedicalIncident, Student } from "../../../models/types";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import MedicalEventDetails from "../nurse/MedicalEventDetails";
 import axios from "../../../utils/axiosConfig";
@@ -28,31 +28,49 @@ const ParentMedicalEventsDashboard: React.FC<
   ParentMedicalEventsDashboardProps
 > = ({ parentId }) => {
   const [events, setEvents] = useState<MedicalIncident[]>([]);
+  const [students, setStudents] = useState<Student[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<MedicalIncident | null>(null);
   const [isViewingDetails, setIsViewingDetails] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchMedicalIncidents = async () => {
+    const fetchStudentsAndMedicalIncidents = async () => {
       setLoading(true);
       setError(null);
       try {
-        // In a real app, we would fetch events for the parent's children from an API
-        // For this example, we'll use the general endpoint
-        const response = await axios.get('/api/medical-incident/all');
-        // In a real implementation, you would filter by parent's children
-        setEvents(response.data);
+        // Bước 1: Lấy danh sách học sinh của phụ huynh
+        const studentsResponse = await axios.get(`/api/Student/get-student-by-parent-id/${parentId}`);
+        const studentsList = studentsResponse.data;
+        setStudents(studentsList);
+
+        // Bước 2: Lấy tất cả sự kiện y tế của từng học sinh
+        const allEvents: MedicalIncident[] = [];
+        for (const student of studentsList) {
+          try {
+            const eventsResponse = await axios.get(`/api/medical-incident/student/${student.id}`);
+            allEvents.push(...eventsResponse.data);
+          } catch (err) {
+            console.warn(`Không thể tải sự kiện y tế cho học sinh ${student.firstName} ${student.lastName}:`, err);
+          }
+        }
+
+        setEvents(allEvents);
       } catch (err) {
-        console.error("Error fetching medical incidents:", err);
-        setError("Có lỗi khi tải dữ liệu sự kiện y tế");
+        console.error("Error fetching data:", err);
+        setError("Có lỗi khi tải dữ liệu học sinh hoặc sự kiện y tế");
       } finally {
         setLoading(false);
       }
     };
     
-    fetchMedicalIncidents();
+    fetchStudentsAndMedicalIncidents();
   }, [parentId]);
+
+  // Sắp xếp sự kiện theo thời gian mới nhất trước
+  const sortedEvents = events.sort((a, b) => 
+    new Date(b.incidentDate).getTime() - new Date(a.incidentDate).getTime()
+  );
 
   const handleViewEvent = (event: MedicalIncident) => {
     setSelectedEvent(event);
@@ -117,8 +135,16 @@ const ParentMedicalEventsDashboard: React.FC<
   return (
     <Box>
       <Typography variant="h4" gutterBottom>
-        Sự kiện y tế của học sinh
+        Sự kiện y tế của con em
       </Typography>
+
+      {students.length > 0 && (
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          Hiển thị sự kiện y tế của: {students.map(s => `${s.firstName} ${s.lastName}`).join(', ')}
+          <br />
+          Tổng số sự kiện: {events.length}
+        </Typography>
+      )}
 
       {error && (
         <Alert severity="error" sx={{ mb: 2 }}>
@@ -136,9 +162,13 @@ const ParentMedicalEventsDashboard: React.FC<
         <MedicalEventDetails event={selectedEvent} onBack={handleBackToList} />
       ) : (
         <>
-          {!loading && events.length === 0 ? (
+          {!loading && events.length === 0 && students.length === 0 ? (
             <Alert severity="info">
-              Không có sự kiện y tế nào được ghi nhận cho học sinh của bạn.
+              Bạn chưa có học sinh nào được đăng ký trong hệ thống.
+            </Alert>
+          ) : !loading && events.length === 0 && students.length > 0 ? (
+            <Alert severity="info">
+              Không có sự kiện y tế nào được ghi nhận cho con em của bạn.
             </Alert>
           ) : (
             !loading && (
@@ -156,7 +186,7 @@ const ParentMedicalEventsDashboard: React.FC<
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {events.map((event) => (
+                    {sortedEvents.map((event) => (
                       <TableRow key={event.id} hover>
                         <TableCell>
                           {format(parseISO(event.incidentDate), "dd/MM/yyyy HH:mm")}

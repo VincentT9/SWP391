@@ -139,21 +139,7 @@ const HealthCheckPromo: React.FC = () => {
                   >
                     Đăng ký khám
                   </Button>
-                  <Button
-                    variant="outlined"
-                    size="large"
-                    color="info"
-                    onClick={() => navigate('/login')}
-                    sx={{ 
-                      px: 4, 
-                      py: 1.5,
-                      borderRadius: 3,
-                      textTransform: 'none',
-                      fontSize: '1.1rem'
-                    }}
-                  >
-                    Xem kết quả
-                  </Button>
+                  
                 </Stack>
               </Box>
               <Box sx={{ flex: 1, maxWidth: 500 }}>

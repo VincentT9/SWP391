@@ -161,7 +161,7 @@ const MedicationDeliveryPromo: React.FC = () => {
               <Box sx={{ flex: 1, maxWidth: 500 }}>
                 <Box
                   component="img"
-                  src="/src/assets/Picture1.png"
+                  src="https://english.shanghai.gov.cn/cmsres/7d/7d0434a400f44f528351bc93b809d4da/2cba7acd06926bc86ce2772b21b55278.jpeg"
                   alt="Medication Delivery"
                   sx={{
                     width: '100%',

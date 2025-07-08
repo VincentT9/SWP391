@@ -4,7 +4,7 @@ import { ThemeProvider } from "@mui/material/styles";
 import { AuthProvider } from "./components/auth/AuthContext";
 import CssBaseline from "@mui/material/CssBaseline";
 import theme from "./theme/theme";
-import MainLayout from "./components/layout/MainLayout";
+import LayoutSelector from "./components/layout/LayoutSelector";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -44,7 +44,7 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/homepage" element={<HomePage />} />
-            <Route path="/" element={<MainLayout />}>
+            <Route path="/" element={<LayoutSelector />}>
               <Route index element={<HomePage />} />
               <Route path="landing" element={<LandingPage />} />
               <Route path="promo/medication-delivery" element={<MedicationDeliveryPromo />} />
