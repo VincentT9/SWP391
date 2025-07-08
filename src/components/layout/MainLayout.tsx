@@ -16,7 +16,6 @@ import {
   Divider,
   Badge,
   Container,
-  ListItemIcon,
   ListItemText,
   Tabs,
   Tab,
@@ -27,15 +26,7 @@ import {
   ListItemButton,
   Chip,
 } from "@mui/material";
-import {
-  Menu as MenuIcon,
-  Notifications as NotificationsIcon,
-  KeyboardArrowDown,
-  Logout,
-  AccountCircle,
-  Settings as SettingsIcon,
-  ArrowDropDown,
-} from "@mui/icons-material";
+
 import { useAuth } from "../auth/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -101,83 +92,69 @@ const menuCategories: MenuCategory[] = [
     name: "Trang chủ",
     path: "/",
   },
-  // Promo menu items - accessible without login
+  // Promo menu items - chỉ hiển thị khi chưa đăng nhập
   {
     name: "Gửi thuốc đến trường",
     path: "/promo/medication-delivery",
   },
   {
-    name: "Tiêm phòng",
-    path: "/promo/vaccination",
+    name: "Chương trình tiêm phòng",
+    path: "/promo/vaccination", 
   },
   {
-    name: "Khám sức khỏe",
+    name: "Dịch vụ y tế học đường",
     path: "/promo/health-check",
   },
+  // Main features - chỉ hiển thị khi đã đăng nhập
   {
-    
-       
-    name: "Sổ sức khỏe & chăm sóc học sinh", // More friendly name for "Học sinh"
-    role: ["MedicalStaff", "Parent"],
-    submenu: [
-      {
-        text: "Khám sức khỏe định kỳ", // More descriptive for medical staff
-        path: "/health-check",
-        role: ["MedicalStaff"],
-      },
-      {
-        text: "Khai báo & theo dõi sức khỏe học sinh", // Caring name for parent view
-        path: "/health-records",
-        role: ["Parent"],
-      },
-      {
-        text: "Gửi thuốc đến trường", // More action-oriented for parents
-        path: "/medication/parent",
-        role: ["Parent"],
-      },
-    ],
+    name: "Gửi thuốc cho con",
+    role: ["Parent"],
+    path: "/medication/parent",
   },
   {
-    name: "Hoạt động y tế", // More comprehensive than "Sự kiện y tế"
-    role: ["MedicalStaff", "Admin", "Parent"],
-    submenu: [
-      {
-        text: "Danh mục thuốc từ phụ huynh", // Simplified name
-        path: "/medication/nurse",
-        role: ["MedicalStaff"],
-      },
-      {
-        text: "Sự kiện y tế học đường", // More specific description
-        path: "/medical-events",
-        role: ["MedicalStaff", "Admin", "Parent"],
-      },
-      {
-        text: "Quản lý tiêm phòng", // More specific description
-        path: "/vaccination",
-        role: ["MedicalStaff", "Admin"],
-      },
-    ],
+    name: "Quản lý thuốc học sinh", 
+    role: ["MedicalStaff", "Admin"],
+    path: "/medication/nurse",
   },
   {
-    name: "Quản lý vật tư, trang thiết bị", // More educational term for "Thuốc & Vật tư"
+    name: "Lịch tiêm phòng",
+    role: ["MedicalStaff", "Admin"],
+    path: "/vaccination",
+  },
+  {
+    name: "Theo dõi tiêm phòng con",
+    role: ["Parent"],
+    path: "/vaccination/parent",
+  },
+  {
+    name: "Xử lý sự cố y tế",
+    role: ["MedicalStaff", "Admin"],
+    path: "/medical-events",
+  },
+  {
+    name: "Sức khỏe con em",
+    role: ["Parent"],
+    path: "/medical-events",
+  },
+  {
+    name: "Hồ sơ sức khỏe",
+    role: ["Parent", "MedicalStaff"],
+    path: "/health-records",
+  },
+  {
+    name: "Vật tư y tế",
     role: ["MedicalStaff", "Admin"],
     path: "/medical-supplier",
   },
   {
-    name: "Hệ thống", // Simpler than "Quản trị"
+    name: "Quản lý học sinh",
     role: ["Admin"],
-    submenu: [
-      {
-        text: "Quản lý thông tin học sinh", // More comprehensive for admin
-        path: "/admin/students",
-        role: ["Admin"],
-      },
-      {
-        text: "Quản lý người dùng hệ thống", // More comprehensive
-        path: "/user-management",
-        role: ["Admin"],
-      },
-    ],
+    path: "/admin/students",
+  },
+  {
+    name: "Quản lý hệ thống",
+    role: ["Admin"],
+    path: "/user-management",
   },
 ];
 
@@ -212,14 +189,10 @@ const MainLayout = () => {
     // If user is not authenticated, only show home and promo pages
     if (!user?.isAuthenticated) {
       return category.name === "Trang chủ" || 
-             category.name === "Gửi thuốc đến trường" ||
-             category.name === "Tiêm phòng" ||
-             category.name === "Khám sức khỏe";
+             category.path?.startsWith("/promo/");
     }
-    // If authenticated, show based on role (excluding promo pages)
-    return category.name !== "Gửi thuốc đến trường" && 
-           category.name !== "Tiêm phòng" && 
-           category.name !== "Khám sức khỏe" &&
+    // If authenticated, show based on role but EXCLUDE promo pages
+    return !category.path?.startsWith("/promo/") &&
            (!category.role || category.role.includes(user?.role || ''));
   });
 
@@ -335,8 +308,8 @@ const MainLayout = () => {
               />
             </Box>
 
-            {/* Mobile Toggle Menu - Show for all users */}
-            {isMobile && (
+            {/* Mobile Toggle Menu - Only show for authenticated users */}
+            {isMobile && user?.isAuthenticated && (
               <IconButton
                 edge="start"
                 color="inherit"
@@ -344,7 +317,7 @@ const MainLayout = () => {
                 onClick={handleMobileMenuToggle}
                 sx={{ mr: 2 }}
               >
-                <MenuIcon />
+                <Box component="span" sx={{ fontSize: '1.2rem' }}>☰</Box>
               </IconButton>
             )}
 
@@ -424,7 +397,7 @@ const MainLayout = () => {
                           />
                         )}
                         {category.submenu && (
-                          <ArrowDropDown sx={{ ml: 0.5 }} />
+                          <Box component="span" sx={{ ml: 0.5, fontSize: '0.8rem' }}>▼</Box>
                         )}
                       </Box>
                     }
@@ -517,7 +490,7 @@ const MainLayout = () => {
                         },
                       }}
                     >
-                      <NotificationsIcon />
+                      <Box component="span" sx={{ fontSize: '1.2rem' }}>🔔</Box>
                     </Badge>
                   </IconButton>
 
@@ -573,9 +546,7 @@ const MainLayout = () => {
                             {user?.role}
                           </Typography>
                         </Box>
-                        <KeyboardArrowDown
-                          sx={{ ml: 0.5, color: "rgba(255, 255, 255, 0.7)" }}
-                        />
+                        <Box component="span" sx={{ ml: 0.5, color: "rgba(255, 255, 255, 0.7)", fontSize: '0.8rem' }}>▼</Box>
                       </>
                     )}
                   </Box>
@@ -590,7 +561,7 @@ const MainLayout = () => {
       {user?.isAuthenticated && (
         <>
           {/* Dropdown Menus for Navigation Categories */}
-          {menuCategories.map((category) => {
+          {visibleCategories.map((category) => {
             if (!category.submenu) return null;
 
             return (
@@ -934,12 +905,6 @@ const MainLayout = () => {
               }}
               sx={{ py: 1.5, px: 2.5 }}
             >
-              <ListItemIcon>
-                <AccountCircle
-                  fontSize="small"
-                  sx={{ color: colors.primary }}
-                />
-              </ListItemIcon>
               <ListItemText primary="Trang cá nhân" />
             </MenuItem>
 
@@ -951,9 +916,6 @@ const MainLayout = () => {
               onClick={handleLogout}
               sx={{ py: 1.5, px: 2.5 }}
             >
-              <ListItemIcon>
-                <Logout fontSize="small" sx={{ color: colors.error }} />
-              </ListItemIcon>
               <ListItemText
                 primary="Đăng xuất"
                 primaryTypographyProps={{ color: colors.error }}
@@ -979,7 +941,7 @@ const MainLayout = () => {
             }}
           >
             <List sx={{ py: 2 }}>
-              {menuCategories.flatMap((category) => {
+              {visibleCategories.flatMap((category) => {
                 // For categories with submenu, add title and then all items
                 if (category.submenu) {
                   return [
@@ -1051,13 +1013,6 @@ const MainLayout = () => {
                   ];
                 } else {
                   // For standalone categories without submenu
-                  if (
-                    category.role &&
-                    Array.isArray(category.role) &&
-                    !category.role.includes(user.role)
-                  )
-                    return [];
-
                   return [
                     <ListItem disablePadding key={category.name}>
                       <ListItemButton

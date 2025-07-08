@@ -159,7 +159,7 @@ const VaccinationPromo: React.FC = () => {
               <Box sx={{ flex: 1, maxWidth: 500 }}>
                 <Box
                   component="img"
-                  src="/src/assets/Picture2.png"
+                  src="https://domf5oio6qrcr.cloudfront.net/medialibrary/15219/276ebdfb-7e12-479e-a1dc-58801bc4b793.jpg"
                   alt="Vaccination Program"
                   sx={{
                     width: '100%',

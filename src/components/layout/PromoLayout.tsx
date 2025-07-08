@@ -8,10 +8,14 @@ import {
   Container,
   Stack,
 } from '@mui/material';
-import { useNavigate, Outlet } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { School } from '@mui/icons-material';
 
-const PromoLayout: React.FC = () => {
+interface PromoLayoutProps {
+  children: React.ReactNode;
+}
+
+const PromoLayout: React.FC<PromoLayoutProps> = ({ children }) => {
   const navigate = useNavigate();
 
   return (
@@ -92,7 +96,7 @@ const PromoLayout: React.FC = () => {
       </AppBar>
 
       {/* Content */}
-      <Outlet />
+      {children}
     </Box>
   );
 };
