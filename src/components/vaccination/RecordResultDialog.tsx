@@ -268,8 +268,18 @@ const RecordResultDialog: React.FC<RecordResultDialogProps> = ({
     try {
       setIsSubmittingConsultation(true);
 
-      // Get current user ID (medical staff)
-      const medicalStaffId = localStorage.getItem("userId");
+      // Get current user ID (medical staff) from authUser JSON object
+      const authUserStr = localStorage.getItem("authUser");
+      let medicalStaffId = null;
+
+      if (authUserStr) {
+        try {
+          const authUser = JSON.parse(authUserStr);
+          medicalStaffId = authUser.id;
+        } catch (parseError) {
+          console.error("Error parsing authUser:", parseError);
+        }
+      }
 
       if (!medicalStaffId) {
         toast.error(
@@ -278,9 +288,13 @@ const RecordResultDialog: React.FC<RecordResultDialogProps> = ({
         return;
       }
 
+      // Kiểm tra resultId và đảm bảo nó là null nếu rỗng
+      const validResultId =
+        resultId && resultId.trim() !== "" ? resultId : null;
+
       const payload = {
-        healthCheckupResultId: campaignType === 1 ? resultId : null,
-        vaccinationResultId: campaignType === 0 ? resultId : null,
+        healthCheckupResultId: campaignType === 1 ? validResultId : null,
+        vaccinationResultId: campaignType === 0 ? validResultId : null,
         studentId: studentId,
         medicalStaffId: medicalStaffId,
         scheduledDate: consultationData.scheduledDate.toISOString(),
