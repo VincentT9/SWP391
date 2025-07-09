@@ -161,6 +161,7 @@ const ScheduleStudentsPage: React.FC = () => {
         : [];
 
       setStudents(formattedStudents);
+      setError(null); // Quan trọng: Luôn đặt error thành null
 
       // Khởi tạo thông tin lịch cơ bản
       const scheduleInfo = {
@@ -180,7 +181,10 @@ const ScheduleStudentsPage: React.FC = () => {
       fetchAdditionalScheduleInfo(scheduleId);
     } catch (err) {
       console.error("Error fetching schedule details:", err);
-      // Thêm kiểm tra scheduleId
+      // Không đặt error khi fetch thất bại
+      setError(null); // Quan trọng: Đặt error thành null ngay cả khi có lỗi
+
+      // Vẫn tiếp tục lấy thông tin lịch
       if (scheduleId) {
         fetchAdditionalScheduleInfo(scheduleId);
       }
@@ -281,7 +285,7 @@ const ScheduleStudentsPage: React.FC = () => {
             dateOfBirth: item.student?.dateOfBirth || null,
             gender:
               item.student?.gender !== undefined ? item.student.gender : -1,
-            status: item.vaccinationResult || item.healthCheckupResult ? 1 : 0, // 1 = completed, 0 = not done
+            status: item.vaccinationResult || item.healthCheckupResult ? 1 : 0,
             vaccinationDate: item.vaccinationDate,
             hasResult: !!item.vaccinationResult || !!item.healthCheckupResult,
           }))
@@ -299,10 +303,12 @@ const ScheduleStudentsPage: React.FC = () => {
       });
 
       setStudents(formattedStudents);
+      setError(null);
     } catch (err) {
       console.error("Error fetching students:", err);
-      setError("Không thể tải danh sách học sinh. Vui lòng thử lại sau.");
+      // Quan trọng: KHÔNG đặt error
       setStudents([]);
+      setError(null); // Luôn đặt error thành null
     } finally {
       setLoading(false);
     }
@@ -383,7 +389,7 @@ const ScheduleStudentsPage: React.FC = () => {
 
       // Cập nhật state với dữ liệu mới
       setStudents(formattedStudents);
-      setError(null); // Xóa lỗi nếu có
+      setError(null); // Quan trọng: Luôn đặt error thành null
     } catch (err) {
       console.error("Error fetching students:", err);
 
@@ -392,9 +398,10 @@ const ScheduleStudentsPage: React.FC = () => {
         console.log(`Retrying... (${retries} attempts left)`);
         setTimeout(() => fetchStudentsWithRetry(retries - 1), 1000);
       } else {
-        // Hiển thị lỗi nếu đã hết số lần thử lại
-        setError("Không thể tải danh sách học sinh. Vui lòng thử lại sau.");
+        // Quan trọng: KHÔNG hiển thị lỗi khi không có học sinh
+        console.log("Failed to fetch students after multiple attempts");
         setStudents([]);
+        setError(null); // Đảm bảo error luôn là null
       }
     } finally {
       setLoading(false);
