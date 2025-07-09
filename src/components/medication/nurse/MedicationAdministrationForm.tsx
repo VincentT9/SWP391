@@ -16,10 +16,23 @@ import {
   Avatar,
   Stack,
   CircularProgress,
+  Chip,
 } from "@mui/material";
 import { toast } from "react-toastify";
-import { format, addDays, parseISO } from "date-fns";
+import { format, addDays, parseISO, isToday as isTodayDateFns } from "date-fns";
 import instance from "../../../utils/axiosConfig";
+
+const BASE_API = process.env.REACT_APP_BASE_URL;
+
+interface MedicationDiaryEntry {
+  id: string;
+  medicationReqId: string;
+  status: number;
+  description: string;
+  createAt: string;
+  createdBy: string;
+}
+
 interface Student {
   id: string;
   studentCode: string;
@@ -45,6 +58,7 @@ interface MedicationRequest {
   studentName: string;
   medicalStaffId: string;
   medicalStaffName: string | null;
+  medicalDiaries?: MedicationDiaryEntry[]; // Add this field to handle diary entries from API
 }
 
 interface MedicationAdministrationFormProps {
@@ -68,6 +82,75 @@ const MedicationAdministrationForm: React.FC<MedicationAdministrationFormProps> 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [student, setStudent] = useState<Student | null>(null);
   const [loadingStudent, setLoadingStudent] = useState(false);
+  const [isCompletedToday, setIsCompletedToday] = useState(false);
+  const [checkingStatus, setCheckingStatus] = useState(false);
+  const [todayDiaryCount, setTodayDiaryCount] = useState(0);
+
+  // Function to check diary entries from medication request data (if available) or fetch from API
+  const checkAndUpdateMedicationStatus = async (medicationRequestId: string) => {
+    console.log('=== checkAndUpdateMedicationStatus called ===');
+    console.log('Medication Request ID:', medicationRequestId);
+    console.log('Current medicationRequest.id:', medicationRequest.id);
+    
+    try {
+      setCheckingStatus(true);
+      
+      let diaryEntries: MedicationDiaryEntry[] = [];
+      
+      // First, check if diary entries are already available in the medicationRequest prop
+      if (medicationRequest.medicalDiaries && Array.isArray(medicationRequest.medicalDiaries)) {
+        diaryEntries = medicationRequest.medicalDiaries;
+        console.log('Using diary entries from props:', diaryEntries.length, 'entries');
+      } else {
+        // If not available in props, fetch from API
+        console.log('Fetching medication request details from API...');
+        const medicationResponse = await instance.get(
+          `${BASE_API}/api/MedicationRequest/get-medication-request-by-id/${medicationRequestId}`
+        );
+        
+        const medicationData = medicationResponse.data;
+        diaryEntries = medicationData.medicalDiaries || [];
+        console.log('Fetched diary entries from API:', diaryEntries.length, 'entries');
+      }
+      
+      // Filter diary entries that were created today for this specific medication request
+      const todayEntries = diaryEntries.filter(entry => {
+        const entryDate = parseISO(entry.createAt);
+        const today = new Date();
+        
+        // Check if the entry was created today (same date)
+        return entryDate.getDate() === today.getDate() &&
+               entryDate.getMonth() === today.getMonth() &&
+               entryDate.getFullYear() === today.getFullYear();
+      });
+
+      // If there are any diary entries for today (regardless of status), medication is completed for today
+      const hasEntriesForToday = todayEntries.length > 0;
+      setIsCompletedToday(hasEntriesForToday);
+      setTodayDiaryCount(todayEntries.length);
+      
+      if (hasEntriesForToday) {
+        console.log(`Medication request ${medicationRequestId} already has ${todayEntries.length} diary entry(ies) for today`);
+        console.log('Today entries:', todayEntries);
+        
+        // Log details about each entry
+        todayEntries.forEach((entry, index) => {
+          const statusText = entry.status === 1 ? 'đã cho uống' : 'đã hủy';
+          const createTime = format(parseISO(entry.createAt), 'HH:mm:ss');
+          console.log(`Entry ${index + 1}: ${statusText} at ${createTime} - ${entry.description}`);
+        });
+      }
+      
+      return hasEntriesForToday;
+    } catch (error) {
+      console.error("Error checking medication request details:", error);
+      setIsCompletedToday(false);
+      setTodayDiaryCount(0);
+      return false;
+    } finally {
+      setCheckingStatus(false);
+    }
+  };
 
   useEffect(() => {
     const fetchStudentData = async () => {
@@ -87,6 +170,19 @@ const MedicationAdministrationForm: React.FC<MedicationAdministrationFormProps> 
     fetchStudentData();
   }, [medicationRequest.studentCode]);
 
+  // Check medication status on component mount and when medicationRequest changes
+  useEffect(() => {
+    // Debounce to prevent multiple calls
+    const timeoutId = setTimeout(() => {
+      if (medicationRequest.id) {
+        console.log('Checking medication status for ID:', medicationRequest.id);
+        checkAndUpdateMedicationStatus(medicationRequest.id);
+      }
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
+  }, [medicationRequest.id]);
+
   const handleGiveMedicationClick = () => {
     setGivenDialogOpen(true);
   };
@@ -103,13 +199,38 @@ const MedicationAdministrationForm: React.FC<MedicationAdministrationFormProps> 
       return;
     }
 
+    // Prevent double submission
+    if (isSubmitting) {
+      return;
+    }
+
     try {
       setIsSubmitting(true);
-      await onMedicationAdministered(true, description);
+      
+      console.log('Creating diary entry for medication request:', medicationRequest.id);
+      
+      // Create medication diary entry for administered medication
+      const createResponse = await instance.post(`${BASE_API}/api/MedicaDiary/create`, {
+        medicationReqId: medicationRequest.id,
+        status: 1, // 1 for administered
+        description: description
+      });
 
-      // Reset form and close dialog
+      console.log('Diary entry created successfully:', createResponse.data);
+
+      // Check status with current medication request ID (no additional API call needed here)
+      await checkAndUpdateMedicationStatus(medicationRequest.id);
+
+      toast.success("Đã ghi nhận lần cho uống thuốc thành công");
+
+      // Reset form and close dialog first
       setDescription("");
       setGivenDialogOpen(false);
+
+      // Call the parent callback AFTER successful creation and UI update
+      setTimeout(() => {
+        onMedicationAdministered(true, description);
+      }, 100);
     } catch (error) {
       console.error("Error administering medication:", error);
       toast.error("Không thể cập nhật thông tin dùng thuốc. Vui lòng thử lại sau.");
@@ -124,13 +245,38 @@ const MedicationAdministrationForm: React.FC<MedicationAdministrationFormProps> 
       return;
     }
 
+    // Prevent double submission
+    if (isSubmitting) {
+      return;
+    }
+
     try {
       setIsSubmitting(true);
-      await onMedicationAdministered(false, description);
+      
+      console.log('Creating diary entry (not given) for medication request:', medicationRequest.id);
+      
+      // Create medication diary entry for not administered medication
+      const createResponse = await instance.post(`${BASE_API}/api/MedicaDiary/create`, {
+        medicationReqId: medicationRequest.id,
+        status: 0, // 0 for not administered
+        description: description
+      });
 
-      // Reset form and close dialog
+      console.log('Diary entry (not given) created successfully:', createResponse.data);
+
+      // Check status with current medication request ID
+      await checkAndUpdateMedicationStatus(medicationRequest.id);
+
+      toast.info("Đã ghi nhận thông tin hủy lần uống thuốc");
+
+      // Reset form and close dialog first
       setDescription("");
       setNotGivenDialogOpen(false);
+
+      // Call the parent callback AFTER successful creation and UI update
+      setTimeout(() => {
+        onMedicationAdministered(false, description);
+      }, 100);
     } catch (error) {
       console.error("Error logging not given medication:", error);
       toast.error("Không thể cập nhật thông tin hủy dùng thuốc. Vui lòng thử lại sau.");
@@ -198,9 +344,21 @@ const MedicationAdministrationForm: React.FC<MedicationAdministrationFormProps> 
             width: { xs: '100%', md: '58.33%' }, 
             pl: { md: 2 } 
           }}>
-            <Typography variant="h6" gutterBottom>
-              Chi tiết thuốc
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+              <Typography variant="h6">
+                Chi tiết thuốc
+              </Typography>
+              {checkingStatus ? (
+                <CircularProgress size={20} />
+              ) : isCompletedToday ? (
+                <Chip 
+                  label={`Hôm nay đã uống thuốc (${todayDiaryCount} lần ghi nhận)`} 
+                  color="success" 
+                  size="small"
+                  sx={{ fontWeight: 600 }}
+                />
+              ) : null}
+            </Box>
 
             <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
               <Typography variant="body1">
@@ -243,23 +401,38 @@ const MedicationAdministrationForm: React.FC<MedicationAdministrationFormProps> 
               justifyContent="center"
               height="100%"
             >
-              <Button
-                variant="contained"
-                color="primary"
-                fullWidth
-                onClick={handleGiveMedicationClick}
-              >
-                Đã cho uống thuốc
-              </Button>
+              {isCompletedToday ? (
+                <Alert severity="info" sx={{ textAlign: 'center', fontSize: '0.875rem' }}>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                    Hôm nay đã uống thuốc
+                  </Typography>
+                  <Typography variant="caption" sx={{ display: 'block', mt: 0.5 }}>
+                    Không thể thực hiện thêm thao tác
+                  </Typography>
+                </Alert>
+              ) : (
+                <>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    fullWidth
+                    onClick={handleGiveMedicationClick}
+                    disabled={isSubmitting || checkingStatus}
+                  >
+                    Đã cho uống thuốc
+                  </Button>
 
-              <Button
-                variant="outlined"
-                color="error"
-                fullWidth
-                onClick={handleNotGiveMedicationClick}
-              >
-                Hủy lần uống thuốc
-              </Button>
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    fullWidth
+                    onClick={handleNotGiveMedicationClick}
+                    disabled={isSubmitting || checkingStatus}
+                  >
+                    Hủy lần uống thuốc
+                  </Button>
+                </>
+              )}
             </Stack>
           </Box>
         </Box>

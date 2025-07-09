@@ -4,7 +4,7 @@ import { ThemeProvider } from "@mui/material/styles";
 import { AuthProvider } from "./components/auth/AuthContext";
 import CssBaseline from "@mui/material/CssBaseline";
 import theme from "./theme/theme";
-import MainLayout from "./components/layout/MainLayout";
+import LayoutSelector from "./components/layout/LayoutSelector";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -28,6 +28,12 @@ import ParentMedicationDashboard from "./components/medication/parent/ParentMedi
 import VaccinationProgramDetailsPage from "./components/vaccination/VaccinationProgramDetailsPage";
 import ScheduleStudentsPage from "./components/vaccination/ScheduleStudentsPage";
 
+// Promo Pages
+import MedicationDeliveryPromo from "./components/promo/MedicationDeliveryPromo";
+import VaccinationPromo from "./components/promo/VaccinationPromo";
+import HealthCheckPromo from "./components/promo/HealthCheckPromo";
+import LandingPage from "./components/promo/LandingPage";
+
 function App() {
   return (
     <AuthProvider>
@@ -38,8 +44,12 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/homepage" element={<HomePage />} />
-            <Route path="/" element={<MainLayout />}>
+            <Route path="/" element={<LayoutSelector />}>
               <Route index element={<HomePage />} />
+              <Route path="landing" element={<LandingPage />} />
+              <Route path="promo/medication-delivery" element={<MedicationDeliveryPromo />} />
+              <Route path="promo/vaccination" element={<VaccinationPromo />} />
+              <Route path="promo/health-check" element={<HealthCheckPromo />} />
               <Route path="health-records" element={<HealthRecordsPage />} />
               <Route path="health-declaration" element={<HealthDeclarationFormPage />} />
               <Route path="medication" element={<MedicationPage />} />
