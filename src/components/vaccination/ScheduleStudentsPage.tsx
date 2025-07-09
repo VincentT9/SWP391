@@ -751,7 +751,9 @@ const ScheduleStudentsPage: React.FC = () => {
           mb: 3,
           borderRadius: 2,
           display: "flex",
+          flexDirection: { xs: "column", sm: "row" },
           justifyContent: "space-between",
+          gap: 2,
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center", flexGrow: 1, mr: 2 }}>
@@ -773,53 +775,44 @@ const ScheduleStudentsPage: React.FC = () => {
           />
         </Box>
 
-        <Box sx={{ display: "flex", gap: 1 }}>
-          {/* Action Buttons - Only show to Admin users */}
-          {isAdmin() && (
-            <Box
-              sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}
+        {/* Cải thiện bố cục các nút thao tác */}
+        {isAdmin() && (
+          <Box
+            sx={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 2,
+              justifyContent: { xs: "flex-start", sm: "flex-end" },
+            }}
+          >
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<AddIcon />}
+              onClick={handleAddStudent}
             >
-              <Box>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  startIcon={<AddIcon />}
-                  onClick={handleAddStudent}
-                >
-                  Thêm học sinh
-                </Button>
-                <Button
-                  variant="outlined"
-                  color="primary"
-                  startIcon={<DescriptionIcon />}
-                  onClick={handleCreateConsentForms}
-                  sx={{ ml: 2 }}
-                  disabled={consentFormExists || isCreatingConsentForms}
-                >
-                  {isCreatingConsentForms ? (
-                    <>
-                      <CircularProgress size={20} sx={{ mr: 1 }} />
-                      Đang tạo...
-                    </>
-                  ) : (
-                    "Tạo phiếu đồng ý"
-                  )}
-                </Button>
-              </Box>
+              Thêm học sinh
+            </Button>
 
-              {students.length > 0 && (
-                <Button
-                  variant="outlined"
-                  color="error"
-                  startIcon={<DeleteIcon />}
-                  onClick={handleDeleteAllStudents}
-                >
-                  Xóa tất cả
-                </Button>
-              )}
-            </Box>
-          )}
-        </Box>
+            <Button
+              variant="outlined"
+              color="primary"
+              startIcon={<DescriptionIcon />}
+              onClick={handleCreateConsentForms}
+            >
+              Tạo phiếu đồng ý
+            </Button>
+
+            <Button
+              variant="outlined"
+              color="error"
+              startIcon={<DeleteIcon />}
+              onClick={handleDeleteAllStudents}
+            >
+              Xóa tất cả
+            </Button>
+          </Box>
+        )}
       </Paper>
 
       {/* Tabs */}
@@ -945,36 +938,47 @@ const ScheduleStudentsPage: React.FC = () => {
                 ) : (
                   <TableRow>
                     <TableCell colSpan={7} align="center">
-                      <Typography variant="body1" sx={{ py: 2 }}>
-                        {error ? (
-                          <Box
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              gap: 1,
-                            }}
+                      <Box
+                        sx={{
+                          py: 4,
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          gap: 2,
+                        }}
+                      >
+                        <Typography variant="body1">
+                          {error ? (
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: 1,
+                              }}
+                            >
+                              <WarningIcon color="warning" />
+                              {error}
+                            </Box>
+                          ) : searchQuery ? (
+                            "Không tìm thấy học sinh phù hợp"
+                          ) : (
+                            "Chưa có học sinh nào trong lịch này"
+                          )}
+                        </Typography>
+
+                        {!error && students.length === 0 && (
+                          <Button
+                            variant="contained"
+                            color="primary"
+                            startIcon={<AddIcon />}
+                            onClick={handleAddStudent}
+                            sx={{ mt: 1 }}
                           >
-                            <WarningIcon color="warning" />
-                            {error}
-                          </Box>
-                        ) : searchQuery ? (
-                          "Không tìm thấy học sinh phù hợp"
-                        ) : (
-                          "Chưa có học sinh nào trong lịch này"
+                            Thêm học sinh vào lịch
+                          </Button>
                         )}
-                      </Typography>
-                      {!error && students.length === 0 && (
-                        <Button
-                          variant="contained"
-                          color="primary"
-                          startIcon={<AddIcon />}
-                          onClick={handleAddStudent}
-                          sx={{ mt: 2 }}
-                        >
-                          Thêm học sinh vào lịch
-                        </Button>
-                      )}
+                      </Box>
                     </TableCell>
                   </TableRow>
                 )}
