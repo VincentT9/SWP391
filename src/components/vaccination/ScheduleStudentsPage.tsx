@@ -535,6 +535,8 @@ const ScheduleStudentsPage: React.FC = () => {
             reasonForDecline: "", // Không cần lý do vì mặc định đồng ý
           };
 
+          console.log("Request body:", requestBody);
+
           await instance.post(
             "/api/ConsentForm/create-consent-form",
             requestBody
