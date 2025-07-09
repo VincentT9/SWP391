@@ -211,6 +211,10 @@ const RecordResultDialog: React.FC<RecordResultDialogProps> = ({
         scheduleDetailId,
         height: healthForm.height ? parseFloat(healthForm.height) : null,
         weight: healthForm.weight ? parseFloat(healthForm.weight) : null,
+        visionLeftResult: healthForm.visionLeftResult,
+        visionRightResult: healthForm.visionRightResult,
+        hearingLeftResult: healthForm.hearingLeftResult,
+        hearingRightResult: healthForm.hearingRightResult,
         bloodPressureSys: healthForm.bloodPressureSys
           ? parseFloat(healthForm.bloodPressureSys)
           : null,
@@ -222,12 +226,11 @@ const RecordResultDialog: React.FC<RecordResultDialogProps> = ({
           : null,
         dentalCheckupResult: healthForm.dentalCheckupResult,
         otherResults: healthForm.otherResults,
+        abnormalSigns: healthForm.abnormalSigns,
+        recommendations: healthForm.recommendations,
       };
 
-      const response = await instance.post(
-        "/api/HealthCheckupResult/create-health-result",
-        payload
-      );
+      const response = await instance.post("/api/HealthCheckupResult", payload);
 
       // Store the returned ID for consultation creation
       if (response.data && response.data.id) {

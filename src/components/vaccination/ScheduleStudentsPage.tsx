@@ -274,7 +274,7 @@ const ScheduleStudentsPage: React.FC = () => {
       const formattedStudents = response.data
         ? response.data.map((item: any) => ({
             id: item.id,
-            studentId: item.studentId,
+            studentId: item.student?.id,
             studentName: item.student?.fullName || "N/A",
             studentCode: item.student?.studentCode || "N/A",
             className: item.student?.class || "N/A",
@@ -357,7 +357,7 @@ const ScheduleStudentsPage: React.FC = () => {
       const formattedStudents = response.data
         ? response.data.map((item: any) => ({
             id: item.id,
-            studentId: item.studentId,
+            studentId: item.student?.id,
             studentName: item.student?.fullName || "N/A",
             studentCode: item.student?.studentCode || "N/A",
             className: item.student?.class || "N/A",
@@ -526,11 +526,21 @@ const ScheduleStudentsPage: React.FC = () => {
       let successCount = 0;
 
       for (const student of students) {
+        // Kiểm tra studentId trước khi tạo request
+        if (!student.studentId) {
+          console.error(
+            `Bỏ qua: Không tìm thấy ID cho học sinh ${
+              student.studentName || "không xác định"
+            }`
+          );
+          continue; // Bỏ qua học sinh này
+        }
+
         try {
           const requestBody = {
             campaignId: schedule.campaignId,
             studentId: student.studentId,
-            isApproved: true, // Mặc định là đồng ý
+            isApproved: false, // Mặc định là không đồng ý
             consentDate: currentDate,
             reasonForDecline: "", // Không cần lý do vì mặc định đồng ý
           };
@@ -980,6 +990,8 @@ const ScheduleStudentsPage: React.FC = () => {
         onClose={() => setIsAddStudentDialogOpen(false)}
         onSuccess={handleAddStudentSuccess}
         scheduleId={scheduleId || ""}
+        existingStudentIds={students.map((s) => s.studentId).filter(Boolean)}
+        scheduleDate={schedule?.scheduledDate || new Date().toISOString()}
       />
 
       {/* Delete Confirmation Dialog */}
