@@ -3,6 +3,7 @@ import { Typography, Box, Tabs, Tab, Button, Paper, CircularProgress } from "@mu
 import AddIcon from "@mui/icons-material/Add";
 import { MedicalEventForm, MedicalEventsList, MedicalEventDetails } from ".";
 import { MedicalIncident } from "../../../models/types";
+import PageHeader from "../../common/PageHeader";
 import axios from "../../../utils/axiosConfig";
 import { toast } from "react-toastify";
 import instance from "../../../utils/axiosConfig";
@@ -168,18 +169,23 @@ const NurseMedicalEventsDashboard: React.FC<
 
   return (
     <Box>
-      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3 }}>
-        <Typography variant="h4">Quản lý sự kiện y tế</Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<AddIcon />}
-          onClick={handleCreateEvent}
-          disabled={loading}
-        >
-          Ghi nhận sự kiện mới
-        </Button>
-      </Box>
+      <PageHeader 
+        title="Quản lý sự kiện y tế"
+        subtitle="Ghi nhận và theo dõi các sự kiện y tế của học sinh tại trường"
+        showRefresh={true}
+        onRefresh={fetchIncidents}
+        actions={
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<AddIcon />}
+            onClick={handleCreateEvent}
+            disabled={loading}
+          >
+            Ghi nhận sự kiện mới
+          </Button>
+        }
+      />
 
       {error && (
         <Paper sx={{ p: 2, mb: 2, bgcolor: "rgba(231, 76, 60, 0.1)" }}>

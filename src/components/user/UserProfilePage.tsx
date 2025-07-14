@@ -28,6 +28,7 @@ import {
 import { useAuth } from '../auth/AuthContext';
 import instance from '../../utils/axiosConfig';
 import { toast } from 'react-toastify';
+import PageHeader from '../common/PageHeader';
 
 interface UserProfile {
   id: number;
@@ -206,9 +207,10 @@ const UserProfilePage = () => {
   return (
     <Container maxWidth="lg">
       <Box sx={{ my: 4 }}>
-        <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', color: '#2980b9' }}>
-          Trang cá nhân
-        </Typography>
+        <PageHeader 
+          title="Trang cá nhân"
+          subtitle="Quản lý thông tin cá nhân và cài đặt tài khoản"
+        />
 
         <Card sx={{ borderRadius: 2, boxShadow: 3 }}>
           <CardContent sx={{ p: 4 }}>

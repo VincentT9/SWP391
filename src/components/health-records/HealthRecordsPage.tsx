@@ -44,6 +44,7 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import InfoIcon from "@mui/icons-material/Info";
+import PageHeader from "../common/PageHeader";
 import instance from "../../utils/axiosConfig";
 
 // ===== KHAI BÁO KIỂU DỮ LIỆU =====
@@ -554,36 +555,28 @@ const HealthRecordsPage = () => {
         maxWidth: "1100px !important", // Giảm độ rộng container
       }}
     >
-      <>
-        {/* ===== HEADER TRANG ===== */}
-        <Box
-          sx={{
-            mb: 5, // Tăng margin-bottom
-            pt: 1,
-          }}
-        >
-          <div>
-            <Typography
-              variant="h4"
-              gutterBottom
-              sx={{
-                fontWeight: "600",
-                color: "#2980b9", // Màu xanh đậm hơn
-                mb: 1.5, // Tăng khoảng cách với dòng tiếp theo
-                fontSize: { xs: "1.8rem", md: "2.2rem" }, // Responsive font size
-              }}
-            >
-              Hồ sơ sức khỏe học sinh
-            </Typography>
-            <Typography
-              variant="body1"
-              color="text.secondary"
-              sx={{ fontSize: "1rem", maxWidth: "600px" }} // Giới hạn chiều rộng text
-            >
-              Xem và quản lý thông tin sức khỏe của học sinh
-            </Typography>
-          </div>
-        </Box>
+      <PageHeader 
+        title="Hồ sơ sức khỏe học sinh"
+        subtitle="Quản lý và theo dõi thông tin sức khỏe tổng thể của con em"
+        showRefresh={true}
+        onRefresh={fetchData}
+        actions={
+          <Button
+            variant="outlined"
+            startIcon={<AddIcon />}
+            onClick={() => navigate("/health-declaration")}
+            sx={{ 
+              color: "#2980b9", 
+              borderColor: "#2980b9",
+              "&:hover": {
+                backgroundColor: "rgba(41, 128, 185, 0.1)"
+              }
+            }}
+          >
+            Thêm học sinh
+          </Button>
+        }
+      />
 
         {/* ===== TIÊU ĐỀ VÀ TAB CHỌN HỌC SINH ===== */}
         <Box sx={{ mb: 4 }}>
@@ -1517,7 +1510,6 @@ const HealthRecordsPage = () => {
             </Button>
           </DialogActions>
         </Dialog>
-      </>
     </Container>
   );
 };

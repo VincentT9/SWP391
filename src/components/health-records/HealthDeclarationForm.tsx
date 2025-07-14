@@ -33,6 +33,7 @@ import { useForm, Controller } from "react-hook-form";
 import { toast } from "react-toastify";
 import { HealthRecord } from "../../models/types";
 import axios from "axios";
+import PageHeader from "../common/PageHeader";
 import instance from "../../utils/axiosConfig";
 
 // Định nghĩa kiểu dữ liệu Student từ API
@@ -275,18 +276,10 @@ const HealthDeclarationForm = () => {
 
   return (
     <Container maxWidth="lg">
-      <Box sx={{ mb: 4 }}>
-        <Typography
-          variant="h4"
-          gutterBottom
-          sx={{ fontWeight: "bold", color: "#2980b9" }}
-        >
-          Khai báo sức khỏe học sinh
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Vui lòng điền đầy đủ thông tin sức khỏe của học sinh
-        </Typography>
-      </Box>
+      <PageHeader 
+        title="Khai báo sức khỏe học sinh" 
+        subtitle="Vui lòng điền đầy đủ thông tin sức khỏe của học sinh"
+      />
 
       <Paper sx={{ mb: 4, p: 3 }}>
         <form onSubmit={handleSubmit(onSubmit)}>

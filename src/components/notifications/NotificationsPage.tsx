@@ -47,6 +47,7 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../auth/AuthContext';
 import axiosInstance from '../../utils/axiosConfig';
+import PageHeader from '../common/PageHeader';
 
 interface Notification {
   id: string;
@@ -396,31 +397,24 @@ const NotificationsPage: React.FC = () => {
   return (
     <Container maxWidth="lg">
       <Box sx={{ my: 4 }}>
-        {/* Header */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Badge badgeContent={unreadCount} color="error" sx={{ mr: 2 }}>
-              <NotificationsIcon sx={{ fontSize: 32, color: '#2980b9' }} />
-            </Badge>
-            <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#2980b9' }}>
-              Thông báo
-            </Typography>
-          </Box>
-          
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <IconButton onClick={fetchNotifications} disabled={loading}>
-              <RefreshIcon />
-            </IconButton>
-            <Button
-              variant="outlined"
-              onClick={markAllAsRead}
-              disabled={unreadCount === 0}
-              sx={{ color: '#2980b9', borderColor: '#2980b9' }}
-            >
-              Đánh dấu tất cả đã đọc
-            </Button>
-          </Box>
-        </Box>
+        <PageHeader 
+          title="Thông báo"
+          subtitle="Quản lý và theo dõi các thông báo hệ thống"
+          showRefresh={true}
+          onRefresh={fetchNotifications}
+          actions={
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Button
+                variant="outlined"
+                onClick={markAllAsRead}
+                disabled={unreadCount === 0}
+                sx={{ color: '#2980b9', borderColor: '#2980b9' }}
+              >
+                Đánh dấu tất cả đã đọc
+              </Button>
+            </Box>
+          }
+        />
 
         {/* Tabs */}
         <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>

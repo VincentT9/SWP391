@@ -45,6 +45,7 @@ import { useAuth } from "../auth/AuthContext";
 import axios from "axios";
 import instance from "../../utils/axiosConfig";
 import { toast } from "react-toastify"; // Import toast
+import PageHeader from "../common/PageHeader";
 
 // SupplyType enum mapping
 enum SupplyType {
@@ -509,30 +510,10 @@ const MedicalSupplierPage = () => {
     <Container maxWidth="xl">
       <Box sx={{ my: 4 }}>
         {/* Header with user info */}
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "flex-start",
-            mb: 4,
-          }}
-        >
-          <Box sx={{ display: "flex", alignItems: "center" }}>
-            <InventoryIcon sx={{ fontSize: 40, color: "#2980b9", mr: 2 }} />
-            <Box>
-              <Typography
-                variant="h4"
-                gutterBottom
-                sx={{ fontWeight: "bold", color: "#2980b9" }}
-              >
-                Quản lý vật tư y tế
-              </Typography>
-              <Typography variant="body1" color="text.secondary">
-                Quản lý thuốc, thiết bị và vật tư tiêu hao trong kho
-              </Typography>
-            </Box>
-          </Box>
-        </Box>
+        <PageHeader 
+          title="Quản lý vật tư y tế" 
+          subtitle="Quản lý thuốc, thiết bị và vật tư tiêu hao trong kho"
+        />
 
         {/* Alert cho low stock */}
         {lowStockItems.length > 0 && (

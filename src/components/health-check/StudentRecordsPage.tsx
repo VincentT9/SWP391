@@ -56,6 +56,7 @@ import {
 } from "@mui/icons-material";
 import { useAuth } from "../auth/AuthContext";
 import instance from "../../utils/axiosConfig";
+import PageHeader from "../common/PageHeader";
 
 // Updated interface to match API response
 interface Student {
@@ -409,27 +410,10 @@ const StudentRecordsPage: React.FC = () => {
       }}
     >
       <Box sx={{ my: 2 }}>
-        {/* Header with improved styling */}
-        <Box sx={{ mb: 5, pt: 1 }}>
-          <Typography
-            variant="h4"
-            sx={{
-              fontWeight: "600",
-              color: "#2980b9",
-              mb: 1.5,
-              fontSize: { xs: "1.8rem", md: "2.2rem" },
-            }}
-          >
-            Tìm kiếm hồ sơ học sinh
-          </Typography>
-          <Typography
-            variant="body1"
-            color="text.secondary"
-            sx={{ fontSize: "1rem", maxWidth: "600px" }}
-          >
-            Nhập mã số học sinh để tìm kiếm và xem hồ sơ sức khỏe
-          </Typography>
-        </Box>
+        <PageHeader 
+          title="Tìm kiếm hồ sơ học sinh"
+          subtitle="Tra cứu thông tin sức khỏe và hồ sơ y tế của học sinh"
+        />
 
         {/* Search Section with improved styling */}
         <Card

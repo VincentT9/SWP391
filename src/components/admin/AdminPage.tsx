@@ -37,8 +37,10 @@ import {
   Security as SecurityIcon,
   Refresh as RefreshIcon,
   Lock as LockIcon,
+  AdminPanelSettings as AdminIcon,
 } from "@mui/icons-material";
 import { useAuth } from "../auth/AuthContext";
+import PageHeader from "../common/PageHeader";
 
 // Interface cho User từ API - cập nhật theo response thực tế
 interface User {
@@ -409,31 +411,22 @@ const AdminPage = () => {
   return (
     <Container maxWidth="lg">
       <Box sx={{ my: 4 }}>
-        {/* Header with current user info */}
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "flex-start",
-            mb: 4,
-          }}
-        >
-          <Box sx={{ display: "flex", alignItems: "center" }}>
-            <SecurityIcon sx={{ fontSize: 40, color: "#2980b9", mr: 2 }} />
-            <Box>
-              <Typography
-                variant="h4"
-                gutterBottom
-                sx={{ fontWeight: "bold", color: "#2980b9" }}
-              >
-                Quản lý người dùng
-              </Typography>
-              <Typography variant="body1" color="text.secondary">
-                Quản lý tài khoản và phân quyền người dùng trong hệ thống
-              </Typography>
-            </Box>
-          </Box>
-        </Box>
+        <PageHeader 
+          title="Quản lý người dùng"
+          subtitle="Quản lý tài khoản và phân quyền người dùng trong hệ thống"
+          showRefresh={true}
+          onRefresh={fetchUsers}
+          actions={
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<AddIcon />}
+              onClick={() => setOpenDialog(true)}
+            >
+              Thêm người dùng
+            </Button>
+          }
+        />
 
         <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
           <Button
