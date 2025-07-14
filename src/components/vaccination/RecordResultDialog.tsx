@@ -211,6 +211,10 @@ const RecordResultDialog: React.FC<RecordResultDialogProps> = ({
         scheduleDetailId,
         height: healthForm.height ? parseFloat(healthForm.height) : null,
         weight: healthForm.weight ? parseFloat(healthForm.weight) : null,
+        visionLeftResult: healthForm.visionLeftResult,
+        visionRightResult: healthForm.visionRightResult,
+        hearingLeftResult: healthForm.hearingLeftResult,
+        hearingRightResult: healthForm.hearingRightResult,
         bloodPressureSys: healthForm.bloodPressureSys
           ? parseFloat(healthForm.bloodPressureSys)
           : null,
@@ -222,12 +226,11 @@ const RecordResultDialog: React.FC<RecordResultDialogProps> = ({
           : null,
         dentalCheckupResult: healthForm.dentalCheckupResult,
         otherResults: healthForm.otherResults,
+        abnormalSigns: healthForm.abnormalSigns,
+        recommendations: healthForm.recommendations,
       };
 
-      const response = await instance.post(
-        "/api/HealthCheckupResult/create-health-result",
-        payload
-      );
+      const response = await instance.post("/api/HealthCheckupResult", payload);
 
       // Store the returned ID for consultation creation
       if (response.data && response.data.id) {
@@ -265,8 +268,18 @@ const RecordResultDialog: React.FC<RecordResultDialogProps> = ({
     try {
       setIsSubmittingConsultation(true);
 
-      // Get current user ID (medical staff)
-      const medicalStaffId = localStorage.getItem("userId");
+      // Get current user ID (medical staff) from authUser JSON object
+      const authUserStr = localStorage.getItem("authUser");
+      let medicalStaffId = null;
+
+      if (authUserStr) {
+        try {
+          const authUser = JSON.parse(authUserStr);
+          medicalStaffId = authUser.id;
+        } catch (parseError) {
+          console.error("Error parsing authUser:", parseError);
+        }
+      }
 
       if (!medicalStaffId) {
         toast.error(
@@ -275,9 +288,13 @@ const RecordResultDialog: React.FC<RecordResultDialogProps> = ({
         return;
       }
 
+      // Kiểm tra resultId và đảm bảo nó là null nếu rỗng
+      const validResultId =
+        resultId && resultId.trim() !== "" ? resultId : null;
+
       const payload = {
-        healthCheckupResultId: campaignType === 1 ? resultId : null,
-        vaccinationResultId: campaignType === 0 ? resultId : null,
+        healthCheckupResultId: campaignType === 1 ? validResultId : null,
+        vaccinationResultId: campaignType === 0 ? validResultId : null,
         studentId: studentId,
         medicalStaffId: medicalStaffId,
         scheduledDate: consultationData.scheduledDate.toISOString(),

@@ -27,13 +27,14 @@ import { toast } from "react-toastify";
 import instance from "../../utils/axiosConfig";
 import { format } from "date-fns";
 
-// First, update the props interface to accept existing student IDs
+// Thêm scheduleDate vào interface props
 interface AddStudentToScheduleDialogProps {
   open: boolean;
   onClose: () => void;
   onSuccess: () => void;
   scheduleId: string;
-  existingStudentIds?: string[]; // New prop to receive existing student IDs
+  existingStudentIds?: string[];
+  scheduleDate: string; // Thêm prop để nhận ngày của schedule
 }
 
 const AddStudentToScheduleDialog: React.FC<AddStudentToScheduleDialogProps> = ({
@@ -41,7 +42,8 @@ const AddStudentToScheduleDialog: React.FC<AddStudentToScheduleDialogProps> = ({
   onClose,
   onSuccess,
   scheduleId,
-  existingStudentIds = [], // Default to empty array if not provided
+  existingStudentIds = [],
+  scheduleDate, // Nhận ngày lịch từ props
 }) => {
   const [students, setStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -136,7 +138,7 @@ const AddStudentToScheduleDialog: React.FC<AddStudentToScheduleDialogProps> = ({
         const requestBody = {
           studentId: studentId,
           scheduleId: scheduleId,
-          vaccinationDate: new Date().toISOString(),
+          vaccinationDate: scheduleDate, // Sử dụng ngày của schedule thay vì ngày hiện tại
         };
 
         return instance.post(

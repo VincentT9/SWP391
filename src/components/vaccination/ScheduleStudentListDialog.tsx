@@ -751,7 +751,12 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
         onClose={() => setIsAddStudentDialogOpen(false)}
         onSuccess={handleAddStudentSuccess}
         scheduleId={schedule?.id}
-        existingStudentIds={students.map((student) => student.studentId)} // Pass student IDs of existing students
+        existingStudentIds={students.map((s) => s.studentId).filter(Boolean)}
+        scheduleDate={
+          schedule?.vaccinationDate ||
+          schedule?.scheduledDate ||
+          new Date().toISOString()
+        }
       />
 
       {/* Confirmation Dialog */}

@@ -161,6 +161,7 @@ const ScheduleStudentsPage: React.FC = () => {
         : [];
 
       setStudents(formattedStudents);
+      setError(null); // Quan trọng: Luôn đặt error thành null
 
       // Khởi tạo thông tin lịch cơ bản
       const scheduleInfo = {
@@ -180,7 +181,10 @@ const ScheduleStudentsPage: React.FC = () => {
       fetchAdditionalScheduleInfo(scheduleId);
     } catch (err) {
       console.error("Error fetching schedule details:", err);
-      // Thêm kiểm tra scheduleId
+      // Không đặt error khi fetch thất bại
+      setError(null); // Quan trọng: Đặt error thành null ngay cả khi có lỗi
+
+      // Vẫn tiếp tục lấy thông tin lịch
       if (scheduleId) {
         fetchAdditionalScheduleInfo(scheduleId);
       }
@@ -274,14 +278,14 @@ const ScheduleStudentsPage: React.FC = () => {
       const formattedStudents = response.data
         ? response.data.map((item: any) => ({
             id: item.id,
-            studentId: item.studentId,
+            studentId: item.student?.id,
             studentName: item.student?.fullName || "N/A",
             studentCode: item.student?.studentCode || "N/A",
             className: item.student?.class || "N/A",
             dateOfBirth: item.student?.dateOfBirth || null,
             gender:
               item.student?.gender !== undefined ? item.student.gender : -1,
-            status: item.vaccinationResult || item.healthCheckupResult ? 1 : 0, // 1 = completed, 0 = not done
+            status: item.vaccinationResult || item.healthCheckupResult ? 1 : 0,
             vaccinationDate: item.vaccinationDate,
             hasResult: !!item.vaccinationResult || !!item.healthCheckupResult,
           }))
@@ -299,10 +303,12 @@ const ScheduleStudentsPage: React.FC = () => {
       });
 
       setStudents(formattedStudents);
+      setError(null);
     } catch (err) {
       console.error("Error fetching students:", err);
-      // setError("Không thể tải danh sách học sinh. Vui lòng thử lại sau.");
+
       setStudents([]);
+      setError(null); // Luôn đặt error thành null
     } finally {
       setLoading(false);
     }
@@ -357,7 +363,7 @@ const ScheduleStudentsPage: React.FC = () => {
       const formattedStudents = response.data
         ? response.data.map((item: any) => ({
             id: item.id,
-            studentId: item.studentId,
+            studentId: item.student?.id,
             studentName: item.student?.fullName || "N/A",
             studentCode: item.student?.studentCode || "N/A",
             className: item.student?.class || "N/A",
@@ -383,7 +389,7 @@ const ScheduleStudentsPage: React.FC = () => {
 
       // Cập nhật state với dữ liệu mới
       setStudents(formattedStudents);
-      setError(null); // Xóa lỗi nếu có
+      setError(null); // Quan trọng: Luôn đặt error thành null
     } catch (err) {
       console.error("Error fetching students:", err);
 
@@ -392,9 +398,8 @@ const ScheduleStudentsPage: React.FC = () => {
 
         setTimeout(() => fetchStudentsWithRetry(retries - 1), 1000);
       } else {
-        // Hiển thị lỗi nếu đã hết số lần thử lại
-        // setError("Không thể tải danh sách học sinh. Vui lòng thử lại sau.");
         setStudents([]);
+        setError(null); // Đảm bảo error luôn là null
       }
     } finally {
       setLoading(false);
@@ -526,14 +531,26 @@ const ScheduleStudentsPage: React.FC = () => {
       let successCount = 0;
 
       for (const student of students) {
+        // Kiểm tra studentId trước khi tạo request
+        if (!student.studentId) {
+          console.error(
+            `Bỏ qua: Không tìm thấy ID cho học sinh ${
+              student.studentName || "không xác định"
+            }`
+          );
+          continue; // Bỏ qua học sinh này
+        }
+
         try {
           const requestBody = {
             campaignId: schedule.campaignId,
             studentId: student.studentId,
-            isApproved: true, // Mặc định là đồng ý
+            isApproved: false, // Mặc định là không đồng ý
             consentDate: currentDate,
             reasonForDecline: "", // Không cần lý do vì mặc định đồng ý
           };
+
+          console.log("Request body:", requestBody);
 
           await instance.post(
             "/api/ConsentForm/create-consent-form",
@@ -739,7 +756,9 @@ const ScheduleStudentsPage: React.FC = () => {
           mb: 3,
           borderRadius: 2,
           display: "flex",
+          flexDirection: { xs: "column", sm: "row" },
           justifyContent: "space-between",
+          gap: 2,
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center", flexGrow: 1, mr: 2 }}>
@@ -761,53 +780,44 @@ const ScheduleStudentsPage: React.FC = () => {
           />
         </Box>
 
-        <Box sx={{ display: "flex", gap: 1 }}>
-          {/* Action Buttons - Only show to Admin users */}
-          {isAdmin() && (
-            <Box
-              sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}
+        {/* Cải thiện bố cục các nút thao tác */}
+        {isAdmin() && (
+          <Box
+            sx={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 2,
+              justifyContent: { xs: "flex-start", sm: "flex-end" },
+            }}
+          >
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<AddIcon />}
+              onClick={handleAddStudent}
             >
-              <Box>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  startIcon={<AddIcon />}
-                  onClick={handleAddStudent}
-                >
-                  Thêm học sinh
-                </Button>
-                <Button
-                  variant="outlined"
-                  color="primary"
-                  startIcon={<DescriptionIcon />}
-                  onClick={handleCreateConsentForms}
-                  sx={{ ml: 2 }}
-                  disabled={consentFormExists || isCreatingConsentForms}
-                >
-                  {isCreatingConsentForms ? (
-                    <>
-                      <CircularProgress size={20} sx={{ mr: 1 }} />
-                      Đang tạo...
-                    </>
-                  ) : (
-                    "Tạo phiếu đồng ý"
-                  )}
-                </Button>
-              </Box>
+              Thêm học sinh
+            </Button>
 
-              {students.length > 0 && (
-                <Button
-                  variant="outlined"
-                  color="error"
-                  startIcon={<DeleteIcon />}
-                  onClick={handleDeleteAllStudents}
-                >
-                  Xóa tất cả
-                </Button>
-              )}
-            </Box>
-          )}
-        </Box>
+            <Button
+              variant="outlined"
+              color="primary"
+              startIcon={<DescriptionIcon />}
+              onClick={handleCreateConsentForms}
+            >
+              Tạo phiếu đồng ý
+            </Button>
+
+            <Button
+              variant="outlined"
+              color="error"
+              startIcon={<DeleteIcon />}
+              onClick={handleDeleteAllStudents}
+            >
+              Xóa tất cả
+            </Button>
+          </Box>
+        )}
       </Paper>
 
       {/* Tabs */}
@@ -933,36 +943,47 @@ const ScheduleStudentsPage: React.FC = () => {
                 ) : (
                   <TableRow>
                     <TableCell colSpan={7} align="center">
-                      <Typography variant="body1" sx={{ py: 2 }}>
-                        {error ? (
-                          <Box
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              gap: 1,
-                            }}
+                      <Box
+                        sx={{
+                          py: 4,
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          gap: 2,
+                        }}
+                      >
+                        <Typography variant="body1">
+                          {error ? (
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: 1,
+                              }}
+                            >
+                              <WarningIcon color="warning" />
+                              {error}
+                            </Box>
+                          ) : searchQuery ? (
+                            "Không tìm thấy học sinh phù hợp"
+                          ) : (
+                            "Chưa có học sinh nào trong lịch này"
+                          )}
+                        </Typography>
+
+                        {!error && students.length === 0 && (
+                          <Button
+                            variant="contained"
+                            color="primary"
+                            startIcon={<AddIcon />}
+                            onClick={handleAddStudent}
+                            sx={{ mt: 1 }}
                           >
-                            <WarningIcon color="warning" />
-                            {error}
-                          </Box>
-                        ) : searchQuery ? (
-                          "Không tìm thấy học sinh phù hợp"
-                        ) : (
-                          "Chưa có học sinh nào trong lịch này"
+                            Thêm học sinh vào lịch
+                          </Button>
                         )}
-                      </Typography>
-                      {!error && students.length === 0 && (
-                        <Button
-                          variant="contained"
-                          color="primary"
-                          startIcon={<AddIcon />}
-                          onClick={handleAddStudent}
-                          sx={{ mt: 2 }}
-                        >
-                          Thêm học sinh vào lịch
-                        </Button>
-                      )}
+                      </Box>
                     </TableCell>
                   </TableRow>
                 )}
@@ -978,6 +999,8 @@ const ScheduleStudentsPage: React.FC = () => {
         onClose={() => setIsAddStudentDialogOpen(false)}
         onSuccess={handleAddStudentSuccess}
         scheduleId={scheduleId || ""}
+        existingStudentIds={students.map((s) => s.studentId).filter(Boolean)}
+        scheduleDate={schedule?.scheduledDate || new Date().toISOString()}
       />
 
       {/* Delete Confirmation Dialog */}
