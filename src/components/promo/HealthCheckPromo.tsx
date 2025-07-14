@@ -27,32 +27,32 @@ const HealthCheckPromo: React.FC = () => {
 
   const features = [
     {
-      icon: <HealthAndSafety sx={{ fontSize: 40, color: theme.palette.primary.main }} />,
+      icon: <HealthAndSafety sx={{ fontSize: 40, color: '#2980b9' }} />,
       title: 'Khám sức khỏe toàn diện',
       description: 'Kiểm tra tổng quát về chiều cao, cân nặng, thị lực, răng miệng'
     },
     {
-      icon: <Assignment sx={{ fontSize: 40, color: theme.palette.success.main }} />,
+      icon: <Assignment sx={{ fontSize: 40, color: '#2980b9' }} />,
       title: 'Hồ sơ sức khỏe số',
       description: 'Lưu trữ và theo dõi lịch sử sức khỏe học sinh một cách hệ thống'
     },
     {
-      icon: <Timeline sx={{ fontSize: 40, color: theme.palette.warning.main }} />,
+      icon: <Timeline sx={{ fontSize: 40, color: '#2980b9' }} />,
       title: 'Theo dõi phát triển',
       description: 'Biểu đồ tăng trưởng và phát triển thể chất theo từng giai đoạn'
     },
     {
-      icon: <Psychology sx={{ fontSize: 40, color: theme.palette.error.main }} />,
+      icon: <Psychology sx={{ fontSize: 40, color: '#2980b9' }} />,
       title: 'Tư vấn chuyên nghiệp',
       description: 'Bác sĩ tư vấn về dinh dưỡng và chế độ sinh hoạt phù hợp'
     },
     {
-      icon: <Visibility sx={{ fontSize: 40, color: theme.palette.info.main }} />,
+      icon: <Visibility sx={{ fontSize: 40, color: '#2980b9' }} />,
       title: 'Phát hiện sớm',
       description: 'Sàng lọc và phát hiện sớm các vấn đề sức khỏe tiềm ẩn'
     },
     {
-      icon: <FamilyRestroom sx={{ fontSize: 40, color: theme.palette.secondary.main }} />,
+      icon: <FamilyRestroom sx={{ fontSize: 40, color: '#2980b9' }} />,
       title: 'Báo cáo cho phụ huynh',
       description: 'Thông báo kết quả khám và khuyến nghị chi tiết cho gia đình'
     }
@@ -82,7 +82,7 @@ const HealthCheckPromo: React.FC = () => {
       {/* Hero Section */}
       <Box
         sx={{
-          bgcolor: alpha(theme.palette.info.main, 0.1),
+          bgcolor: 'rgba(41, 128, 185, 0.1)',
           py: 8,
           position: 'relative',
           overflow: 'hidden'
@@ -102,13 +102,13 @@ const HealthCheckPromo: React.FC = () => {
                   gutterBottom
                   sx={{ 
                     fontWeight: 'bold',
-                    color: theme.palette.info.main,
+                    color: '#2980b9',
                     mb: 3
                   }}
                 >
                   Kiểm tra sức khỏe
                   <br />
-                  <span style={{ color: theme.palette.primary.main }}>
+                  <span style={{ color: '#2980b9' }}>
                     định kỳ
                   </span>
                 </Typography>
@@ -148,7 +148,7 @@ const HealthCheckPromo: React.FC = () => {
                     width: '100%',
                     height: 400,
                     borderRadius: 2,
-                    bgcolor: alpha(theme.palette.info.main, 0.1),
+                    bgcolor: alpha('#2980b9', 0.1),
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -158,7 +158,7 @@ const HealthCheckPromo: React.FC = () => {
                   <HealthAndSafety 
                     sx={{ 
                       fontSize: 150, 
-                      color: theme.palette.info.main,
+                      color: '#2980b9',
                       opacity: 0.7
                     }} 
                   />
@@ -237,7 +237,7 @@ const HealthCheckPromo: React.FC = () => {
       </Container>
 
       {/* Checkup Items Section */}
-      <Box sx={{ bgcolor: alpha(theme.palette.grey[100], 0.5), py: 8 }}>
+      <Box sx={{ bgcolor: 'rgba(41, 128, 185, 0.05)', py: 8 }}>
         <Container maxWidth="lg">
           <Typography
             variant="h3"
@@ -268,9 +268,9 @@ const HealthCheckPromo: React.FC = () => {
                     borderRadius: 3,
                     boxShadow: theme.shadows[4],
                     height: '100%',
-                    border: `2px solid ${alpha(theme.palette.info.main, 0.2)}`,
+                    border: `2px solid ${alpha('#2980b9', 0.2)}`,
                     '&:hover': {
-                      borderColor: theme.palette.info.main,
+                      borderColor: '#2980b9',
                       boxShadow: theme.shadows[8]
                     }
                   }}
@@ -281,7 +281,7 @@ const HealthCheckPromo: React.FC = () => {
                     gutterBottom
                     sx={{ 
                       fontWeight: 'bold',
-                      color: theme.palette.info.main,
+                      color: '#2980b9',
                       textAlign: 'center',
                       mb: 3
                     }}
@@ -298,7 +298,7 @@ const HealthCheckPromo: React.FC = () => {
                           gap: 1,
                           p: 1,
                           borderRadius: 1,
-                          bgcolor: alpha(theme.palette.info.main, 0.05)
+                          bgcolor: alpha('#2980b9', 0.05)
                         }}
                       >
                         <Box
@@ -306,7 +306,7 @@ const HealthCheckPromo: React.FC = () => {
                             width: 8,
                             height: 8,
                             borderRadius: '50%',
-                            bgcolor: theme.palette.info.main
+                            bgcolor: '#2980b9'
                           }}
                         />
                         <Typography variant="body2">
@@ -364,7 +364,7 @@ const HealthCheckPromo: React.FC = () => {
                       variant="h6"
                       sx={{ 
                         fontWeight: 'bold',
-                        color: theme.palette.info.main,
+                        color: '#2980b9',
                         mb: 1
                       }}
                     >
@@ -382,7 +382,7 @@ const HealthCheckPromo: React.FC = () => {
             <Assignment 
               sx={{ 
                 fontSize: 200, 
-                color: alpha(theme.palette.info.main, 0.3),
+                color: alpha('#2980b9', 0.3),
                 mb: 2
               }} 
             />
@@ -394,7 +394,7 @@ const HealthCheckPromo: React.FC = () => {
       </Container>
 
       {/* CTA Section */}
-      <Box sx={{ bgcolor: alpha(theme.palette.info.main, 0.1), py: 8 }}>
+      <Box sx={{ bgcolor: alpha('#2980b9', 0.1), py: 8 }}>
         <Container maxWidth="lg">
           <Box
             sx={{

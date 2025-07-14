@@ -120,7 +120,7 @@ const MedicationRequestList: React.FC<MedicationRequestListProps> = ({
       setProcessingRequestId(requestId);
       pendingRequests.current.add(requestId);
 
-      console.log("Attempting to accept request ID:", requestId);
+
       const requestData = requests.find((req) => req.id === requestId);
       if (!requestData) {
         throw new Error("Request not found");
@@ -153,8 +153,8 @@ const MedicationRequestList: React.FC<MedicationRequestListProps> = ({
         medicalStaffId: nurseId,
       };
 
-      console.log("Sending update data:", JSON.stringify(updateData));
-      console.log("req id:", requestId);
+
+
       // Make the API call
       const apiUrl = `${BASE_API}/api/MedicationRequest/update-medication-request/${requestId}`;
       const response = await instance.put(apiUrl, updateData);

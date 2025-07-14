@@ -88,8 +88,8 @@ const MedicalSupplierPage = () => {
       setMedicalSuppliers(response.data);
     } catch (err) {
       console.error("Error fetching suppliers:", err);
-      setError("Không thể tải dữ liệu vật tư y tế. Vui lòng thử lại sau.");
-      toast.error("Không thể tải dữ liệu vật tư y tế");
+      // setError("Không thể tải dữ liệu vật tư y tế. Vui lòng thử lại sau.");
+      // toast.error("Không thể tải dữ liệu vật tư y tế");
     } finally {
       setIsLoading(false);
     }
@@ -104,7 +104,7 @@ const MedicalSupplierPage = () => {
       return response.data;
     } catch (err) {
       console.error(`Error fetching supplier with ID ${id}:`, err);
-      toast.error("Không thể tải thông tin vật tư");
+      // toast.error("Không thể tải thông tin vật tư");
       throw new Error("Không thể tải thông tin vật tư");
     }
   };
@@ -592,11 +592,11 @@ const MedicalSupplierPage = () => {
             {/* Statistics row */}
             <Box sx={{ px: 3, pb: 3 }}>
               <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-                <Card sx={{ flex: 1, minWidth: 200, bgcolor: "#e3f2fd" }}>
+                <Card sx={{ flex: 1, minWidth: 200, bgcolor: "rgba(41, 128, 185, 0.08)" }}>
                   <CardContent sx={{ p: 2, textAlign: "center" }}>
                     <Typography
                       variant="h4"
-                      sx={{ color: "#1976d2", fontWeight: "bold" }}
+                      sx={{ color: "#2980b9", fontWeight: "bold" }}
                     >
                       {
                         medicalSuppliers.filter(
@@ -609,11 +609,11 @@ const MedicalSupplierPage = () => {
                     <Typography variant="body2">Loại thuốc</Typography>
                   </CardContent>
                 </Card>
-                <Card sx={{ flex: 1, minWidth: 200, bgcolor: "#f3e5f5" }}>
+                <Card sx={{ flex: 1, minWidth: 200, bgcolor: "rgba(41, 128, 185, 0.08)" }}>
                   <CardContent sx={{ p: 2, textAlign: "center" }}>
                     <Typography
                       variant="h4"
-                      sx={{ color: "#7b1fa2", fontWeight: "bold" }}
+                      sx={{ color: "#2980b9", fontWeight: "bold" }}
                     >
                       {
                         medicalSuppliers.filter(
@@ -626,11 +626,11 @@ const MedicalSupplierPage = () => {
                     <Typography variant="body2">Thiết bị</Typography>
                   </CardContent>
                 </Card>
-                <Card sx={{ flex: 1, minWidth: 200, bgcolor: "#fff3e0" }}>
+                <Card sx={{ flex: 1, minWidth: 200, bgcolor: "rgba(41, 128, 185, 0.08)" }}>
                   <CardContent sx={{ p: 2, textAlign: "center" }}>
                     <Typography
                       variant="h4"
-                      sx={{ color: "#f57c00", fontWeight: "bold" }}
+                      sx={{ color: "#2980b9", fontWeight: "bold" }}
                     >
                       {
                         medicalSuppliers.filter(
@@ -643,11 +643,11 @@ const MedicalSupplierPage = () => {
                     <Typography variant="body2">Vật tư tiêu hao</Typography>
                   </CardContent>
                 </Card>
-                <Card sx={{ flex: 1, minWidth: 200, bgcolor: "#ffebee" }}>
+                <Card sx={{ flex: 1, minWidth: 200, bgcolor: "rgba(41, 128, 185, 0.08)" }}>
                   <CardContent sx={{ p: 2, textAlign: "center" }}>
                     <Typography
                       variant="h4"
-                      sx={{ color: "#d32f2f", fontWeight: "bold" }}
+                      sx={{ color: "#2980b9", fontWeight: "bold" }}
                     >
                       {lowStockItems.length}
                     </Typography>
@@ -661,7 +661,7 @@ const MedicalSupplierPage = () => {
             <TableContainer>
               <Table>
                 <TableHead>
-                  <TableRow sx={{ bgcolor: "#f5f5f5" }}>
+                  <TableRow sx={{ bgcolor: "#f8f9fa" }}>
                     <TableCell sx={{ fontWeight: "bold" }}>Hình ảnh</TableCell>
                     <TableCell sx={{ fontWeight: "bold" }}>
                       Tên vật tư

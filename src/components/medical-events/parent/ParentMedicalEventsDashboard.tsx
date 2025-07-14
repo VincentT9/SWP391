@@ -58,7 +58,7 @@ const ParentMedicalEventsDashboard: React.FC<
         setEvents(allEvents);
       } catch (err) {
         console.error("Error fetching data:", err);
-        setError("Có lỗi khi tải dữ liệu học sinh hoặc sự kiện y tế");
+        // setError("Có lỗi khi tải dữ liệu học sinh hoặc sự kiện y tế");
       } finally {
         setLoading(false);
       }

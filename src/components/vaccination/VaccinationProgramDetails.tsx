@@ -177,14 +177,14 @@ const VaccinationProgramDetails: React.FC<VaccinationProgramDetailsProps> = ({
       if (!campaign?.id) return;
 
       setIsLoading(true);
-      console.log("Refreshing campaign data for ID:", campaign.id);
+
 
       const response = await instance.get(
         `/api/Campaign/get-campaign-by-id/${campaign.id}`
       );
 
-      console.log("Refresh campaign response:", response.data);
-      console.log("Schedules in response:", response.data?.schedules);
+
+
 
       if (response.data) {
         setCampaign(response.data);
@@ -200,9 +200,9 @@ const VaccinationProgramDetails: React.FC<VaccinationProgramDetailsProps> = ({
 
   // Hàm xử lý thêm lịch mới
   const handleAddSchedule = () => {
-    console.log("Adding schedule for campaign:", campaign);
-    console.log("Campaign ID:", campaign?.id);
-    console.log("Campaign ID type:", typeof campaign?.id);
+
+
+
 
     if (!campaign?.id) {
       toast.error("Không thể thêm lịch: thiếu thông tin chương trình");
@@ -295,18 +295,18 @@ const VaccinationProgramDetails: React.FC<VaccinationProgramDetailsProps> = ({
 
     const attemptRefresh = async () => {
       try {
-        console.log(`Attempt ${retries + 1} to refresh campaign data`);
+
         const response = await instance.get(
           `/api/Campaign/get-campaign-by-id/${campaignId}`
         );
 
         // Kiểm tra xem schedule mới có tồn tại không
         const schedules = response.data?.schedules || [];
-        console.log(
-          `Found ${schedules.length} schedules in refresh attempt ${
-            retries + 1
-          }`
-        );
+        // console.log(
+        //   `Found ${schedules.length} schedules in refresh attempt ${
+        //     retries + 1
+        //   }`
+        // );
 
         setCampaign(response.data);
         setSchedules(schedules);
@@ -324,7 +324,7 @@ const VaccinationProgramDetails: React.FC<VaccinationProgramDetailsProps> = ({
 
       retries++;
       if (retries < maxRetries) {
-        console.log(`Waiting ${delay}ms before retry ${retries + 1}...`);
+
         await new Promise((resolve) => setTimeout(resolve, delay));
         delay *= 1.5; // Increase delay for each retry
       }

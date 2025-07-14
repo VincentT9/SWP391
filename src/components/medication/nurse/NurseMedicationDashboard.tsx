@@ -89,12 +89,12 @@ const NurseMedicationDashboard: React.FC<NurseMedicationDashboardProps> = ({
       const response = await instance.get(
         `${API_BASE_URL}/api/MedicationRequest/get-all-medication-requests`
       );
-      console.log("Medication requests response:", response.data);
+
       setApiMedicationRequests(response.data);
       
       // Convert API format to local format for compatibility with existing components
       const convertedRequests = response.data.map((req: ApiMedicationRequest) => {
-        console.log("dssadas ",req );
+
         // Calculate end date by adding numberOfDayToTake to startDate
         const startDate = parseISO(req.startDate);
         const calculatedEndDate = addDays(startDate, req.numberOfDayToTake - 1); // subtract 1 because first day counts
@@ -119,7 +119,7 @@ const NurseMedicationDashboard: React.FC<NurseMedicationDashboardProps> = ({
     } catch (error) {
     
       console.error("Error fetching medication requests:", error);
-      toast.error("Không thể tải danh sách yêu cầu thuốc. Vui lòng thử lại sau.");
+      // toast.error("Không thể tải danh sách yêu cầu thuốc. Vui lòng thử lại sau.");
     } finally {
       setIsLoading(false);
     }
@@ -133,7 +133,7 @@ const NurseMedicationDashboard: React.FC<NurseMedicationDashboardProps> = ({
         `${API_BASE_URL}/api/MedicationRequest/get-medication-requests-by-status/1`
       );
       
-      console.log("All accepted medication requests:", response.data.length);
+
       
       // Get today's date without time component for accurate comparison
       const today = new Date();
@@ -156,16 +156,16 @@ const NurseMedicationDashboard: React.FC<NurseMedicationDashboardProps> = ({
         const isInDateRange = todayDateOnly >= startDateOnly && todayDateOnly <= calculatedEndDate;
         
         // Debugging logs
-        console.log(`Medication: ${req.medicationName}, Start: ${format(startDateOnly, 'yyyy-MM-dd')}, End: ${format(calculatedEndDate, 'yyyy-MM-dd')}, InRange: ${isInDateRange}`);
+
         
         return isInDateRange;
       });
       
-      console.log(`Found ${medicationsForToday.length} medications for today`);
+
       setTodayMedications(medicationsForToday);
     } catch (error) {
       console.error("Error fetching today's medications:", error);
-      toast.error("Không thể tải danh sách thuốc cần cho uống hôm nay.");
+      // toast.error("Không thể tải danh sách thuốc cần cho uống hôm nay.");
     } finally {
       setIsLoading(false);
     }
@@ -210,7 +210,7 @@ const NurseMedicationDashboard: React.FC<NurseMedicationDashboardProps> = ({
     try {
       // Don't create diary entry here since MedicationAdministrationForm already creates it
       // Just show success message and refresh the list
-      console.log('Medication administered callback called for request:', requestId);
+
       
       if (wasAdministered) {
         toast.success("Đã ghi nhận thông tin dùng thuốc của học sinh");

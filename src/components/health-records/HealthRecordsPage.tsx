@@ -150,7 +150,7 @@ const HealthRecordsPage = () => {
       try {
         const authUser = JSON.parse(authUserJson);
         const userId = authUser.id;
-        console.log("Current User ID:", userId);
+
 
         if (!userId) {
           setError(
@@ -169,7 +169,7 @@ const HealthRecordsPage = () => {
             },
           }
         );
-        console.log("API Response:", response.data);
+
 
         // Không cần tìm user nữa vì API đã trả về đúng user cần
         const parentUser = response.data;
@@ -192,14 +192,9 @@ const HealthRecordsPage = () => {
         setCurrentUser(parentUser);
 
         if (parentUser.students && parentUser.students.length > 0) {
-          console.log("Students from API:", parentUser.students);
+
           // Fix forEach parameters
           parentUser.students.forEach((student: ApiStudent, index: number) => {
-            console.log(`Student ${index}:`, student);
-            console.log(
-              `HealthRecord for student ${index}:`,
-              student.healthRecord
-            );
           });
 
           // Đảm bảo healthRecord có đủ trường
@@ -236,13 +231,13 @@ const HealthRecordsPage = () => {
         }
       } catch (error) {
         console.error("Error processing user data:", error);
-        setError("Lỗi xử lý thông tin người dùng. Vui lòng đăng nhập lại.");
+        // setError("Lỗi xử lý thông tin người dùng. Vui lòng đăng nhập lại.");
         setLoading(false);
         return;
       }
     } catch (err) {
       console.error("Error fetching data:", err);
-      setError("Đã xảy ra lỗi khi tải dữ liệu. Vui lòng thử lại sau.");
+      // setError("Đã xảy ra lỗi khi tải dữ liệu. Vui lòng thử lại sau.");
     } finally {
       setLoading(false);
     }
@@ -365,7 +360,7 @@ const HealthRecordsPage = () => {
         otherNotes: updatedRecord.otherNotes || "",
       };
 
-      console.log("Sending health record data:", healthRecordData);
+
 
       let response;
       if (healthRecord && healthRecord.id) {
@@ -374,21 +369,17 @@ const HealthRecordsPage = () => {
           `/api/HealthRecord/update-health-record/${healthRecord.id}`,
           healthRecordData
         );
-        console.log("Update response:", response.data);
+
       } else {
         // Tạo mới hồ sơ
         response = await instance.post(
           `/api/HealthRecord/create-health-record`,
           healthRecordData
         );
-        console.log("Create response:", response.data);
+
 
         // Nếu đang tạo hồ sơ mới và có parentId, cập nhật parentId cho student đã có sẵn
         if (parentId && selectedStudent) {
-          console.log(
-            `Cập nhật liên kết học sinh có ID: ${selectedStudent.id} với phụ huynh ID: ${parentId}`
-          );
-
           try {
             // Giữ nguyên thông tin học sinh, chỉ cập nhật parentId
             const studentUpdateData = {
@@ -402,18 +393,13 @@ const HealthRecordsPage = () => {
               image: selectedStudent.image || "",
             };
 
-            console.log(
-              "Cập nhật thông tin học sinh với parentId:",
-              studentUpdateData
-            );
-
             // Sử dụng API update-student để cập nhật liên kết, không tạo mới học sinh
             const studentResponse = await instance.put(
               `/api/Student/update-student/${selectedStudent.id}`,
               studentUpdateData
             );
 
-            console.log("Kết quả cập nhật liên kết:", studentResponse.data);
+
             toast.success("Đã liên kết học sinh với tài khoản của bạn");
           } catch (updateError) {
             console.error("Lỗi khi cập nhật liên kết học sinh:", updateError);
@@ -681,8 +667,8 @@ const HealthRecordsPage = () => {
         </Box>
 
         {/* ===== HIỂN THỊ HỒ SƠ SỨC KHỎE ===== */}
-        {console.log("Selected student:", selectedStudent)}
-        {console.log("Health record:", healthRecord)}
+
+
 
         {healthRecord && Object.keys(healthRecord).length > 0 ? (
           // Card chứa thông tin sức khỏe
@@ -717,11 +703,11 @@ const HealthRecordsPage = () => {
                   >
                     <Avatar
                       sx={{
-                        bgcolor: "#1976d2",
+                        bgcolor: "#2980b9",
                         width: 64,
                         height: 64,
                         mr: 2.5,
-                        boxShadow: "0 3px 10px rgba(25,118,210,0.2)",
+                        boxShadow: "0 3px 10px rgba(41,128,185,0.2)",
                       }}
                     >
                       <PersonIcon fontSize="large" />
@@ -813,9 +799,9 @@ const HealthRecordsPage = () => {
                       display: "flex",
                       alignItems: "center",
                       p: 2.5,
-                      bgcolor: "#f5f9ff",
+                      bgcolor: "rgba(41, 128, 185, 0.08)",
                       borderRadius: 2,
-                      border: "1px solid #e3f2fd",
+                      border: "1px solid rgba(41, 128, 185, 0.2)",
                       transition: "transform 0.2s",
                       "&:hover": {
                         transform: "translateY(-3px)",
@@ -823,7 +809,7 @@ const HealthRecordsPage = () => {
                       },
                     }}
                   >
-                    <Avatar sx={{ bgcolor: "#1976d2", mr: 2 }}>
+                    <Avatar sx={{ bgcolor: "#2980b9", mr: 2 }}>
                       <HeightIcon />
                     </Avatar>
                     <Box>
@@ -850,9 +836,9 @@ const HealthRecordsPage = () => {
                       display: "flex",
                       alignItems: "center",
                       p: 2.5,
-                      bgcolor: "#f9f9ff",
+                      bgcolor: "rgba(41, 128, 185, 0.08)",
                       borderRadius: 2,
-                      border: "1px solid #e8eaf6",
+                      border: "1px solid rgba(41, 128, 185, 0.2)",
                       transition: "transform 0.2s",
                       "&:hover": {
                         transform: "translateY(-3px)",
@@ -860,7 +846,7 @@ const HealthRecordsPage = () => {
                       },
                     }}
                   >
-                    <Avatar sx={{ bgcolor: "#3f51b5", mr: 2 }}>
+                    <Avatar sx={{ bgcolor: "#2980b9", mr: 2 }}>
                       <WeightIcon />
                     </Avatar>
                     <Box>
@@ -887,9 +873,9 @@ const HealthRecordsPage = () => {
                       display: "flex",
                       alignItems: "center",
                       p: 2.5,
-                      bgcolor: "#fff5f5",
+                      bgcolor: "rgba(41, 128, 185, 0.08)",
                       borderRadius: 2,
-                      border: "1px solid #ffebee",
+                      border: "1px solid rgba(41, 128, 185, 0.2)",
                       transition: "transform 0.2s",
                       "&:hover": {
                         transform: "translateY(-3px)",
@@ -897,7 +883,7 @@ const HealthRecordsPage = () => {
                       },
                     }}
                   >
-                    <Avatar sx={{ bgcolor: "#d32f2f", mr: 2 }}>
+                    <Avatar sx={{ bgcolor: "#2980b9", mr: 2 }}>
                       <BloodtypeIcon />
                     </Avatar>
                     <Box>
@@ -924,9 +910,9 @@ const HealthRecordsPage = () => {
                       display: "flex",
                       alignItems: "center",
                       p: 2.5,
-                      bgcolor: "#f4fcf7",
+                      bgcolor: "rgba(41, 128, 185, 0.08)",
                       borderRadius: 2,
-                      border: "1px solid #e8f5e9",
+                      border: "1px solid rgba(41, 128, 185, 0.2)",
                       transition: "transform 0.2s",
                       "&:hover": {
                         transform: "translateY(-3px)",
@@ -934,7 +920,7 @@ const HealthRecordsPage = () => {
                       },
                     }}
                   >
-                    <Avatar sx={{ bgcolor: "#4caf50", mr: 2 }}>
+                    <Avatar sx={{ bgcolor: "#2980b9", mr: 2 }}>
                       <HospitalIcon />
                     </Avatar>
                     <Box>
@@ -988,9 +974,9 @@ const HealthRecordsPage = () => {
                     elevation={0}
                     sx={{
                       p: 3,
-                      bgcolor: "#fff8e1",
+                      bgcolor: "rgba(41, 128, 185, 0.08)",
                       borderRadius: 2,
-                      border: "1px solid #ffecb3",
+                      border: "1px solid rgba(41, 128, 185, 0.2)",
                     }}
                   >
                     <Typography variant="body1" sx={{ lineHeight: 1.7 }}>
@@ -1002,9 +988,9 @@ const HealthRecordsPage = () => {
                     elevation={0}
                     sx={{
                       p: 3,
-                      bgcolor: "#fafafa",
+                      bgcolor: "rgba(41, 128, 185, 0.08)",
                       borderRadius: 2,
-                      border: "1px solid #f0f0f0",
+                      border: "1px solid rgba(41, 128, 185, 0.2)",
                     }}
                   >
                     <Typography
@@ -1032,13 +1018,13 @@ const HealthRecordsPage = () => {
 
                 {/* Hiển thị thông tin bệnh mãn tính hoặc thông báo không có */}
                 {healthRecord.chronicDiseases ? (
-                  <Box sx={{ p: 2, bgcolor: "#ffebee", borderRadius: 1 }}>
+                  <Box sx={{ p: 2, bgcolor: "rgba(41, 128, 185, 0.08)", borderRadius: 1 }}>
                     <Typography variant="body1">
                       {healthRecord.chronicDiseases}
                     </Typography>
                   </Box>
                 ) : (
-                  <Box sx={{ p: 2, bgcolor: "#f5f5f5", borderRadius: 1 }}>
+                  <Box sx={{ p: 2, bgcolor: "rgba(41, 128, 185, 0.08)", borderRadius: 1 }}>
                     <Typography
                       variant="body2"
                       color="text.secondary"
@@ -1076,9 +1062,9 @@ const HealthRecordsPage = () => {
                   }}
                 >
                   {/* Thị lực */}
-                  <Box sx={{ bgcolor: "#e3f2fd", p: 2, borderRadius: 1 }}>
+                  <Box sx={{ bgcolor: "rgba(41, 128, 185, 0.08)", p: 2, borderRadius: 1 }}>
                     <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                      <VisionIcon sx={{ color: "#1976d2", mr: 1 }} />
+                      <VisionIcon sx={{ color: "#2980b9", mr: 1 }} />
                       <Typography variant="subtitle2">Thị lực</Typography>
                     </Box>
                     <Box sx={{ ml: 4 }}>
@@ -1094,9 +1080,9 @@ const HealthRecordsPage = () => {
                   </Box>
 
                   {/* Thính lực */}
-                  <Box sx={{ bgcolor: "#e8f5e9", p: 2, borderRadius: 1 }}>
+                  <Box sx={{ bgcolor: "rgba(41, 128, 185, 0.08)", p: 2, borderRadius: 1 }}>
                     <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                      <HearingIcon sx={{ color: "#4caf50", mr: 1 }} />
+                      <HearingIcon sx={{ color: "#2980b9", mr: 1 }} />
                       <Typography variant="subtitle2">Thính lực</Typography>
                     </Box>
                     <Box sx={{ ml: 4 }}>
@@ -1128,7 +1114,7 @@ const HealthRecordsPage = () => {
                   <Typography variant="subtitle2" gutterBottom>
                     Tiền sử bệnh
                   </Typography>
-                  <Box sx={{ p: 2, bgcolor: "#f3e5f5", borderRadius: 1 }}>
+                  <Box sx={{ p: 2, bgcolor: "rgba(41, 128, 185, 0.08)", borderRadius: 1 }}>
                     <Typography variant="body2">
                       {healthRecord.pastMedicalHistory || "Không có thông tin"}
                     </Typography>
@@ -1139,7 +1125,7 @@ const HealthRecordsPage = () => {
                   <Typography variant="subtitle2" gutterBottom>
                     Lịch sử tiêm chủng
                   </Typography>
-                  <Box sx={{ p: 2, bgcolor: "#f3e5f5", borderRadius: 1 }}>
+                  <Box sx={{ p: 2, bgcolor: "rgba(41, 128, 185, 0.08)", borderRadius: 1 }}>
                     <Typography variant="body2">
                       {healthRecord.vaccinationHistory || "Không có thông tin"}
                     </Typography>
@@ -1152,13 +1138,13 @@ const HealthRecordsPage = () => {
 
               <Box>
                 <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                  <NotesIcon sx={{ color: "#4caf50", mr: 1 }} />
+                  <NotesIcon sx={{ color: "#2980b9", mr: 1 }} />
                   <Typography variant="subtitle1" fontWeight="bold">
                     Ghi chú bổ sung
                   </Typography>
                 </Box>
 
-                <Box sx={{ p: 2, bgcolor: "#f1f8e9", borderRadius: 1 }}>
+                <Box sx={{ p: 2, bgcolor: "rgba(41, 128, 185, 0.08)", borderRadius: 1 }}>
                   <Typography variant="body2">
                     {healthRecord.otherNotes || "Không có ghi chú bổ sung"}
                   </Typography>

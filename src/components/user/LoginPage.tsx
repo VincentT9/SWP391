@@ -118,7 +118,7 @@ const LoginPage = () => {
     setValue("username", "");
     setValue("password", "");
     setValue("remember", false);
-    console.log("Credentials cleared");
+
   };
 
   return (
@@ -143,7 +143,7 @@ const LoginPage = () => {
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          backgroundColor: "#0066b3",
+          backgroundColor: "#2980b9",
           color: "white",
         }}
       >
@@ -299,12 +299,12 @@ const LoginPage = () => {
               mt: 1,
               mb: 2,
               py: 1.5,
-              backgroundColor: "#75c043",
+              backgroundColor: "#2ecc71",
               "&:hover": {
-                backgroundColor: "#65b033",
+                backgroundColor: "#27ae60",
               },
               "&:disabled": {
-                backgroundColor: "#cccccc",
+                backgroundColor: "#bdc3c7",
               },
             }}
           >

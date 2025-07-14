@@ -88,10 +88,6 @@ const MedicationAdministrationForm: React.FC<MedicationAdministrationFormProps> 
 
   // Function to check diary entries from medication request data (if available) or fetch from API
   const checkAndUpdateMedicationStatus = async (medicationRequestId: string) => {
-    console.log('=== checkAndUpdateMedicationStatus called ===');
-    console.log('Medication Request ID:', medicationRequestId);
-    console.log('Current medicationRequest.id:', medicationRequest.id);
-    
     try {
       setCheckingStatus(true);
       
@@ -100,17 +96,14 @@ const MedicationAdministrationForm: React.FC<MedicationAdministrationFormProps> 
       // First, check if diary entries are already available in the medicationRequest prop
       if (medicationRequest.medicalDiaries && Array.isArray(medicationRequest.medicalDiaries)) {
         diaryEntries = medicationRequest.medicalDiaries;
-        console.log('Using diary entries from props:', diaryEntries.length, 'entries');
       } else {
         // If not available in props, fetch from API
-        console.log('Fetching medication request details from API...');
         const medicationResponse = await instance.get(
           `${BASE_API}/api/MedicationRequest/get-medication-request-by-id/${medicationRequestId}`
         );
         
         const medicationData = medicationResponse.data;
         diaryEntries = medicationData.medicalDiaries || [];
-        console.log('Fetched diary entries from API:', diaryEntries.length, 'entries');
       }
       
       // Filter diary entries that were created today for this specific medication request
@@ -130,14 +123,10 @@ const MedicationAdministrationForm: React.FC<MedicationAdministrationFormProps> 
       setTodayDiaryCount(todayEntries.length);
       
       if (hasEntriesForToday) {
-        console.log(`Medication request ${medicationRequestId} already has ${todayEntries.length} diary entry(ies) for today`);
-        console.log('Today entries:', todayEntries);
-        
         // Log details about each entry
         todayEntries.forEach((entry, index) => {
           const statusText = entry.status === 1 ? 'đã cho uống' : 'đã hủy';
           const createTime = format(parseISO(entry.createAt), 'HH:mm:ss');
-          console.log(`Entry ${index + 1}: ${statusText} at ${createTime} - ${entry.description}`);
         });
       }
       
@@ -175,7 +164,6 @@ const MedicationAdministrationForm: React.FC<MedicationAdministrationFormProps> 
     // Debounce to prevent multiple calls
     const timeoutId = setTimeout(() => {
       if (medicationRequest.id) {
-        console.log('Checking medication status for ID:', medicationRequest.id);
         checkAndUpdateMedicationStatus(medicationRequest.id);
       }
     }, 100);
@@ -207,16 +195,12 @@ const MedicationAdministrationForm: React.FC<MedicationAdministrationFormProps> 
     try {
       setIsSubmitting(true);
       
-      console.log('Creating diary entry for medication request:', medicationRequest.id);
-      
       // Create medication diary entry for administered medication
       const createResponse = await instance.post(`${BASE_API}/api/MedicaDiary/create`, {
         medicationReqId: medicationRequest.id,
         status: 1, // 1 for administered
         description: description
       });
-
-      console.log('Diary entry created successfully:', createResponse.data);
 
       // Check status with current medication request ID (no additional API call needed here)
       await checkAndUpdateMedicationStatus(medicationRequest.id);
@@ -253,16 +237,12 @@ const MedicationAdministrationForm: React.FC<MedicationAdministrationFormProps> 
     try {
       setIsSubmitting(true);
       
-      console.log('Creating diary entry (not given) for medication request:', medicationRequest.id);
-      
       // Create medication diary entry for not administered medication
       const createResponse = await instance.post(`${BASE_API}/api/MedicaDiary/create`, {
         medicationReqId: medicationRequest.id,
         status: 0, // 0 for not administered
         description: description
       });
-
-      console.log('Diary entry (not given) created successfully:', createResponse.data);
 
       // Check status with current medication request ID
       await checkAndUpdateMedicationStatus(medicationRequest.id);
@@ -305,7 +285,7 @@ const MedicationAdministrationForm: React.FC<MedicationAdministrationFormProps> 
   const daysRemaining = Math.ceil((endDate.getTime() - todayDateOnly.getTime()) / (1000 * 60 * 60 * 24)) + 1;
 
   return (
-    <Card elevation={2} sx={{ mb: 3, border: isToday ? '1px solid #4caf50' : 'none' }}>
+    <Card elevation={2} sx={{ mb: 3, border: isToday ? '1px solid #2ecc71' : 'none' }}>
       <CardContent>
         <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2 }}>
           {/* Student Information */}
@@ -380,7 +360,7 @@ const MedicationAdministrationForm: React.FC<MedicationAdministrationFormProps> 
               <Typography variant="body1">
                 <strong>Số ngày uống:</strong> {medicationRequest.numberOfDayToTake} 
                 {isToday && daysRemaining > 0 && (
-                  <span style={{ color: '#4caf50', marginLeft: '8px' }}>
+                  <span style={{ color: '#2ecc71', marginLeft: '8px' }}>
                     (Còn {daysRemaining} ngày)
                   </span>
                 )}

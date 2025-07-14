@@ -68,8 +68,8 @@ const UserProfilePage = () => {
       setFormData(response.data);
     } catch (err) {
       console.error('Error fetching user profile:', err);
-      setError('Không thể tải thông tin người dùng');
-      toast.error('Không thể tải thông tin người dùng');
+      // setError('Không thể tải thông tin người dùng');
+      // toast.error('Không thể tải thông tin người dùng');
     } finally {
       setIsLoading(false);
     }
@@ -85,7 +85,7 @@ const UserProfilePage = () => {
       
       // Fetch lại dữ liệu mới nhất từ server
       await fetchUserProfile();
-      console.log('Cập nhật thành công:', formData);
+
       setIsEditing(false);
       toast.success('Cập nhật thông tin thành công!');
     } catch (err) {
@@ -206,7 +206,7 @@ const UserProfilePage = () => {
   return (
     <Container maxWidth="lg">
       <Box sx={{ my: 4 }}>
-        <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', color: '#1976d2' }}>
+        <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', color: '#2980b9' }}>
           Trang cá nhân
         </Typography>
 
@@ -228,9 +228,9 @@ const UserProfilePage = () => {
                       position: 'absolute',
                       bottom: 0,
                       right: 0,
-                      bgcolor: '#1976d2',
+                      bgcolor: '#2980b9',
                       color: 'white',
-                      '&:hover': { bgcolor: '#1565c0' }
+                      '&:hover': { bgcolor: '#1b4f72' }
                     }}
                   >
                     <PhotoCameraIcon fontSize="small" />

@@ -23,6 +23,7 @@ export type Student = {
   id: string;
   firstName: string;
   lastName: string;
+  fullName?: string; // Thêm field này để tương thích với API
   dateOfBirth: Date;
   gender?: string;
   grade?: string;

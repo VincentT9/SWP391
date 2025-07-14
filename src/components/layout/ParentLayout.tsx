@@ -20,23 +20,23 @@ import {
 import { useAuth } from "../auth/AuthContext";
 import { motion } from "framer-motion";
 
-// Colors matching HomePage
+// FPT Healthcare colors matching theme
 const colors = {
-  primary: "#1e88e5", // Vibrant blue
-  primaryLight: "#6ab7ff",
-  primaryDark: "#005cb2",
-  secondary: "#00b0ff", // Light blue accent
-  secondaryLight: "#69e2ff",
-  secondaryDark: "#0081cb",
-  success: "#4caf50", // Green for success states
-  warning: "#ff9800", // Orange for warnings
-  error: "#f44336", // Red for errors
-  text: "#263238", // Dark text for readability
-  textSecondary: "#546e7a", // Secondary text
-  background: "#f8fafd", // Light background with a slight blue tint
+  primary: "#2980b9", // FPT Blue
+  primaryLight: "#5dade2",
+  primaryDark: "#1b4f72",
+  secondary: "#f19936", // FPT Orange
+  secondaryLight: "#f4b350",
+  secondaryDark: "#d68910",
+  success: "#2ecc71", // FPT Green
+  warning: "#f39c12", // FPT Orange variant
+  error: "#e74c3c", // FPT Red
+  text: "#2c3e50", // Dark text for readability
+  textSecondary: "#7f8c8d", // Secondary text
+  background: "#f8f9fa", // Clean light background
   backgroundDark: "#ffffff", // Card backgrounds
-  divider: "#e0e0e0", // Divider color
-  badge: "#ff1744", // Bright red for notification badges
+  divider: "#ecf0f1", // Divider color
+  badge: "#e74c3c", // FPT Red for notification badges
 };
 
 const menuItems = [

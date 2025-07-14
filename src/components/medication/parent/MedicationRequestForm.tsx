@@ -72,7 +72,7 @@ const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
         });
 
         // Lưu URL ảnh từ response
-        console.log("Image uploaded successfully:", response.data);
+
         setReceiptImageUrl(response.data);
         setError(null);
       } catch (error) {

@@ -27,22 +27,22 @@ import {
 import { useAuth } from "../auth/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 
-// Admin-focused color palette - professional and modern
+// Admin-focused color palette - FPT Theme
 const adminColors = {
-  primary: "#1565c0", // Deep blue
-  primaryLight: "#42a5f5",
-  secondary: "#424242", // Dark gray
-  accent: "#ff6f00", // Orange accent
-  background: "#f4f6f8",
+  primary: "#2980b9", // FPT Blue
+  primaryLight: "#5dade2",
+  secondary: "#f19936", // FPT Orange
+  accent: "#2ecc71", // FPT Green accent
+  background: "#f8f9fa",
   surface: "#ffffff",
-  sidebar: "#263238", // Dark sidebar
+  sidebar: "#1b4f72", // Darker FPT Blue for sidebar
   sidebarText: "#ffffff",
-  text: "#212121",
-  textSecondary: "#757575",
-  success: "#388e3c",
-  warning: "#f57c00",
-  error: "#d32f2f",
-  border: "#e0e0e0",
+  text: "#2c3e50",
+  textSecondary: "#7f8c8d",
+  success: "#2ecc71", // FPT Green
+  warning: "#f39c12", // FPT Orange variant
+  error: "#e74c3c",
+  border: "#ecf0f1",
 };
 
 // Admin sidebar width
@@ -250,44 +250,7 @@ const AdminLayout = () => {
             </Typography>
           </Box>
         </Box>
-        
-        {/* User info in sidebar */}
-        <Card sx={{ backgroundColor: 'rgba(255,255,255,0.1)', border: 'none' }}>
-          <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <Avatar sx={{ 
-                width: 32, 
-                height: 32, 
-                backgroundColor: adminColors.primary,
-                mr: 1.5,
-                fontSize: '0.8rem'
-              }}>
-                {user?.name?.charAt(0)?.toUpperCase() || 'A'}
-              </Avatar>
-              <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-                <Typography variant="subtitle2" sx={{ 
-                  color: adminColors.sidebarText,
-                  fontWeight: 500,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap'
-                }}>
-                  {user?.name || 'Admin'}
-                </Typography>
-                <Chip 
-                  label={user?.role === 'Admin' ? 'Quản trị viên' : 'Nhân viên y tế'} 
-                  size="small"
-                  sx={{ 
-                    height: 20,
-                    fontSize: '0.7rem',
-                    backgroundColor: adminColors.primary,
-                    color: 'white'
-                  }}
-                />
-              </Box>
-            </Box>
-          </CardContent>
-        </Card>
+      
       </Box>
 
       {/* Navigation menu */}
@@ -400,13 +363,6 @@ const AdminLayout = () => {
               (user?.role === 'Admin' ? 'Quản trị hệ thống' : 'Y tế học đường')}
           </Typography>
 
-          {/* Notifications */}
-          <IconButton sx={{ mr: 1 }}>
-            <Badge badgeContent={3} color="error">
-              <Box component="span" sx={{ fontSize: '1.2rem' }}>🔔</Box>
-            </Badge>
-          </IconButton>
-
           {/* User menu */}
           <Box
             component={motion.div}
@@ -491,12 +447,10 @@ const AdminLayout = () => {
         transformOrigin={{ horizontal: 'right', vertical: 'top' }}
         anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
       >
-        <MenuItem onClick={() => navigate('/admin/profile')}>
+        <MenuItem onClick={() => navigate('/profile')}>
           <ListItemText primary="Thông tin cá nhân" />
         </MenuItem>
-        <MenuItem onClick={() => navigate('/admin/settings')}>
-          <ListItemText primary="Cài đặt" />
-        </MenuItem>
+
         <Divider />
         <MenuItem onClick={handleLogout}>
           <ListItemText 

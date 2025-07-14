@@ -135,14 +135,14 @@ const StudentManagementPage: React.FC = () => {
       }
 
       const data = await response.json();
-      console.log("API Response:", data);
+
 
       // Xử lý data - có thể là array hoặc single object
       const studentsData = Array.isArray(data) ? data : [data];
       setStudents(studentsData);
     } catch (error) {
       console.error("Error fetching students:", error);
-      setError("Chưa có dữ liệu học sinh hoặc có lỗi xảy ra khi tải dữ liệu.");
+      // setError("Chưa có dữ liệu học sinh hoặc có lỗi xảy ra khi tải dữ liệu.");
     } finally {
       setLoading(false);
     }

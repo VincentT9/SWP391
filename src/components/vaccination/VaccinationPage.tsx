@@ -73,9 +73,9 @@ const VaccinationPage = () => {
         setError(null);
       } catch (err) {
         console.error("Error fetching vaccination campaigns:", err);
-        setError(
-          "Không thể tải danh sách chương trình tiêm chủng. Vui lòng thử lại sau."
-        );
+        // setError(
+        //   "Không thể tải danh sách chương trình tiêm chủng. Vui lòng thử lại sau."
+        // );
         setCampaigns([]);
       } finally {
         setLoading(false);

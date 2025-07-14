@@ -126,7 +126,7 @@ const DailyMedicationManager: React.FC<DailyMedicationManagerProps> = ({
       setDailyDosages(dailyEntries);
     } catch (error) {
       console.error("Error calculating daily dosages:", error);
-      toast.error("Không thể tải thông tin liều lượng hàng ngày.");
+      // toast.error("Không thể tải thông tin liều lượng hàng ngày.");
     } finally {
       setIsLoading(false);
     }

@@ -3,31 +3,31 @@ import { createTheme } from '@mui/material/styles';
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#1976d2',  // A blue color suitable for healthcare
-      light: '#63a4ff',
-      dark: '#004ba0',
+      main: '#2980b9',  // FPT Blue - Main brand color
+      light: '#5dade2',
+      dark: '#1b4f72',
       contrastText: '#ffffff',
     },
     secondary: {
-      main: '#4caf50',  // Green for success and health
-      light: '#80e27e',
-      dark: '#087f23',
+      main: '#f19936',  // FPT Orange - Secondary brand color
+      light: '#f4b350',
+      dark: '#d68910',
       contrastText: '#ffffff',
     },
     error: {
-      main: '#f44336',
+      main: '#e74c3c',  // Slightly adjusted red to fit FPT theme
     },
     warning: {
-      main: '#ff9800',
+      main: '#f39c12',  // FPT Orange variant for warnings
     },
     info: {
-      main: '#2196f3',
+      main: '#2980b9',  // Use FPT Blue for info
     },
     success: {
-      main: '#4caf50',
+      main: '#2ecc71',  // FPT Green for success
     },
     background: {
-      default: '#f5f5f5',  // Light gray background
+      default: '#f8f9fa',  // Clean light background
       paper: '#ffffff',    // White for cards and containers
     },
   },
@@ -67,7 +67,7 @@ const theme = createTheme({
     MuiCssBaseline: {
       styleOverrides: {
         body: {
-          backgroundColor: '#f5f5f5',
+          backgroundColor: '#f8f9fa',
           backgroundImage: 'none',
         },
       },
@@ -77,16 +77,38 @@ const theme = createTheme({
         root: {
           borderRadius: 8,
           textTransform: 'none',
-          fontWeight: 500,
+          fontWeight: 600,
+          padding: '8px 16px',
+        },
+        containedPrimary: {
+          backgroundColor: '#2980b9',
+          '&:hover': {
+            backgroundColor: '#1b4f72',
+          },
+        },
+        containedSecondary: {
+          backgroundColor: '#f19936',
+          '&:hover': {
+            backgroundColor: '#d68910',
+          },
         },
       },
     },
     MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: 8,
-          boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
+          borderRadius: 12,
+          boxShadow: '0 4px 20px rgba(41, 128, 185, 0.1)',
           backgroundColor: '#ffffff',
+          border: '1px solid rgba(41, 128, 185, 0.08)',
+        },
+      },
+    },
+    MuiAppBar: {
+      styleOverrides: {
+        root: {
+          backgroundColor: '#2980b9',
+          boxShadow: '0 2px 10px rgba(41, 128, 185, 0.2)',
         },
       },
     },

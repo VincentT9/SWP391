@@ -33,7 +33,7 @@ type FormData = {
 // API Configuration from .env
 const API_REGISTER_URL = process.env.REACT_APP_REGISTER_API;
 
-console.log("API URL:", process.env.REACT_APP_REGISTER_API);
+
 
 const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -108,7 +108,7 @@ const RegisterPage = () => {
       }
 
       // Xử lý thành công
-      console.log("Registration successful:", responseData);
+
       toast.success("Đăng ký thành công! Vui lòng đăng nhập.");
       navigate("/login");
     } catch (error) {
@@ -141,11 +141,11 @@ const RegisterPage = () => {
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          backgroundColor: "#0066b3",
+          backgroundColor: "#2980b9",
           color: "white",
         }}
       >
-        <Avatar sx={{ m: 1, bgcolor: "#75c043" }}>
+        <Avatar sx={{ m: 1, bgcolor: "#2ecc71" }}>
           <PersonAddIcon />
         </Avatar>
         <Typography component="h1" variant="h5" sx={{ color: "white", mb: 1 }}>
@@ -365,9 +365,9 @@ const RegisterPage = () => {
               mt: 1,
               mb: 2,
               py: 1.5,
-              backgroundColor: "#75c043",
-              "&:hover": { backgroundColor: "#65b033" },
-              "&:disabled": { backgroundColor: "#cccccc" },
+              backgroundColor: "#2ecc71",
+              "&:hover": { backgroundColor: "#27ae60" },
+              "&:disabled": { backgroundColor: "#bdc3c7" },
             }}
           >
             {loading ? "Đang đăng ký..." : "Đăng ký"}

@@ -301,7 +301,7 @@ const ScheduleStudentsPage: React.FC = () => {
       setStudents(formattedStudents);
     } catch (err) {
       console.error("Error fetching students:", err);
-      setError("Không thể tải danh sách học sinh. Vui lòng thử lại sau.");
+      // setError("Không thể tải danh sách học sinh. Vui lòng thử lại sau.");
       setStudents([]);
     } finally {
       setLoading(false);
@@ -389,11 +389,11 @@ const ScheduleStudentsPage: React.FC = () => {
 
       // Thử lại nếu còn lượt retry
       if (retries > 0) {
-        console.log(`Retrying... (${retries} attempts left)`);
+
         setTimeout(() => fetchStudentsWithRetry(retries - 1), 1000);
       } else {
         // Hiển thị lỗi nếu đã hết số lần thử lại
-        setError("Không thể tải danh sách học sinh. Vui lòng thử lại sau.");
+        // setError("Không thể tải danh sách học sinh. Vui lòng thử lại sau.");
         setStudents([]);
       }
     } finally {
@@ -479,10 +479,10 @@ const ScheduleStudentsPage: React.FC = () => {
     });
 
     setIsRecordResultDialogOpen(true);
-    console.log(
-      "Opening result dialog with campaign type:",
-      schedule?.campaignType
-    );
+    // console.log(
+    //   "Opening result dialog with campaign type:",
+    //   schedule?.campaignType
+    // );
   };
 
   const handleResultSuccess = () => {
@@ -683,7 +683,7 @@ const ScheduleStudentsPage: React.FC = () => {
         }}
       >
         <Box sx={{ flex: 1, minWidth: { xs: "100%", sm: "0" } }}>
-          <Card sx={{ bgcolor: "#f5f5f5", borderRadius: 2, height: "100%" }}>
+          <Card sx={{ bgcolor: "rgba(41, 128, 185, 0.08)", borderRadius: 2, height: "100%" }}>
             <CardContent>
               <Typography color="text.secondary" gutterBottom>
                 Tổng số học sinh
@@ -696,7 +696,7 @@ const ScheduleStudentsPage: React.FC = () => {
         </Box>
 
         <Box sx={{ flex: 1, minWidth: { xs: "100%", sm: "0" } }}>
-          <Card sx={{ bgcolor: "#e8f5e9", borderRadius: 2, height: "100%" }}>
+          <Card sx={{ bgcolor: "rgba(41, 128, 185, 0.08)", borderRadius: 2, height: "100%" }}>
             <CardContent>
               <Typography color="text.secondary" gutterBottom>
                 Đã hoàn thành
@@ -714,7 +714,7 @@ const ScheduleStudentsPage: React.FC = () => {
         </Box>
 
         <Box sx={{ flex: 1, minWidth: { xs: "100%", sm: "0" } }}>
-          <Card sx={{ bgcolor: "#fff8e1", borderRadius: 2, height: "100%" }}>
+          <Card sx={{ bgcolor: "rgba(41, 128, 185, 0.08)", borderRadius: 2, height: "100%" }}>
             <CardContent>
               <Typography color="text.secondary" gutterBottom>
                 Chưa thực hiện
@@ -851,7 +851,7 @@ const ScheduleStudentsPage: React.FC = () => {
         <Paper sx={{ borderRadius: 2, overflow: "hidden" }}>
           <TableContainer>
             <Table>
-              <TableHead sx={{ bgcolor: "#f5f5f5" }}>
+              <TableHead sx={{ bgcolor: "rgba(41, 128, 185, 0.08)" }}>
                 <TableRow>
                   <TableCell>Mã học sinh</TableCell>
                   <TableCell>Họ tên</TableCell>

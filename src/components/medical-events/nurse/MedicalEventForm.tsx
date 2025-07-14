@@ -122,7 +122,7 @@ const MedicalEventForm: React.FC<MedicalEventFormProps> = ({
         setStudents(response.data);
       } catch (error) {
         console.error('Error fetching students:', error);
-        toast.error('Không thể tải danh sách học sinh');
+        // toast.error('Không thể tải danh sách học sinh');
       } finally {
         setLoading(false);
       }
@@ -140,7 +140,7 @@ const MedicalEventForm: React.FC<MedicalEventFormProps> = ({
         setMedicalSuppliers(response.data);
       } catch (error) {
         console.error('Error fetching medical suppliers:', error);
-        toast.error('Không thể tải danh sách vật tư y tế');
+        // toast.error('Không thể tải danh sách vật tư y tế');
       } finally {
         setLoadingSupplies(false);
       }
@@ -172,7 +172,7 @@ const MedicalEventForm: React.FC<MedicalEventFormProps> = ({
       setStudents(filteredResults);
     } catch (error) {
       console.error("Error searching students:", error);
-      toast.error("Không thể tải danh sách học sinh");
+      // toast.error("Không thể tải danh sách học sinh");
     } finally {
       setLoading(false);
     }
@@ -271,7 +271,7 @@ const MedicalEventForm: React.FC<MedicalEventFormProps> = ({
       setErrors(otherErrors);
     } catch (error) {
       console.error('Error fetching medical supply details:', error);
-      toast.error('Không thể tải thông tin vật tư y tế');
+      // toast.error('Không thể tải thông tin vật tư y tế');
     }
   };
 
@@ -655,14 +655,14 @@ const MedicalEventForm: React.FC<MedicalEventFormProps> = ({
                     <Box key={index} sx={{ 
                       display: "flex", 
                       alignItems: "center", 
-                      bgcolor: isOriginalSupply ? '#e8f4fd' : '#f5f5f5',
+                      bgcolor: isOriginalSupply ? 'rgba(41, 128, 185, 0.1)' : '#f8f9fa',
                       p: 1, 
                       borderRadius: 1,
-                      border: isOriginalSupply ? '1px solid #bbdefb' : 'none'
+                      border: isOriginalSupply ? '1px solid rgba(41, 128, 185, 0.3)' : 'none'
                     }}>
                       <Typography sx={{ flex: 1 }}>
                         {supplierInfo ? supplierInfo.supplyName : supply.supplyId} - SL: {supply.quantity} {supplierInfo?.unit}
-                        {isOriginalSupply && <span style={{ color: '#0277bd', marginLeft: 8 }}>(Đã sử dụng trước đây)</span>}
+                        {isOriginalSupply && <span style={{ color: '#2980b9', marginLeft: 8 }}>(Đã sử dụng trước đây)</span>}
                       </Typography>
                       {!isOriginalSupply && (
                         <Button
