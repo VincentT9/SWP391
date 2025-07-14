@@ -25,18 +25,18 @@ const colors = {
   primary: "#2980b9", // FPT Blue
   primaryLight: "#5dade2",
   primaryDark: "#1b4f72",
-  secondary: "#f19936", // FPT Orange
+  secondary: "#2980b9", // FPT Orange
   secondaryLight: "#f4b350",
   secondaryDark: "#d68910",
   success: "#2ecc71", // FPT Green
-  warning: "#f39c12", // FPT Orange variant
-  error: "#e74c3c", // FPT Red
+  warning: "#2980b9", // FPT Orange variant
+  error: "#2980b9", // FPT Red
   text: "#2c3e50", // Dark text for readability
   textSecondary: "#7f8c8d", // Secondary text
   background: "#f8f9fa", // Clean light background
   backgroundDark: "#ffffff", // Card backgrounds
   divider: "#ecf0f1", // Divider color
-  badge: "#e74c3c", // FPT Red for notification badges
+  badge: "#2980b9", // FPT Red for notification badges
 };
 
 const menuItems = [

@@ -99,8 +99,7 @@ const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
       !studentId ||
       !startDate ||
       !daysRequired ||
-      !components ||
-      !dosesPerDay
+      !components
     ) {
       alert("Vui lòng điền đầy đủ các thông tin bắt buộc");
       return;
@@ -270,20 +269,7 @@ const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
                 />
               </Box>
 
-              {/* Số lần uống trong ngày - Giữ nguyên */}
-              <Box sx={{ mb: 2 }}>
-                <TextField
-                  required
-                  fullWidth
-                  id="doses-per-day"
-                  label="Số lần uống trong ngày"
-                  type="number"
-                  InputProps={{ inputProps: { min: 1, max: 10 } }}
-                  value={dosesPerDay}
-                  onChange={(e) => setDosesPerDay(parseInt(e.target.value))}
-                  helperText="Nhập số lần uống thuốc trong ngày (1-10 lần)"
-                />
-              </Box>
+
             </Box>
 
             {/* Phần chụp hóa đơn thuốc (Optional) */}

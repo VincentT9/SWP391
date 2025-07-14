@@ -180,13 +180,17 @@ const MedicalEventDetails: React.FC<MedicalEventDetailsProps> = ({
                   <TableRow>
                     <TableCell>ID</TableCell>
                     <TableCell>Số lượng</TableCell>
+                    <TableCell>Ngày sử dụng</TableCell>
+                    <TableCell>Ghi chú</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {event.medicalSupplyUsages.map((supply, index) => (
                     <TableRow key={index}>
-                      <TableCell>{supply.supplyId}</TableCell>
-                      <TableCell>{supply.quantity}</TableCell>
+                      <TableCell>{(supply as any).medicalSupplierId || (supply as any).supplyId}</TableCell>
+                      <TableCell>{(supply as any).quantityUsed || (supply as any).quantity}</TableCell>
+                      <TableCell>{(supply as any).usageDate ? new Date((supply as any).usageDate).toLocaleDateString() : 'N/A'}</TableCell>
+                      <TableCell>{(supply as any).notes || 'Không có'}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

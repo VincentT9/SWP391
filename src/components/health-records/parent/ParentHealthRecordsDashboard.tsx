@@ -14,6 +14,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import HealthRecordForm from "./HealthRecordForm";
 import { mockStudents, mockHealthRecords } from "../../../utils/mockData";
 import { HealthRecord, Student } from "../../../models/types";
+import PageHeader from "../../common/PageHeader";
 
 interface ParentHealthRecordsDashboardProps {
   parentId: string;
@@ -119,14 +120,10 @@ const ParentHealthRecordsDashboard: React.FC<
 
   return (
     <>
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" gutterBottom>
-          Hồ sơ sức khỏe học sinh
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Xem và cập nhật thông tin sức khỏe của con bạn
-        </Typography>
-      </Box>
+      <PageHeader 
+        title="Hồ sơ sức khỏe học sinh" 
+        subtitle="Xem và cập nhật thông tin sức khỏe của con bạn"
+      />
 
       <Paper sx={{ mb: 4 }}>
         <Tabs

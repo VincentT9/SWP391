@@ -3,6 +3,7 @@ import { Typography, Box, Tabs, Tab, Button, Paper, CircularProgress } from "@mu
 import AddIcon from "@mui/icons-material/Add";
 import { MedicalEventForm, MedicalEventsList, MedicalEventDetails } from ".";
 import { MedicalIncident } from "../../../models/types";
+import PageHeader from "../../common/PageHeader";
 import axios from "../../../utils/axiosConfig";
 import { toast } from "react-toastify";
 import instance from "../../../utils/axiosConfig";
@@ -109,26 +110,27 @@ const NurseMedicalEventsDashboard: React.FC<
       await instance.put(`/api/medical-incident/update/${selectedEvent.id}`, updateData);
       
       // If there are new medical supplies to add, process them
-      if (incidentData.medicalSupplyUsage && incidentData.medicalSupplyUsage.length > 0) {
+      if (incidentData.medicalSupplierUsage && incidentData.medicalSupplierUsage.length > 0) {
         // Get only the new supplies (those not in the original event)
         const originalSupplies = selectedEvent.medicalSupplyUsages || [];
-        const newSupplies = incidentData.medicalSupplyUsage.filter(
+        const newSupplies = incidentData.medicalSupplierUsage.filter(
           (newSupply: any) => !originalSupplies.some(
-            (origSupply: any) => origSupply.supplyId === newSupply.supplyId && origSupply.quantity === newSupply.quantity
+            (origSupply: any) => (origSupply.medicalSupplierId || origSupply.supplyId) === (newSupply.medicalSupplierId || newSupply.supplyId) && 
+            (origSupply.quantityUsed || origSupply.quantity) === (newSupply.quantityUsed || newSupply.quantity)
           )
         );
         
         // Update supplier quantities for any new supplies added
         for (const supply of newSupplies) {
           // Get current supplier details
-          const supplierResponse = await instance.get(`/api/MedicalSupplier/get-supplier-by-id/${supply.supplyId}`);
+          const supplierResponse = await instance.get(`/api/MedicalSupplier/get-supplier-by-id/${supply.medicalSupplierId || supply.supplyId}`);
           const supplierData = supplierResponse.data;
           
           // Calculate new quantity
-          const newQuantity = Math.max(0, supplierData.quantity - supply.quantity);
+          const newQuantity = Math.max(0, supplierData.quantity - (supply.quantityUsed || supply.quantity));
           
           // Update the supplier inventory
-          await instance.put(`/api/MedicalSupplier/update-supplier/${supply.supplyId}`, {
+          await instance.put(`/api/MedicalSupplier/update-supplier/${supply.medicalSupplierId || supply.supplyId}`, {
             ...supplierData,
             quantity: newQuantity
           });
@@ -167,18 +169,23 @@ const NurseMedicalEventsDashboard: React.FC<
 
   return (
     <Box>
-      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3 }}>
-        <Typography variant="h4">Quản lý sự kiện y tế</Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<AddIcon />}
-          onClick={handleCreateEvent}
-          disabled={loading}
-        >
-          Ghi nhận sự kiện mới
-        </Button>
-      </Box>
+      <PageHeader 
+        title="Quản lý sự kiện y tế"
+        subtitle="Ghi nhận và theo dõi các sự kiện y tế của học sinh tại trường"
+        showRefresh={true}
+        onRefresh={fetchIncidents}
+        actions={
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<AddIcon />}
+            onClick={handleCreateEvent}
+            disabled={loading}
+          >
+            Ghi nhận sự kiện mới
+          </Button>
+        }
+      />
 
       {error && (
         <Paper sx={{ p: 2, mb: 2, bgcolor: "rgba(231, 76, 60, 0.1)" }}>

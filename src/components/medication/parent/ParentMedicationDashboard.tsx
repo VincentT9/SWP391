@@ -10,10 +10,12 @@ import {
   Alert,
   Button, // Added Button import
 } from "@mui/material";
+import MedicationIcon from "@mui/icons-material/Medication";
 import MedicationRequestForm from "./MedicationRequestForm";
 import MedicationRequestList from "./MedicationRequestList";
 import MedicationLogView from "../MedicationLogView";
 import MedicationDiaryView from "../MedicationDiaryView"; // Import component mới
+import PageHeader from "../../common/PageHeader";
 import axios from "axios";
 import {
   MedicationRequest as MedicationRequestType,
@@ -332,9 +334,12 @@ const ParentMedicationDashboard: React.FC<ParentMedicationDashboardProps> = ({
   return (
     <Container maxWidth="lg">
       <Box sx={{ my: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          Quản lý thuốc
-        </Typography>
+        <PageHeader 
+          title="Quản lý thuốc"
+          subtitle="Theo dõi việc sử dụng thuốc và lịch uống thuốc của con em"
+          showRefresh={true}
+          onRefresh={() => window.location.reload()}
+        />
 
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>

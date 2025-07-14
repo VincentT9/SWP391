@@ -93,9 +93,7 @@ const LoginPage = () => {
         setLoginError(
           "Đăng nhập thất bại. Vui lòng kiểm tra tên đăng nhập và mật khẩu."
         );
-        toast.error(
-          "Đăng nhập thất bại. Vui lòng kiểm tra tên đăng nhập và mật khẩu."
-        );
+        
       }
     } catch (error) {
       console.error("Login error:", error);
@@ -270,25 +268,7 @@ const LoginPage = () => {
             </RouterLink>
           </Box>
 
-          {/* Clear credentials button - only show if credentials are saved */}
-          {rememberValue && (
-            <Box sx={{ textAlign: "center", mb: 2 }}>
-              <Button
-                variant="text"
-                size="small"
-                onClick={handleClearSavedCredentials}
-                sx={{
-                  color: "yellow",
-                  textTransform: "none",
-                  "&:hover": {
-                    backgroundColor: "rgba(255, 255, 255, 0.1)",
-                  },
-                }}
-              >
-                Xóa thông tin đã lưu
-              </Button>
-            </Box>
-          )}
+          
 
           <Button
             type="submit"

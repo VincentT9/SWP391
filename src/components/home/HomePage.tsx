@@ -66,8 +66,8 @@ const colors = {
   secondaryLight: "#69e2ff",
   secondaryDark: "#0081cb",
   success: "#4caf50", // Green for success states
-  warning: "#ff9800", // Orange for warnings
-  error: "#f44336", // Red for errors
+  warning: "#2980b9", // Orange for warnings
+  error: "#2980b9", // Red for errors
   text: "#263238", // Dark text for readability
   textSecondary: "#546e7a", // Secondary text
   background: "#f8fafd", // Light background with a slight blue tint

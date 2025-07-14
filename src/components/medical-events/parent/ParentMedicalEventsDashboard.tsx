@@ -17,7 +17,9 @@ import {
 import { format, parseISO } from "date-fns";
 import { MedicalIncident, Student } from "../../../models/types";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
 import MedicalEventDetails from "../nurse/MedicalEventDetails";
+import PageHeader from "../../common/PageHeader";
 import axios from "../../../utils/axiosConfig";
 
 interface ParentMedicalEventsDashboardProps {
@@ -134,17 +136,12 @@ const ParentMedicalEventsDashboard: React.FC<
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>
-        Sự kiện y tế của con em
-      </Typography>
-
-      {students.length > 0 && (
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Hiển thị sự kiện y tế của: {students.map(s => `${s.firstName} ${s.lastName}`).join(', ')}
-          <br />
-          Tổng số sự kiện: {events.length}
-        </Typography>
-      )}
+      <PageHeader 
+        title="Sự kiện y tế của con em"
+        subtitle="Theo dõi các sự kiện y tế và tình trạng sức khỏe của con em tại trường"
+        showRefresh={true}
+        onRefresh={() => window.location.reload()}
+      />
 
       {error && (
         <Alert severity="error" sx={{ mb: 2 }}>

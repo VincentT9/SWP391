@@ -10,6 +10,7 @@ import CompletedExpiredRequestsList from "./CompletedExpiredRequestsList";
 import axios from "axios";
 import { toast } from "react-toastify";
 import instance from "../../../utils/axiosConfig";
+import PageHeader from "../../common/PageHeader";
 // API base URL from environment variables
 const API_BASE_URL = process.env.REACT_APP_BASE_URL;
 
@@ -229,9 +230,12 @@ const NurseMedicationDashboard: React.FC<NurseMedicationDashboardProps> = ({
   return (
     <Container maxWidth="lg">
       <Box sx={{ my: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          Quản lý thuốc
-        </Typography>
+        <PageHeader 
+          title="Quản lý thuốc"
+          subtitle="Theo dõi và quản lý việc phát thuốc cho học sinh"
+          showRefresh={true}
+          onRefresh={() => window.location.reload()}
+        />
 
         <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 3 }}>
           <Tabs

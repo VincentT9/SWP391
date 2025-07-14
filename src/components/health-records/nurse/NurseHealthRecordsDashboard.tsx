@@ -11,6 +11,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import { mockStudents, mockHealthRecords } from "../../../utils/mockData";
 import { Student, HealthRecord } from "../../../models/types";
 import { HealthRecordsList, StudentHealthRecordView } from ".";
+import PageHeader from "../../common/PageHeader";
 
 interface NurseHealthRecordsDashboardProps {
   nurseId: string;
@@ -72,9 +73,7 @@ const NurseHealthRecordsDashboard: React.FC<
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>
-        Quản lý hồ sơ sức khỏe học sinh
-      </Typography>
+      <PageHeader title="Quản lý hồ sơ sức khỏe học sinh" />
 
       {selectedStudent ? (
         <StudentHealthRecordView

@@ -56,6 +56,7 @@ import {
 } from "@mui/icons-material";
 import { useAuth } from "../auth/AuthContext";
 import instance from "../../utils/axiosConfig";
+import PageHeader from "../common/PageHeader";
 
 // Updated interface to match API response
 interface Student {
@@ -334,13 +335,13 @@ const StudentRecordsPage: React.FC = () => {
   const getRecordTypeColor = (type: string) => {
     switch (type) {
       case "checkup":
-        return "#2196f3";
+        return "#2980b9";
       case "treatment":
-        return "#f44336";
+        return "#2980b9";
       case "vaccination":
         return "#4caf50";
       case "medication":
-        return "#ff9800";
+        return "#2980b9";
       default:
         return "#757575";
     }
@@ -409,27 +410,10 @@ const StudentRecordsPage: React.FC = () => {
       }}
     >
       <Box sx={{ my: 2 }}>
-        {/* Header with improved styling */}
-        <Box sx={{ mb: 5, pt: 1 }}>
-          <Typography
-            variant="h4"
-            sx={{
-              fontWeight: "600",
-              color: "#1565c0",
-              mb: 1.5,
-              fontSize: { xs: "1.8rem", md: "2.2rem" },
-            }}
-          >
-            Tìm kiếm hồ sơ học sinh
-          </Typography>
-          <Typography
-            variant="body1"
-            color="text.secondary"
-            sx={{ fontSize: "1rem", maxWidth: "600px" }}
-          >
-            Nhập mã số học sinh để tìm kiếm và xem hồ sơ sức khỏe
-          </Typography>
-        </Box>
+        <PageHeader 
+          title="Tìm kiếm hồ sơ học sinh"
+          subtitle="Tra cứu thông tin sức khỏe và hồ sơ y tế của học sinh"
+        />
 
         {/* Search Section with improved styling */}
         <Card
@@ -437,7 +421,7 @@ const StudentRecordsPage: React.FC = () => {
             mb: 4,
             borderRadius: 3,
             boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
-            border: "1px solid #e0e0e0",
+            border: "1px solid rgba(41, 128, 185, 0.2)",
           }}
         >
           <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
@@ -466,7 +450,7 @@ const StudentRecordsPage: React.FC = () => {
                   loading ? <CircularProgress size={20} /> : <SearchIcon />
                 }
                 sx={{
-                  bgcolor: "#0066b3",
+                  bgcolor: "#2980b9",
                   "&:hover": { bgcolor: "#004d85" },
                   minWidth: "120px",
                   height: "56px",
@@ -486,7 +470,7 @@ const StudentRecordsPage: React.FC = () => {
               mb: 4,
               borderRadius: 3,
               boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
-              border: "1px solid #e0e0e0",
+              border: "1px solid rgba(41, 128, 185, 0.2)",
               overflow: "hidden",
             }}
           >
@@ -504,7 +488,7 @@ const StudentRecordsPage: React.FC = () => {
                   variant="h6"
                   sx={{
                     fontWeight: "bold",
-                    color: "#0066b3",
+                    color: "#2980b9",
                     display: "flex",
                     alignItems: "center",
                   }}
@@ -519,8 +503,8 @@ const StudentRecordsPage: React.FC = () => {
                   onClick={handleOpenEditDialog}
                   startIcon={<EditIcon />}
                   sx={{
-                    bgcolor: "#ff9800",
-                    "&:hover": { bgcolor: "#f57c00" },
+                    bgcolor: "#2980b9",
+                    "&:hover": { bgcolor: "#4caf50" },
                     borderRadius: 2,
                     boxShadow: "0 2px 8px rgba(255,152,0,0.3)",
                   }}
@@ -550,7 +534,7 @@ const StudentRecordsPage: React.FC = () => {
                       height: 100,
                       mx: "auto",
                       mb: 2,
-                      bgcolor: "#0066b3",
+                      bgcolor: "#2980b9",
                       boxShadow: "0 3px 10px rgba(25,118,210,0.2)",
                     }}
                     src={selectedStudent.image}
@@ -586,8 +570,8 @@ const StudentRecordsPage: React.FC = () => {
                           elevation={0}
                           sx={{
                             p: 2,
-                            bgcolor: "#f5f9ff",
-                            border: "1px solid #e3f2fd",
+                            bgcolor: "rgba(41, 128, 185, 0.05)",
+                            border: "1px solid rgba(41, 128, 185, 0.2)",
                             borderRadius: 2,
                             height: "100%",
                           }}
@@ -615,8 +599,8 @@ const StudentRecordsPage: React.FC = () => {
                           elevation={0}
                           sx={{
                             p: 2,
-                            bgcolor: "#f5f9ff",
-                            border: "1px solid #e3f2fd",
+                            bgcolor: "rgba(41, 128, 185, 0.05)",
+                            border: "1px solid rgba(41, 128, 185, 0.2)",
                             borderRadius: 2,
                             height: "100%",
                           }}
@@ -644,8 +628,8 @@ const StudentRecordsPage: React.FC = () => {
                           elevation={0}
                           sx={{
                             p: 2,
-                            bgcolor: "#f5f9ff",
-                            border: "1px solid #e3f2fd",
+                            bgcolor: "rgba(41, 128, 185, 0.05)",
+                            border: "1px solid rgba(41, 128, 185, 0.2)",
                             borderRadius: 2,
                             height: "100%",
                           }}
@@ -673,8 +657,8 @@ const StudentRecordsPage: React.FC = () => {
                           elevation={0}
                           sx={{
                             p: 2,
-                            bgcolor: "#f5f9ff",
-                            border: "1px solid #e3f2fd",
+                            bgcolor: "rgba(41, 128, 185, 0.05)",
+                            border: "1px solid rgba(41, 128, 185, 0.2)",
                             borderRadius: 2,
                             height: "100%",
                           }}
@@ -696,7 +680,7 @@ const StudentRecordsPage: React.FC = () => {
                 </Box>
               </Box>
 
-              <Divider sx={{ my: 4, borderColor: "#e0e0e0" }} />
+              <Divider sx={{ my: 4, borderColor: "rgba(41, 128, 185, 0.2)" }} />
 
               {/* Health Information - Enhanced styling */}
               <Box>
@@ -709,7 +693,7 @@ const StudentRecordsPage: React.FC = () => {
                     alignItems: "center",
                   }}
                 >
-                  <MedicalIcon sx={{ mr: 1, color: "#1976d2" }} />
+                  <MedicalIcon sx={{ mr: 1, color: "#2980b9" }} />
                   Thông tin sức khỏe
                 </Typography>
 
@@ -734,9 +718,9 @@ const StudentRecordsPage: React.FC = () => {
                           display: "flex",
                           alignItems: "center",
                           p: 2,
-                          bgcolor: "#f5f9ff",
+                          bgcolor: "rgba(41, 128, 185, 0.05)",
                           borderRadius: 2,
-                          border: "1px solid #e3f2fd",
+                          border: "1px solid rgba(41, 128, 185, 0.2)",
                           height: "100%",
                           transition: "transform 0.2s",
                           "&:hover": {
@@ -745,7 +729,7 @@ const StudentRecordsPage: React.FC = () => {
                           },
                         }}
                       >
-                        <Avatar sx={{ bgcolor: "#1976d2", mr: 1.5 }}>
+                        <Avatar sx={{ bgcolor: "#2980b9", mr: 1.5 }}>
                           <HeightIcon />
                         </Avatar>
                         <Box>
@@ -775,9 +759,9 @@ const StudentRecordsPage: React.FC = () => {
                           display: "flex",
                           alignItems: "center",
                           p: 2,
-                          bgcolor: "#f9f9ff",
+                          bgcolor: "rgba(41, 128, 185, 0.05)",
                           borderRadius: 2,
-                          border: "1px solid #e8eaf6",
+                          border: "1px solid rgba(41, 128, 185, 0.2)",
                           height: "100%",
                           transition: "transform 0.2s",
                           "&:hover": {
@@ -786,7 +770,7 @@ const StudentRecordsPage: React.FC = () => {
                           },
                         }}
                       >
-                        <Avatar sx={{ bgcolor: "#3f51b5", mr: 1.5 }}>
+                        <Avatar sx={{ bgcolor: "#2980b9", mr: 1.5 }}>
                           <WeightIcon />
                         </Avatar>
                         <Box>
@@ -816,9 +800,9 @@ const StudentRecordsPage: React.FC = () => {
                           display: "flex",
                           alignItems: "center",
                           p: 2,
-                          bgcolor: "#fff5f5",
+                          bgcolor: "rgba(41, 128, 185, 0.05)",
                           borderRadius: 2,
-                          border: "1px solid #ffebee",
+                          border: "1px solid rgba(41, 128, 185, 0.2)",
                           height: "100%",
                           transition: "transform 0.2s",
                           "&:hover": {
@@ -827,7 +811,7 @@ const StudentRecordsPage: React.FC = () => {
                           },
                         }}
                       >
-                        <Avatar sx={{ bgcolor: "#d32f2f", mr: 1.5 }}>
+                        <Avatar sx={{ bgcolor: "#2980b9", mr: 1.5 }}>
                           <BloodtypeIcon />
                         </Avatar>
                         <Box>
@@ -858,9 +842,9 @@ const StudentRecordsPage: React.FC = () => {
                           display: "flex",
                           alignItems: "center",
                           p: 2,
-                          bgcolor: "#f4fcf7",
+                          bgcolor: "rgba(41, 128, 185, 0.05)",
                           borderRadius: 2,
-                          border: "1px solid #e8f5e9",
+                          border: "1px solid rgba(41, 128, 185, 0.2)",
                           height: "100%",
                           transition: "transform 0.2s",
                           "&:hover": {
@@ -905,7 +889,7 @@ const StudentRecordsPage: React.FC = () => {
                       fontWeight: 600,
                     }}
                   >
-                    <WarningIcon sx={{ mr: 1, color: "#ff9800" }} />
+                    <WarningIcon sx={{ mr: 1, color: "#2980b9" }} />
                     Dị ứng
                   </Typography>
 
@@ -914,9 +898,9 @@ const StudentRecordsPage: React.FC = () => {
                       elevation={0}
                       sx={{
                         p: 3,
-                        bgcolor: "#fff8e1",
+                        bgcolor: "rgba(41, 128, 185, 0.05)",
                         borderRadius: 2,
-                        border: "1px solid #ffecb3",
+                        border: "1px solid rgba(41, 128, 185, 0.2)",
                       }}
                     >
                       <Typography variant="body1" sx={{ lineHeight: 1.7 }}>
@@ -928,9 +912,9 @@ const StudentRecordsPage: React.FC = () => {
                       elevation={0}
                       sx={{
                         p: 3,
-                        bgcolor: "#fafafa",
+                        bgcolor: "rgba(41, 128, 185, 0.05)",
                         borderRadius: 2,
-                        border: "1px solid #f0f0f0",
+                        border: "1px solid rgba(41, 128, 185, 0.2)",
                       }}
                     >
                       <Typography
@@ -958,7 +942,7 @@ const StudentRecordsPage: React.FC = () => {
                       fontWeight: 600,
                     }}
                   >
-                    <HospitalIcon sx={{ mr: 1, color: "#f44336" }} />
+                    <HospitalIcon sx={{ mr: 1, color: "#2980b9" }} />
                     Bệnh mãn tính
                   </Typography>
 
@@ -967,9 +951,9 @@ const StudentRecordsPage: React.FC = () => {
                       elevation={0}
                       sx={{
                         p: 3,
-                        bgcolor: "#ffebee",
+                        bgcolor: "rgba(41, 128, 185, 0.2)",
                         borderRadius: 2,
-                        border: "1px solid #ffcdd2",
+                        border: "1px solid rgba(41, 128, 185, 0.2)",
                       }}
                     >
                       <Typography variant="body1" sx={{ lineHeight: 1.7 }}>
@@ -981,9 +965,9 @@ const StudentRecordsPage: React.FC = () => {
                       elevation={0}
                       sx={{
                         p: 3,
-                        bgcolor: "#fafafa",
+                        bgcolor: "rgba(41, 128, 185, 0.05)",
                         borderRadius: 2,
-                        border: "1px solid #f0f0f0",
+                        border: "1px solid rgba(41, 128, 185, 0.2)",
                       }}
                     >
                       <Typography
@@ -1011,7 +995,7 @@ const StudentRecordsPage: React.FC = () => {
                       fontWeight: 600,
                     }}
                   >
-                    <EyeIcon sx={{ mr: 1, color: "#2196f3" }} />
+                    <EyeIcon sx={{ mr: 1, color: "#2980b9" }} />
                     Thị lực và thính lực
                   </Typography>
 
@@ -1032,7 +1016,7 @@ const StudentRecordsPage: React.FC = () => {
                     <Paper
                       elevation={0}
                       sx={{
-                        bgcolor: "#e3f2fd",
+                        bgcolor: "rgba(41, 128, 185, 0.2)",
                         p: 2,
                         borderRadius: 2,
                         border: "1px solid #bbdefb",
@@ -1041,7 +1025,7 @@ const StudentRecordsPage: React.FC = () => {
                       <Box
                         sx={{ display: "flex", alignItems: "center", mb: 1 }}
                       >
-                        <EyeIcon sx={{ color: "#1976d2", mr: 1 }} />
+                        <EyeIcon sx={{ color: "#2980b9", mr: 1 }} />
                         <Typography variant="subtitle2" fontWeight="medium">
                           Thị lực
                         </Typography>
@@ -1064,7 +1048,7 @@ const StudentRecordsPage: React.FC = () => {
                     <Paper
                       elevation={0}
                       sx={{
-                        bgcolor: "#e8f5e9",
+                        bgcolor: "rgba(41, 128, 185, 0.2)",
                         p: 2,
                         borderRadius: 2,
                         border: "1px solid #c8e6c9",
@@ -1107,7 +1091,7 @@ const StudentRecordsPage: React.FC = () => {
                       fontWeight: 600,
                     }}
                   >
-                    <EventIcon sx={{ mr: 1, color: "#9c27b0" }} />
+                    <EventIcon sx={{ mr: 1, color: "#2980b9" }} />
                     Lịch sử y tế
                   </Typography>
 
@@ -1123,9 +1107,9 @@ const StudentRecordsPage: React.FC = () => {
                       elevation={0}
                       sx={{
                         p: 2,
-                        bgcolor: "#f3e5f5",
+                        bgcolor: "rgba(41, 128, 185, 0.05)",
                         borderRadius: 2,
-                        border: "1px solid #e1bee7",
+                        border: "1px solid rgba(41, 128, 185, 0.2)",
                       }}
                     >
                       <Typography variant="body2">
@@ -1147,9 +1131,9 @@ const StudentRecordsPage: React.FC = () => {
                       elevation={0}
                       sx={{
                         p: 2,
-                        bgcolor: "#f3e5f5",
+                        bgcolor: "rgba(41, 128, 185, 0.05)",
                         borderRadius: 2,
-                        border: "1px solid #e1bee7",
+                        border: "1px solid rgba(41, 128, 185, 0.2)",
                       }}
                     >
                       <Typography variant="body2">
@@ -1198,186 +1182,6 @@ const StudentRecordsPage: React.FC = () => {
           </Card>
         )}
 
-        {/* Health Records Section */}
-        {selectedStudent && (
-          <Card
-            sx={{
-              borderRadius: 3,
-              boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
-              border: "1px solid #e0e0e0",
-              overflow: "hidden",
-            }}
-          >
-            <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  mb: 3,
-                }}
-              >
-                <Typography
-                  variant="h6"
-                  sx={{
-                    fontWeight: "bold",
-                    color: "#0066b3",
-                    display: "flex",
-                    alignItems: "center",
-                  }}
-                >
-                  <MedicalIcon sx={{ mr: 1 }} />
-                  Lịch sử khám chữa bệnh ({healthRecords.length} bản ghi)
-                </Typography>
-                <Button
-                  variant="contained"
-                  startIcon={<AddIcon />}
-                  sx={{
-                    bgcolor: "#4caf50",
-                    "&:hover": { bgcolor: "#45a049" },
-                    borderRadius: 2,
-                    boxShadow: "0 3px 10px rgba(76,175,80,0.2)",
-                  }}
-                >
-                  Thêm bản ghi mới
-                </Button>
-              </Box>
-
-              {loadingRecords ? (
-                <Box sx={{ textAlign: "center", py: 4 }}>
-                  <CircularProgress
-                    size={40}
-                    sx={{ color: "#1976d2", mb: 2 }}
-                  />
-                  <Typography>Đang tải dữ liệu bản ghi...</Typography>
-                </Box>
-              ) : recordsError ? (
-                <Box sx={{ textAlign: "center", py: 4 }}>
-                  <Alert
-                    severity="info"
-                    sx={{
-                      maxWidth: "500px",
-                      mx: "auto",
-                      borderRadius: 2,
-                      "& .MuiAlert-icon": {
-                        fontSize: "1.5rem",
-                      },
-                    }}
-                  >
-                    {recordsError}
-                  </Alert>
-                </Box>
-              ) : healthRecords.length === 0 ? (
-                <Box sx={{ textAlign: "center", py: 6 }}>
-                  <MedicalIcon sx={{ fontSize: 64, color: "#ccc", mb: 2 }} />
-                  <Typography variant="h6" color="textSecondary">
-                    Chưa có bản ghi sức khỏe nào
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    color="textSecondary"
-                    sx={{
-                      mb: 3,
-                      maxWidth: "500px",
-                      mx: "auto",
-                    }}
-                  >
-                    Nhấn "Thêm bản ghi mới" để tạo bản ghi đầu tiên cho học sinh
-                    này
-                  </Typography>
-                  <Button
-                    variant="outlined"
-                    startIcon={<AddIcon />}
-                    sx={{
-                      borderRadius: 2,
-                      borderWidth: "1.5px",
-                      borderColor: "#4caf50",
-                      color: "#4caf50",
-                      "&:hover": {
-                        borderWidth: "1.5px",
-                        borderColor: "#45a049",
-                      },
-                    }}
-                  >
-                    Thêm bản ghi mới
-                  </Button>
-                </Box>
-              ) : (
-                <TableContainer
-                  component={Paper}
-                  variant="outlined"
-                  sx={{
-                    borderRadius: 2,
-                    overflow: "hidden",
-                    "& .MuiTable-root": {
-                      borderCollapse: "separate",
-                      borderSpacing: 0,
-                    },
-                  }}
-                >
-                  <Table>
-                    <TableHead>
-                      <TableRow sx={{ bgcolor: "#f5f9ff" }}>
-                        <TableCell sx={{ fontWeight: 600 }}>Ngày</TableCell>
-                        <TableCell sx={{ fontWeight: 600 }}>Loại</TableCell>
-                        <TableCell sx={{ fontWeight: 600 }}>Tiêu đề</TableCell>
-                        <TableCell sx={{ fontWeight: 600 }}>Y tá</TableCell>
-                        <TableCell sx={{ fontWeight: 600 }}>Thao tác</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {healthRecords.map((record) => (
-                        <TableRow
-                          key={record.id}
-                          hover
-                          sx={{
-                            "&:last-child td, &:last-child th": { border: 0 },
-                          }}
-                        >
-                          <TableCell>
-                            {new Date(record.date).toLocaleDateString("vi-VN")}
-                          </TableCell>
-                          <TableCell>
-                            <Chip
-                              label={getRecordTypeLabel(record.type)}
-                              size="small"
-                              sx={{
-                                bgcolor: getRecordTypeColor(record.type),
-                                color: "white",
-                                fontWeight: 500,
-                                px: 1,
-                              }}
-                            />
-                          </TableCell>
-                          <TableCell>{record.title}</TableCell>
-                          <TableCell>{record.nurseName}</TableCell>
-                          <TableCell>
-                            <IconButton
-                              size="small"
-                              onClick={() => handleViewRecord(record)}
-                              sx={{ color: "#0066b3" }}
-                              title="Xem chi tiết"
-                            >
-                              <EyeIcon />
-                            </IconButton>
-                            <IconButton
-                              size="small"
-                              sx={{ color: "#ff9800" }}
-                              title="Chỉnh sửa"
-                            >
-                              <EditIcon />
-                            </IconButton>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
         {/* Record Detail Dialog - Enhanced styling */}
         <Dialog
           open={openDialog}
@@ -1399,15 +1203,15 @@ const StudentRecordsPage: React.FC = () => {
               alignItems: "center",
               px: 3,
               py: 2,
-              bgcolor: "#f5f9ff",
-              borderBottom: "1px solid #e3f2fd",
+              bgcolor: "rgba(41, 128, 185, 0.05)",
+              borderBottom: "1px solid rgba(41, 128, 185, 0.2)",
             }}
           >
             <Typography
               variant="h6"
               sx={{ fontWeight: 600, display: "flex", alignItems: "center" }}
             >
-              <MedicalIcon sx={{ mr: 1, color: "#1976d2" }} />
+              <MedicalIcon sx={{ mr: 1, color: "#2980b9" }} />
               Chi tiết bản ghi sức khỏe
             </Typography>
             <IconButton onClick={handleCloseDialog} size="small">
@@ -1501,7 +1305,7 @@ const StudentRecordsPage: React.FC = () => {
                         alignItems: "center",
                       }}
                     >
-                      <MedicalIcon sx={{ mr: 1, color: "#1976d2" }} />
+                      <MedicalIcon sx={{ mr: 1, color: "#2980b9" }} />
                       Chỉ số sức khỏe
                     </Typography>
 
@@ -1520,13 +1324,13 @@ const StudentRecordsPage: React.FC = () => {
                               display: "flex",
                               alignItems: "center",
                               p: 1.5,
-                              bgcolor: "#f5f9ff",
+                              bgcolor: "rgba(41, 128, 185, 0.05)",
                               borderRadius: 2,
-                              border: "1px solid #e3f2fd",
+                              border: "1px solid rgba(41, 128, 185, 0.2)",
                               height: "100%",
                             }}
                           >
-                            <HeightIcon sx={{ mr: 1, color: "#1976d2" }} />
+                            <HeightIcon sx={{ mr: 1, color: "#2980b9" }} />
                             <Box>
                               <Typography
                                 variant="caption"
@@ -1550,13 +1354,13 @@ const StudentRecordsPage: React.FC = () => {
                               display: "flex",
                               alignItems: "center",
                               p: 1.5,
-                              bgcolor: "#f9f9ff",
+                              bgcolor: "rgba(41, 128, 185, 0.05)",
                               borderRadius: 2,
-                              border: "1px solid #e8eaf6",
+                              border: "1px solid rgba(41, 128, 185, 0.2)",
                               height: "100%",
                             }}
                           >
-                            <WeightIcon sx={{ mr: 1, color: "#3f51b5" }} />
+                            <WeightIcon sx={{ mr: 1, color: "#2980b9" }} />
                             <Box>
                               <Typography
                                 variant="caption"
@@ -1580,13 +1384,13 @@ const StudentRecordsPage: React.FC = () => {
                               display: "flex",
                               alignItems: "center",
                               p: 1.5,
-                              bgcolor: "#fff5f5",
+                              bgcolor: "rgba(41, 128, 185, 0.05)",
                               borderRadius: 2,
-                              border: "1px solid #ffebee",
+                              border: "1px solid rgba(41, 128, 185, 0.2)",
                               height: "100%",
                             }}
                           >
-                            <BloodtypeIcon sx={{ mr: 1, color: "#f44336" }} />
+                            <BloodtypeIcon sx={{ mr: 1, color: "#2980b9" }} />
                             <Box>
                               <Typography
                                 variant="caption"
@@ -1610,13 +1414,13 @@ const StudentRecordsPage: React.FC = () => {
                               display: "flex",
                               alignItems: "center",
                               p: 1.5,
-                              bgcolor: "#fff8e1",
+                              bgcolor: "rgba(41, 128, 185, 0.05)",
                               borderRadius: 2,
-                              border: "1px solid #ffecb3",
+                              border: "1px solid rgba(41, 128, 185, 0.2)",
                               height: "100%",
                             }}
                           >
-                            <MedicalIcon sx={{ mr: 1, color: "#ff9800" }} />
+                            <MedicalIcon sx={{ mr: 1, color: "#2980b9" }} />
                             <Box>
                               <Typography
                                 variant="caption"
@@ -1648,7 +1452,7 @@ const StudentRecordsPage: React.FC = () => {
                       elevation={0}
                       sx={{
                         p: 2,
-                        bgcolor: "#e8f5e9",
+                        bgcolor: "rgba(41, 128, 185, 0.2)",
                         borderRadius: 2,
                         border: "1px solid #c8e6c9",
                       }}
@@ -1673,7 +1477,7 @@ const StudentRecordsPage: React.FC = () => {
                       elevation={0}
                       sx={{
                         p: 2,
-                        bgcolor: "#e3f2fd",
+                        bgcolor: "rgba(41, 128, 185, 0.2)",
                         borderRadius: 2,
                         border: "1px solid #bbdefb",
                       }}
@@ -1700,9 +1504,9 @@ const StudentRecordsPage: React.FC = () => {
                         sx={{
                           py: 1,
                           px: 2,
-                          bgcolor: "#fff8e1",
+                          bgcolor: "rgba(41, 128, 185, 0.05)",
                           borderRadius: 2,
-                          border: "1px solid #ffecb3",
+                          border: "1px solid rgba(41, 128, 185, 0.2)",
                         }}
                       >
                         <List dense disablePadding>
@@ -1710,7 +1514,7 @@ const StudentRecordsPage: React.FC = () => {
                             (medication, index) => (
                               <ListItem key={index} sx={{ py: 0.5 }}>
                                 <ListItemIcon sx={{ minWidth: 36 }}>
-                                  <MedicationIcon sx={{ color: "#ff9800" }} />
+                                  <MedicationIcon sx={{ color: "#2980b9" }} />
                                 </ListItemIcon>
                                 <ListItemText primary={medication} />
                               </ListItem>
@@ -1732,7 +1536,7 @@ const StudentRecordsPage: React.FC = () => {
                   <Box sx={{ display: "flex", alignItems: "center" }}>
                     <Avatar
                       sx={{
-                        bgcolor: "#1976d2",
+                        bgcolor: "#2980b9",
                         width: 36,
                         height: 36,
                         mr: 1.5,
@@ -1769,7 +1573,7 @@ const StudentRecordsPage: React.FC = () => {
               startIcon={<EditIcon />}
               sx={{
                 borderRadius: 2,
-                bgcolor: "#0066b3",
+                bgcolor: "#2980b9",
                 "&:hover": { bgcolor: "#004d85" },
                 textTransform: "none",
               }}
@@ -1799,15 +1603,15 @@ const StudentRecordsPage: React.FC = () => {
               alignItems: "center",
               px: 3,
               py: 2,
-              bgcolor: "#fff8e1",
-              borderBottom: "1px solid #ffecb3",
+              bgcolor: "rgba(41, 128, 185, 0.05)",
+              borderBottom: "1px solid rgba(41, 128, 185, 0.2)",
             }}
           >
             <Typography
               variant="h6"
               sx={{ fontWeight: 600, display: "flex", alignItems: "center" }}
             >
-              <EditIcon sx={{ mr: 1, color: "#ff9800" }} />
+              <EditIcon sx={{ mr: 1, color: "#2980b9" }} />
               Cập nhật hồ sơ sức khỏe
             </Typography>
             <IconButton onClick={handleCloseEditDialog} size="small">
@@ -2091,7 +1895,7 @@ const StudentRecordsPage: React.FC = () => {
               }
               sx={{
                 borderRadius: 2,
-                bgcolor: "#0066b3",
+                bgcolor: "#2980b9",
                 "&:hover": { bgcolor: "#004d85" },
                 textTransform: "none",
               }}

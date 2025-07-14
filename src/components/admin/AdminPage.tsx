@@ -37,8 +37,10 @@ import {
   Security as SecurityIcon,
   Refresh as RefreshIcon,
   Lock as LockIcon,
+  AdminPanelSettings as AdminIcon,
 } from "@mui/icons-material";
 import { useAuth } from "../auth/AuthContext";
+import PageHeader from "../common/PageHeader";
 
 // Interface cho User từ API - cập nhật theo response thực tế
 interface User {
@@ -409,31 +411,22 @@ const AdminPage = () => {
   return (
     <Container maxWidth="lg">
       <Box sx={{ my: 4 }}>
-        {/* Header with current user info */}
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "flex-start",
-            mb: 4,
-          }}
-        >
-          <Box sx={{ display: "flex", alignItems: "center" }}>
-            <SecurityIcon sx={{ fontSize: 40, color: "#1976d2", mr: 2 }} />
-            <Box>
-              <Typography
-                variant="h4"
-                gutterBottom
-                sx={{ fontWeight: "bold", color: "#1976d2" }}
-              >
-                Quản lý người dùng
-              </Typography>
-              <Typography variant="body1" color="text.secondary">
-                Quản lý tài khoản và phân quyền người dùng trong hệ thống
-              </Typography>
-            </Box>
-          </Box>
-        </Box>
+        <PageHeader 
+          title="Quản lý người dùng"
+          subtitle="Quản lý tài khoản và phân quyền người dùng trong hệ thống"
+          showRefresh={true}
+          onRefresh={fetchUsers}
+          actions={
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<AddIcon />}
+              onClick={() => setOpenDialog(true)}
+            >
+              Thêm người dùng
+            </Button>
+          }
+        />
 
         <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
           <Button
@@ -480,7 +473,7 @@ const AdminPage = () => {
             <TableContainer>
               <Table>
                 <TableHead>
-                  <TableRow sx={{ bgcolor: "#f5f5f5" }}>
+                  <TableRow sx={{ bgcolor: "rgba(41, 128, 185, 0.05)" }}>
                     <TableCell sx={{ fontWeight: "bold" }}>Avatar</TableCell>
                     <TableCell sx={{ fontWeight: "bold" }}>
                       Tên đăng nhập
@@ -527,7 +520,7 @@ const AdminPage = () => {
                         <TableCell>
                           <Avatar
                             src={userData.image || undefined}
-                            sx={{ bgcolor: "#1976d2" }}
+                            sx={{ bgcolor: "#2980b9" }}
                           >
                             {userData.fullName?.charAt(0) ||
                               userData.username?.charAt(0) ||

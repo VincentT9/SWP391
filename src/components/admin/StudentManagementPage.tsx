@@ -45,6 +45,7 @@ import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import { useAuth } from "../auth/AuthContext";
 import { format } from "date-fns";
 import axios from "../../utils/axiosConfig";
+import PageHeader from "../common/PageHeader";
 
 // Interface cho Student từ API
 interface Student {
@@ -446,19 +447,11 @@ const StudentManagementPage: React.FC = () => {
           }}
         >
           <Box sx={{ display: "flex", alignItems: "center" }}>
-            <SchoolIcon sx={{ fontSize: 40, color: "#1976d2", mr: 2 }} />
-            <Box>
-              <Typography
-                variant="h4"
-                gutterBottom
-                sx={{ fontWeight: "bold", color: "#1976d2" }}
-              >
-                Quản lý học sinh
-              </Typography>
-              <Typography variant="body1" color="text.secondary">
-                Quản lý thông tin học sinh trong hệ thống
-              </Typography>
-            </Box>
+            <SchoolIcon sx={{ fontSize: 40, color: "#2980b9", mr: 2 }} />
+            <PageHeader 
+              title="Quản lý học sinh" 
+              subtitle="Quản lý thông tin học sinh trong hệ thống"
+            />
           </Box>
         </Box>
 
@@ -533,7 +526,7 @@ const StudentManagementPage: React.FC = () => {
             <TableContainer>
               <Table>
                 <TableHead>
-                  <TableRow sx={{ bgcolor: "#f5f5f5" }}>
+                  <TableRow sx={{ bgcolor: "rgba(41, 128, 185, 0.05)" }}>
                     <TableCell sx={{ fontWeight: "bold" }}>
                       Mã học sinh
                     </TableCell>
@@ -846,7 +839,7 @@ const StudentManagementPage: React.FC = () => {
                 }}
               >
                 <Table size="small">
-                  <TableHead sx={{ bgcolor: "#f5f5f5" }}>
+                  <TableHead sx={{ bgcolor: "rgba(41, 128, 185, 0.05)" }}>
                     <TableRow>
                       <TableCell>StudentCode</TableCell>
                       <TableCell>FullName</TableCell>
