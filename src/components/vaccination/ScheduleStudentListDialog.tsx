@@ -138,7 +138,7 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
       setStudents(formattedStudents);
     } catch (err) {
       console.error("Error fetching students:", err);
-      setError("Không thể tải danh sách học sinh. Vui lòng thử lại sau.");
+      // setError("Không thể tải danh sách học sinh. Vui lòng thử lại sau.");
       setStudents([]);
     } finally {
       setLoading(false);

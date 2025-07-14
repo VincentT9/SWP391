@@ -52,23 +52,23 @@ const pageTransition = {
   duration: 0.3,
 };
 
-// Modern healthcare-focused color palette with more vibrant colors
+// FPT Healthcare-focused color palette
 const colors = {
-  primary: "#1e88e5", // Vibrant blue
-  primaryLight: "#6ab7ff",
-  primaryDark: "#005cb2",
-  secondary: "#00b0ff", // Light blue accent
-  secondaryLight: "#69e2ff",
-  secondaryDark: "#0081cb",
-  success: "#4caf50", // Green for success states
-  warning: "#ff9800", // Orange for warnings
-  error: "#f44336", // Red for errors
-  text: "#263238", // Dark text for readability
-  textSecondary: "#546e7a", // Secondary text
-  background: "#f8fafd", // Light background with a slight blue tint
+  primary: "#2980b9", // FPT Blue
+  primaryLight: "#5dade2",
+  primaryDark: "#1b4f72",
+  secondary: "#f19936", // FPT Orange
+  secondaryLight: "#f4b350",
+  secondaryDark: "#d68910",
+  success: "#2ecc71", // FPT Green
+  warning: "#f39c12", // FPT Orange variant
+  error: "#e74c3c", // FPT Red
+  text: "#2c3e50", // Dark text for readability
+  textSecondary: "#7f8c8d", // Secondary text
+  background: "#f8f9fa", // Clean light background
   backgroundDark: "#ffffff", // Card backgrounds
-  divider: "#e0e0e0", // Divider color
-  badge: "#ff1744", // Bright red for notification badges
+  divider: "#ecf0f1", // Divider color
+  badge: "#e74c3c", // FPT Red for notification badges
 };
 
 // Define menu categories and items
@@ -172,8 +172,6 @@ const MainLayout = () => {
   const [menuAnchors, setMenuAnchors] = useState<{
     [key: string]: HTMLElement | null;
   }>({});
-  const [notificationAnchor, setNotificationAnchor] =
-    useState<null | HTMLElement>(null);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -239,14 +237,6 @@ const MainLayout = () => {
       ...menuAnchors,
       [menuName]: null,
     });
-  };
-
-  const handleNotificationOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setNotificationAnchor(event.currentTarget);
-  };
-
-  const handleNotificationClose = () => {
-    setNotificationAnchor(null);
   };
 
   const handleUserMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -467,33 +457,9 @@ const MainLayout = () => {
                 </>
               )}
 
-              {/* Show notifications and user menu only for authenticated users */}
+              {/* Show user menu only for authenticated users */}
               {user?.isAuthenticated && (
                 <>
-                  {/* Notifications */}
-                  <IconButton
-                    onClick={handleNotificationOpen}
-                    size="medium"
-                    sx={{
-                      color: "white",
-                      "&:hover": {
-                        background: "rgba(255, 255, 255, 0.1)",
-                      },
-                    }}
-                  >
-                    <Badge
-                      badgeContent={3}
-                      sx={{
-                        "& .MuiBadge-badge": {
-                          bgcolor: colors.badge,
-                          boxShadow: "0 0 0 2px #1a73e8",
-                        },
-                      }}
-                    >
-                      <Box component="span" sx={{ fontSize: '1.2rem' }}>🔔</Box>
-                    </Badge>
-                  </IconButton>
-
                   {/* User Menu */}
                   <Box
                     component={motion.div}
@@ -643,204 +609,6 @@ const MainLayout = () => {
               </Popover>
             );
           })}
-
-          {/* Notification Menu */}
-          <Menu
-            anchorEl={notificationAnchor}
-            open={Boolean(notificationAnchor)}
-            onClose={handleNotificationClose}
-            PaperProps={{
-              sx: {
-                width: 340,
-                boxShadow: "0 10px 40px rgba(0,0,0,0.1)",
-                borderRadius: 3,
-                mt: 1.5,
-                overflow: "hidden",
-                background: "rgba(255, 255, 255, 0.97)",
-                backdropFilter: "blur(10px)",
-              },
-            }}
-            transformOrigin={{ horizontal: "right", vertical: "top" }}
-            anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
-          >
-            <Box
-              sx={{
-                p: 2.5,
-                pb: 2,
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                background: "linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%)",
-                color: "white",
-              }}
-            >
-              <Typography variant="subtitle1" fontWeight={600}>
-                Thông báo mới
-              </Typography>
-              <Chip
-                size="small"
-                label="3 mới"
-                sx={{
-                  bgcolor: "rgba(255, 255, 255, 0.25)",
-                  color: "white",
-                  fontWeight: 600,
-                  fontSize: "0.7rem",
-                }}
-              />
-            </Box>
-
-            <Box sx={{ maxHeight: 400, overflowY: "auto" }}>
-              <MenuItem
-                component={motion.div}
-                whileHover={{ x: 3 }}
-                sx={{ py: 2 }}
-                onClick={handleNotificationClose}
-              >
-                <Box
-                  sx={{ display: "flex", alignItems: "flex-start", gap: 1.5 }}
-                >
-                  <Box
-                    sx={{
-                      width: 10,
-                      height: 10,
-                      borderRadius: "50%",
-                      bgcolor: colors.badge,
-                      mt: 0.8,
-                      boxShadow: `0 0 0 3px ${alpha(colors.badge, 0.2)}`,
-                    }}
-                  />
-                  <Box>
-                    <Typography variant="body2" fontWeight={600}>
-                      Lịch khám sức khỏe định kỳ
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      Lớp 10A3 sẽ được khám vào ngày 25/06
-                    </Typography>
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        display: "block",
-                        color: alpha(colors.textSecondary, 0.7),
-                        mt: 0.7,
-                      }}
-                    >
-                      5 phút trước
-                    </Typography>
-                  </Box>
-                </Box>
-              </MenuItem>
-
-              <MenuItem
-                component={motion.div}
-                whileHover={{ x: 3 }}
-                sx={{ py: 2 }}
-                onClick={handleNotificationClose}
-              >
-                <Box
-                  sx={{ display: "flex", alignItems: "flex-start", gap: 1.5 }}
-                >
-                  <Box
-                    sx={{
-                      width: 10,
-                      height: 10,
-                      borderRadius: "50%",
-                      bgcolor: colors.badge,
-                      mt: 0.8,
-                      boxShadow: `0 0 0 3px ${alpha(colors.badge, 0.2)}`,
-                    }}
-                  />
-                  <Box>
-                    <Typography variant="body2" fontWeight={600}>
-                      Cập nhật hồ sơ y tế
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      Vui lòng cập nhật thông tin y tế mới nhất
-                    </Typography>
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        display: "block",
-                        color: alpha(colors.textSecondary, 0.7),
-                        mt: 0.7,
-                      }}
-                    >
-                      3 giờ trước
-                    </Typography>
-                  </Box>
-                </Box>
-              </MenuItem>
-
-              <MenuItem
-                component={motion.div}
-                whileHover={{ x: 3 }}
-                sx={{ py: 2 }}
-                onClick={handleNotificationClose}
-              >
-                <Box
-                  sx={{ display: "flex", alignItems: "flex-start", gap: 1.5 }}
-                >
-                  <Box
-                    sx={{
-                      width: 10,
-                      height: 10,
-                      borderRadius: "50%",
-                      bgcolor: colors.badge,
-                      mt: 0.8,
-                      boxShadow: `0 0 0 3px ${alpha(colors.badge, 0.2)}`,
-                    }}
-                  />
-                  <Box>
-                    <Typography variant="body2" fontWeight={600}>
-                      Thông báo từ y tá trường
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      Có 3 học sinh cần được khám theo dõi
-                    </Typography>
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        display: "block",
-                        color: alpha(colors.textSecondary, 0.7),
-                        mt: 0.7,
-                      }}
-                    >
-                      Hôm qua
-                    </Typography>
-                  </Box>
-                </Box>
-              </MenuItem>
-            </Box>
-
-            <Box
-              sx={{
-                p: 2,
-                textAlign: "center",
-                borderTop: `1px solid ${alpha(colors.divider, 0.8)}`,
-              }}
-            >
-              <Button
-                component={Link}
-                to="/notifications"
-                variant="contained"
-                size="small"
-                onClick={handleNotificationClose}
-                sx={{
-                  textTransform: "none",
-                  borderRadius: 5,
-                  px: 3,
-                  py: 1,
-                  background:
-                    "linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%)",
-                  boxShadow: "0 4px 12px rgba(26, 115, 232, 0.4)",
-                  "&:hover": {
-                    boxShadow: "0 6px 16px rgba(26, 115, 232, 0.6)",
-                  },
-                }}
-              >
-                Xem tất cả thông báo
-              </Button>
-            </Box>
-          </Menu>
 
           {/* User Profile Menu */}
           <Menu

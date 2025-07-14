@@ -53,7 +53,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     }
 
     try {
-      console.log("Attempting login with backend API:", { username });
+
 
       const response = await fetch(API_LOGIN_URL, {
         method: "POST",
@@ -66,15 +66,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         }),
       });
 
-      console.log("Response status:", response.status);
+
 
       if (!response.ok) {
-        console.log("Login failed:", response.status);
+
         return false;
       }
 
       const loginResponse = await response.json();
-      console.log("Login API Response:", loginResponse);
+
 
       // Lấy token từ response
       const token =
@@ -82,14 +82,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       const refreshToken = loginResponse.refreshToken;
 
       if (!token) {
-        console.log("No token received from API");
+
         return false;
       }
 
       try {
         // Decode token để lấy thông tin user
         const decodedToken: any = jwtDecode(token);
-        console.log("Decoded token:", decodedToken);
+
 
         const authenticatedUser: User = {
           id: String(
@@ -122,7 +122,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
           localStorage.setItem("refreshToken", refreshToken);
         }
 
-        console.log("Login successful:", authenticatedUser);
+
         return true;
       } catch (decodeError) {
         console.error("Token decode error:", decodeError);
@@ -182,7 +182,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     setLoading(true);
 
     try {
-      console.log("Logging out user");
+
       // Optional: Call logout API endpoint if exists
       // await fetch(API_LOGOUT_URL, { method: 'POST', headers: getAuthHeaders() });
     } catch (error) {
@@ -192,7 +192,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       localStorage.removeItem("authUser");
       localStorage.removeItem("authToken");
       setLoading(false);
-      console.log("User logged out");
+
     }
   };
 
@@ -241,7 +241,7 @@ export const apiRequest = async (
   const response = await fetch(endpoint, config);
 
   if (response.status === 401) {
-    console.log("Token expired or invalid");
+
     localStorage.removeItem("authUser");
     localStorage.removeItem("authToken");
     window.location.href = "/login";

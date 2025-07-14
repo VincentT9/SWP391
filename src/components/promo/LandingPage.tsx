@@ -25,25 +25,25 @@ const LandingPage: React.FC = () => {
 
   const services = [
     {
-      icon: <LocalPharmacy sx={{ fontSize: 60, color: theme.palette.primary.main }} />,
+      icon: <LocalPharmacy sx={{ fontSize: 60, color: '#2980b9' }} />,
       title: 'Gửi thuốc đến trường',
       description: 'Dịch vụ quản lý và gửi thuốc cho học sinh tại trường một cách an toàn và tiện lợi',
       path: '/promo/medication-delivery',
-      color: theme.palette.primary.main
+      color: '#2980b9'
     },
     {
-      icon: <Vaccines sx={{ fontSize: 60, color: theme.palette.success.main }} />,
+      icon: <Vaccines sx={{ fontSize: 60, color: '#2980b9' }} />,
       title: 'Tiêm phòng tại trường',
       description: 'Chương trình tiêm phòng đầy đủ và an toàn cho học sinh theo quy định của Bộ Y tế',
       path: '/promo/vaccination',
-      color: theme.palette.success.main
+      color: '#2980b9'
     },
     {
-      icon: <HealthAndSafety sx={{ fontSize: 60, color: theme.palette.info.main }} />,
+      icon: <HealthAndSafety sx={{ fontSize: 60, color: '#2980b9' }} />,
       title: 'Kiểm tra sức khỏe định kỳ',
       description: 'Khám sức khỏe định kỳ toàn diện để theo dõi sự phát triển của học sinh',
       path: '/promo/health-check',
-      color: theme.palette.info.main
+      color: '#2980b9'
     }
   ];
 
@@ -52,7 +52,7 @@ const LandingPage: React.FC = () => {
       {/* Hero Section */}
       <Box
         sx={{
-          bgcolor: alpha(theme.palette.primary.main, 0.05),
+          bgcolor: 'rgba(41, 128, 185, 0.05)',
           py: 10,
           position: 'relative',
           overflow: 'hidden'
@@ -71,7 +71,7 @@ const LandingPage: React.FC = () => {
                 gutterBottom
                 sx={{ 
                   fontWeight: 'bold',
-                  color: theme.palette.primary.main,
+                  color: '#2980b9',
                   mb: 3,
                   fontSize: { xs: '2.5rem', md: '3.5rem' }
                 }}
@@ -202,7 +202,7 @@ const LandingPage: React.FC = () => {
                       sx={{ 
                         bgcolor: service.color,
                         '&:hover': {
-                          bgcolor: alpha(service.color, 0.8)
+                          bgcolor: 'rgba(41, 128, 185, 0.8)'
                         },
                         borderRadius: 3,
                         textTransform: 'none',
@@ -224,7 +224,7 @@ const LandingPage: React.FC = () => {
         <Box
           sx={{
             textAlign: 'center',
-            bgcolor: alpha(theme.palette.primary.main, 0.1),
+            bgcolor: 'rgba(41, 128, 185, 0.1)',
             p: 8,
             borderRadius: 4,
             boxShadow: theme.shadows[8]

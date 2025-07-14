@@ -31,7 +31,7 @@ const NurseMedicalEventsDashboard: React.FC<
       setEvents(response.data);
     } catch (err) {
       console.error("Error fetching incidents:", err);
-      setError("Có lỗi khi tải dữ liệu sự kiện y tế");
+      // setError("Có lỗi khi tải dữ liệu sự kiện y tế");
     } finally {
       setLoading(false);
     }
@@ -78,7 +78,7 @@ const NurseMedicalEventsDashboard: React.FC<
       setSelectedEvent(null);
     } catch (err) {
       console.error("Error creating incident:", err);
-      setError("Có lỗi khi tạo mới sự kiện y tế");
+      // setError("Có lỗi khi tạo mới sự kiện y tế");
     } finally {
       setLoading(false);
     }
@@ -144,7 +144,7 @@ const NurseMedicalEventsDashboard: React.FC<
       toast.success("Đã cập nhật sự kiện y tế thành công!");
     } catch (err) {
       console.error("Error updating incident:", err);
-      setError("Có lỗi khi cập nhật sự kiện y tế");
+      // setError("Có lỗi khi cập nhật sự kiện y tế");
     } finally {
       setLoading(false);
     }
@@ -181,7 +181,7 @@ const NurseMedicalEventsDashboard: React.FC<
       </Box>
 
       {error && (
-        <Paper sx={{ p: 2, mb: 2, bgcolor: "#ffebee" }}>
+        <Paper sx={{ p: 2, mb: 2, bgcolor: "rgba(231, 76, 60, 0.1)" }}>
           <Typography color="error">{error}</Typography>
         </Paper>
       )}

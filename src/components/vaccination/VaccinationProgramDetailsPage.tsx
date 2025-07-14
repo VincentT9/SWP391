@@ -27,7 +27,7 @@ const VaccinationProgramDetailsPage: React.FC = () => {
       setCampaign(response.data);
     } catch (err) {
       console.error("Error fetching campaign details:", err);
-      setError("Không thể tải thông tin chương trình. Vui lòng thử lại sau.");
+      // setError("Không thể tải thông tin chương trình. Vui lòng thử lại sau.");
     } finally {
       setLoading(false);
     }

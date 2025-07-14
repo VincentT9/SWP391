@@ -168,26 +168,26 @@ const NotificationsPage: React.FC = () => {
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'medical':
-        return <MedicalIcon sx={{ color: '#f44336' }} />;
+        return <MedicalIcon sx={{ color: '#e74c3c' }} />; // FPT Red
       case 'event':
-        return <EventIcon sx={{ color: '#2196f3' }} />;
+        return <EventIcon sx={{ color: '#2980b9' }} />; // FPT Blue
       case 'warning':
-        return <WarningIcon sx={{ color: '#ff9800' }} />;
+        return <WarningIcon sx={{ color: '#f39c12' }} />; // FPT Orange
       case 'success':
-        return <CheckIcon sx={{ color: '#4caf50' }} />;
+        return <CheckIcon sx={{ color: '#2ecc71' }} />; // FPT Green
       default:
-        return <InfoIcon sx={{ color: '#2196f3' }} />;
+        return <InfoIcon sx={{ color: '#2980b9' }} />; // FPT Blue
     }
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high':
-        return '#f44336';
+        return '#e74c3c'; // FPT Red
       case 'medium':
-        return '#ff9800';
+        return '#f39c12'; // FPT Orange
       default:
-        return '#4caf50';
+        return '#2ecc71'; // FPT Green
     }
   };
 
@@ -226,9 +226,9 @@ const NotificationsPage: React.FC = () => {
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <Badge badgeContent={unreadCount} color="error" sx={{ mr: 2 }}>
-              <NotificationsIcon sx={{ fontSize: 32, color: '#0066b3' }} />
+              <NotificationsIcon sx={{ fontSize: 32, color: '#2980b9' }} />
             </Badge>
-            <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#0066b3' }}>
+            <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#2980b9' }}>
               Thông báo
             </Typography>
           </Box>
@@ -236,7 +236,7 @@ const NotificationsPage: React.FC = () => {
             variant="outlined"
             onClick={markAllAsRead}
             disabled={unreadCount === 0}
-            sx={{ color: '#0066b3', borderColor: '#0066b3' }}
+            sx={{ color: '#2980b9', borderColor: '#2980b9' }}
           >
             Đánh dấu tất cả đã đọc
           </Button>
@@ -307,7 +307,7 @@ const NotificationsPage: React.FC = () => {
                                   width: 8,
                                   height: 8,
                                   borderRadius: '50%',
-                                  bgcolor: '#2196f3',
+                                  bgcolor: '#2980b9',
                                 }}
                               />
                             )}

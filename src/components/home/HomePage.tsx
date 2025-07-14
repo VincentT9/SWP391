@@ -131,12 +131,7 @@ const schoolInfo = {
       image: "https://images.unsplash.com/photo-1505253716362-afaea1d3d1af?q=80&w=580&auto=format",
     },
   ],
-  stats: [
-    { number: "2,500+", label: "Học sinh" },
-    { number: "99%", label: "Hài lòng" },
-    { number: "24/7", label: "Hỗ trợ" },
-    { number: "100%", label: "An toàn" },
-  ],
+ 
 };
 
 const HomePage = () => {
@@ -313,33 +308,7 @@ const HomePage = () => {
                     gap: { xs: 3, md: 4 },
                   }}
                 >
-                  {schoolInfo.stats.map((stat, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.5 + index * 0.1, duration: 0.5 }}
-                    >
-                      <Box sx={{ textAlign: "center", minWidth: 100 }}>
-                        <Typography
-                          variant="h4"
-                          sx={{
-                            fontWeight: 700,
-                            color: colors.primary,
-                            mb: 0.5,
-                          }}
-                        >
-                          {stat.number}
-                        </Typography>
-                        <Typography
-                          variant="caption"
-                          sx={{ color: colors.textSecondary }}
-                        >
-                          {stat.label}
-                        </Typography>
-                      </Box>
-                    </motion.div>
-                  ))}
+                  
                 </Box>
               </motion.div>
             </Box>

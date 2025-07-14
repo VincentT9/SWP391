@@ -131,8 +131,21 @@ const HealthDeclarationForm = () => {
       // Cập nhật studentId cho form
       setValue("studentId", response.data.id);
 
-      // Hiển thị thông báo thành công
-      toast.success(`Đã tìm thấy học sinh: ${response.data.fullName}`);
+      // Hiển thị thông báo thành công - Comment để tránh hiển thị undefined
+      // const firstName = response.data.firstName || '';
+      // const lastName = response.data.lastName || '';
+      // const fullName = response.data.fullName || '';
+      
+      // // Sử dụng fullName nếu có, nếu không thì kết hợp firstName và lastName
+      // let studentName = fullName;
+      // if (!studentName && (firstName || lastName)) {
+      //   studentName = `${firstName} ${lastName}`.trim();
+      // }
+      // if (!studentName) {
+      //   studentName = 'Học sinh';
+      // }
+      
+      // toast.success(`Đã tìm thấy học sinh: ${studentName}`);
     } catch (error) {
       console.error("Error searching for student:", error);
       setSearchError("Không tìm thấy học sinh với mã này");
@@ -176,7 +189,7 @@ const HealthDeclarationForm = () => {
         otherNotes: data.otherNotes || "",
       };
 
-      console.log("Sending health record data:", healthRecordData);
+
 
       // Lấy token từ localStorage
       const token = localStorage.getItem("authToken");
@@ -194,7 +207,7 @@ const HealthDeclarationForm = () => {
         healthRecordData
       );
 
-      console.log("Create health record response:", response.data);
+
 
       // Sau khi tạo hồ sơ thành công, cập nhật parentId cho student
       if (studentData && parentId) {
@@ -210,7 +223,7 @@ const HealthDeclarationForm = () => {
           image: studentData.image || "",
         };
 
-        console.log("Updating student with parent ID:", studentUpdateData);
+
 
         // Gọi API để cập nhật thông tin học sinh - sử dụng update-student endpoint
         const studentResponse = await instance.put(
@@ -218,7 +231,7 @@ const HealthDeclarationForm = () => {
           studentUpdateData
         );
 
-        console.log("Update student response:", studentResponse.data);
+
       }
 
       toast.success("Khai báo sức khỏe thành công!");

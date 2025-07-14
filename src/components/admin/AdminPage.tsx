@@ -105,14 +105,14 @@ const AdminPage = () => {
       }
 
       const data = await response.json();
-      console.log("API Response:", data);
+
 
       // Xử lý data - có thể là array hoặc single object
       const usersData = Array.isArray(data) ? data : [data];
       setUsers(usersData);
     } catch (error) {
       console.error("Error fetching users:", error);
-      setError("Không thể tải dữ liệu người dùng. Vui lòng thử lại.");
+      // setError("Không thể tải dữ liệu người dùng. Vui lòng thử lại.");
     } finally {
       setLoading(false);
     }
@@ -257,7 +257,7 @@ const AdminPage = () => {
   // Modified handleSave function to use different API endpoints for create vs update
   const handleSave = async () => {
     try {
-      console.log("Saving user:", formData);
+
       const token = localStorage.getItem("authToken");
 
       // Make sure we don't allow changing to admin role (0)
@@ -314,9 +314,9 @@ const AdminPage = () => {
         };
       }
 
-      console.log("Sending data to API:", requestData);
-      console.log("Method:", method);
-      console.log("URL:", url);
+
+
+
 
       const response = await fetch(url, {
         method: method,

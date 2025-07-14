@@ -27,32 +27,32 @@ const VaccinationPromo: React.FC = () => {
 
   const features = [
     {
-      icon: <Vaccines sx={{ fontSize: 40, color: theme.palette.primary.main }} />,
+      icon: <Vaccines sx={{ fontSize: 40, color: '#2980b9' }} />,
       title: 'Chương trình tiêm phòng đầy đủ',
       description: 'Tuân thủ nghiêm ngặt lịch tiêm phòng theo quy định của Bộ Y tế'
     },
     {
-      icon: <Shield sx={{ fontSize: 40, color: theme.palette.success.main }} />,
+      icon: <Shield sx={{ fontSize: 40, color: '#2980b9' }} />,
       title: 'An toàn tuyệt đối',
       description: 'Vắc xin chính hãng, quy trình tiêm phòng đạt chuẩn quốc tế'
     },
     {
-      icon: <CalendarMonth sx={{ fontSize: 40, color: theme.palette.warning.main }} />,
+      icon: <CalendarMonth sx={{ fontSize: 40, color: '#2980b9' }} />,
       title: 'Lịch trình linh hoạt',
       description: 'Sắp xếp lịch tiêm phù hợp với thời gian biểu của từng lớp học'
     },
     {
-      icon: <MonitorHeart sx={{ fontSize: 40, color: theme.palette.error.main }} />,
+      icon: <MonitorHeart sx={{ fontSize: 40, color: '#2980b9' }} />,
       title: 'Theo dõi sức khỏe',
       description: 'Giám sát tình trạng sức khỏe học sinh sau tiêm phòng'
     },
     {
-      icon: <Groups sx={{ fontSize: 40, color: theme.palette.info.main }} />,
+      icon: <Groups sx={{ fontSize: 40, color: '#2980b9' }} />,
       title: 'Đội ngũ chuyên nghiệp',
       description: 'Bác sĩ, y tá có kinh nghiệm trong tiêm phòng cho trẻ em'
     },
     {
-      icon: <School sx={{ fontSize: 40, color: theme.palette.secondary.main }} />,
+      icon: <School sx={{ fontSize: 40, color: '#2980b9' }} />,
       title: 'Thuận tiện tại trường',
       description: 'Tiêm phòng trực tiếp tại trường, không làm gián đoạn việc học'
     }
@@ -82,7 +82,7 @@ const VaccinationPromo: React.FC = () => {
       {/* Hero Section */}
       <Box
         sx={{
-          bgcolor: alpha(theme.palette.success.main, 0.1),
+          bgcolor: alpha('#2980b9', 0.1),
           py: 8,
           position: 'relative',
           overflow: 'hidden'
@@ -102,13 +102,13 @@ const VaccinationPromo: React.FC = () => {
                   gutterBottom
                   sx={{ 
                     fontWeight: 'bold',
-                    color: theme.palette.success.main,
+                    color: '#2980b9',
                     mb: 3
                   }}
                 >
                   Chương trình
                   <br />
-                  <span style={{ color: theme.palette.primary.main }}>
+                  <span style={{ color: '#2980b9' }}>
                     tiêm phòng tại trường
                   </span>
                 </Typography>
@@ -242,7 +242,7 @@ const VaccinationPromo: React.FC = () => {
       </Container>
 
       {/* Benefits Section */}
-      <Box sx={{ bgcolor: alpha(theme.palette.grey[100], 0.5), py: 8 }}>
+      <Box sx={{ bgcolor: 'rgba(41, 128, 185, 0.05)', py: 8 }}>
         <Container maxWidth="lg">
           <Typography
             variant="h3"
@@ -283,7 +283,7 @@ const VaccinationPromo: React.FC = () => {
                     gutterBottom
                     sx={{ 
                       fontWeight: 'bold',
-                      color: theme.palette.success.main
+                      color: '#2980b9'
                     }}
                   >
                     {benefit.title}
@@ -338,7 +338,7 @@ const VaccinationPromo: React.FC = () => {
                         width: 40,
                         height: 40,
                         borderRadius: '50%',
-                        bgcolor: theme.palette.success.main,
+                        bgcolor: '#2980b9',
                         color: 'white',
                         display: 'flex',
                         alignItems: 'center',
@@ -361,7 +361,7 @@ const VaccinationPromo: React.FC = () => {
             <Vaccines 
               sx={{ 
                 fontSize: 200, 
-                color: alpha(theme.palette.success.main, 0.3),
+                color: alpha('#2980b9', 0.3),
                 mb: 2
               }} 
             />
@@ -373,7 +373,7 @@ const VaccinationPromo: React.FC = () => {
       </Container>
 
       {/* CTA Section */}
-      <Box sx={{ bgcolor: alpha(theme.palette.success.main, 0.1), py: 8 }}>
+      <Box sx={{ bgcolor: alpha('#2980b9', 0.1), py: 8 }}>
         <Container maxWidth="lg">
           <Box
             sx={{
