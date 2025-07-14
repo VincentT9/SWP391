@@ -130,22 +130,6 @@ const HealthDeclarationForm = () => {
 
       // Cập nhật studentId cho form
       setValue("studentId", response.data.id);
-
-      // Hiển thị thông báo thành công - Comment để tránh hiển thị undefined
-      // const firstName = response.data.firstName || '';
-      // const lastName = response.data.lastName || '';
-      // const fullName = response.data.fullName || '';
-      
-      // // Sử dụng fullName nếu có, nếu không thì kết hợp firstName và lastName
-      // let studentName = fullName;
-      // if (!studentName && (firstName || lastName)) {
-      //   studentName = `${firstName} ${lastName}`.trim();
-      // }
-      // if (!studentName) {
-      //   studentName = 'Học sinh';
-      // }
-      
-      // toast.success(`Đã tìm thấy học sinh: ${studentName}`);
     } catch (error) {
       console.error("Error searching for student:", error);
       setSearchError("Không tìm thấy học sinh với mã này");
@@ -189,8 +173,6 @@ const HealthDeclarationForm = () => {
         otherNotes: data.otherNotes || "",
       };
 
-
-
       // Lấy token từ localStorage
       const token = localStorage.getItem("authToken");
       const authUserJson = localStorage.getItem("authUser");
@@ -207,8 +189,6 @@ const HealthDeclarationForm = () => {
         healthRecordData
       );
 
-
-
       // Sau khi tạo hồ sơ thành công, cập nhật parentId cho student
       if (studentData && parentId) {
         // Chuẩn bị dữ liệu học sinh để cập nhật
@@ -223,15 +203,11 @@ const HealthDeclarationForm = () => {
           image: studentData.image || "",
         };
 
-
-
         // Gọi API để cập nhật thông tin học sinh - sử dụng update-student endpoint
         const studentResponse = await instance.put(
           `/api/Student/update-student/${studentData.id}`,
           studentUpdateData
         );
-
-
       }
 
       toast.success("Khai báo sức khỏe thành công!");
@@ -431,8 +407,14 @@ const HealthDeclarationForm = () => {
                       control={control}
                       rules={{
                         required: "Chiều cao là bắt buộc",
-                        min: { value: 50, message: "Chiều cao phải > 50cm" },
-                        max: { value: 250, message: "Chiều cao phải ≤ 250cm" },
+                        min: {
+                          value: 50,
+                          message: "Chiều cao không chuẩn so với học sinh",
+                        },
+                        max: {
+                          value: 250,
+                          message: "Chiều cao không chuẩn so với học sinh",
+                        },
                         validate: {
                           notZero: (value) =>
                             value > 0 || "Chiều cao phải lớn hơn 0",
@@ -447,17 +429,6 @@ const HealthDeclarationForm = () => {
                           type="text"
                           error={!!errors.height}
                           helperText={errors.height?.message}
-                          onChange={(e) => {
-                            // Xử lý như trước
-                            let value = e.target.value
-                              .replace(/[e+-]/g, "")
-                              .replace(/[^0-9]/g, "");
-                            if (value === "0") value = "";
-                            if (value.length > 3) value = value.slice(0, 3);
-                            const numValue = parseInt(value);
-                            if (numValue > 250) value = "250";
-                            field.onChange(value ? Number(value) : "");
-                          }}
                           InputProps={{
                             inputProps: {
                               maxLength: 3,
@@ -474,8 +445,14 @@ const HealthDeclarationForm = () => {
                       control={control}
                       rules={{
                         required: "Cân nặng là bắt buộc",
-                        min: { value: 10, message: "Cân nặng phải > 10kg" },
-                        max: { value: 150, message: "Cân nặng phải ≤ 150kg" },
+                        min: {
+                          value: 10,
+                          message: "Cân nặng không chuẩn so với học sinh",
+                        },
+                        max: {
+                          value: 150,
+                          message: "Cân nặng không chuẩn so với học sinh",
+                        },
                         validate: {
                           notZero: (value) =>
                             value > 0 || "Cân nặng phải lớn hơn 0",
@@ -490,17 +467,6 @@ const HealthDeclarationForm = () => {
                           type="text"
                           error={!!errors.weight}
                           helperText={errors.weight?.message}
-                          onChange={(e) => {
-                            // Xử lý như trước
-                            let value = e.target.value
-                              .replace(/[e+-]/g, "")
-                              .replace(/[^0-9]/g, "");
-                            if (value === "0") value = "";
-                            if (value.length > 3) value = value.slice(0, 3);
-                            const numValue = parseInt(value);
-                            if (numValue > 150) value = "150";
-                            field.onChange(value ? Number(value) : "");
-                          }}
                           InputProps={{
                             inputProps: {
                               maxLength: 3,
