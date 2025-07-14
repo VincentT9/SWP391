@@ -140,6 +140,10 @@ const StudentRecordsPage: React.FC = () => {
   const [updatingHealthRecord, setUpdatingHealthRecord] = useState(false);
   const [healthRecordForm, setHealthRecordForm] =
     useState<HealthRecordUpdate | null>(null);
+  const [validationErrors, setValidationErrors] = useState<{
+    height?: string;
+    weight?: string;
+  }>({});
   const [updateMessage, setUpdateMessage] = useState<{
     type: "success" | "error";
     message: string;
@@ -286,10 +290,60 @@ const StudentRecordsPage: React.FC = () => {
       [field]: value,
     });
   };
-
   // Handle health record update submission
   const handleUpdateHealthRecord = async () => {
     if (!selectedStudent || !healthRecordForm) return;
+
+    // Validate form data
+    const newErrors: { height?: string; weight?: string } = {};
+    let isValid = true;
+
+    // Validate height
+    const height = Number(healthRecordForm.height);
+    if (!healthRecordForm.height) {
+      newErrors.height = "Chiều cao là bắt buộc";
+      isValid = false;
+    } else if (isNaN(height)) {
+      newErrors.height = "Chiều cao phải là số";
+      isValid = false;
+    } else if (height <= 0) {
+      newErrors.height = "Chiều cao phải lớn hơn 0";
+      isValid = false;
+    } else if (height < 50) {
+      newErrors.height = "Chiều cao không chuẩn so với học sinh";
+      isValid = false;
+    } else if (height > 250) {
+      newErrors.height = "Chiều cao không chuẩn so với học sinh";
+      isValid = false;
+    }
+
+    // Validate weight
+    const weight = Number(healthRecordForm.weight);
+    if (!healthRecordForm.weight) {
+      newErrors.weight = "Cân nặng là bắt buộc";
+      isValid = false;
+    } else if (isNaN(weight)) {
+      newErrors.weight = "Cân nặng phải là số";
+      isValid = false;
+    } else if (weight <= 0) {
+      newErrors.weight = "Cân nặng phải lớn hơn 0";
+      isValid = false;
+    } else if (weight < 10) {
+      newErrors.weight = "Cân nặng không chuẩn so với học sinh";
+      isValid = false;
+    } else if (weight > 150) {
+      newErrors.weight = "Cân nặng không chuẩn so với học sinh";
+      isValid = false;
+    }
+
+    // If there are validation errors, update state and exit
+    if (!isValid) {
+      setValidationErrors(newErrors);
+      return;
+    }
+
+    // Clear any previous validation errors
+    setValidationErrors({});
 
     setUpdatingHealthRecord(true);
 
@@ -410,7 +464,7 @@ const StudentRecordsPage: React.FC = () => {
       }}
     >
       <Box sx={{ my: 2 }}>
-        <PageHeader 
+        <PageHeader
           title="Tìm kiếm hồ sơ học sinh"
           subtitle="Tra cứu thông tin sức khỏe và hồ sơ y tế của học sinh"
         />
@@ -1651,14 +1705,30 @@ const StudentRecordsPage: React.FC = () => {
                         gap: 2,
                       }}
                     >
+                      {" "}
                       <TextField
                         label="Chiều cao (cm)"
                         value={healthRecordForm.height}
-                        onChange={(e) =>
-                          handleFormChange("height", e.target.value)
-                        }
+                        onChange={(e) => {
+                          // Only allow numeric values
+                          const value = e.target.value;
+                          if (
+                            value === "" ||
+                            (/^\d+$/.test(value) && Number(value) <= 250)
+                          ) {
+                            handleFormChange("height", value);
+                            // Clear error when user types
+                            if (validationErrors.height) {
+                              setValidationErrors({
+                                ...validationErrors,
+                                height: undefined,
+                              });
+                            }
+                          }
+                        }}
                         fullWidth
-                        type="number"
+                        type="text"
+                        required
                         InputProps={{
                           startAdornment: (
                             <HeightIcon
@@ -1666,17 +1736,40 @@ const StudentRecordsPage: React.FC = () => {
                               sx={{ mr: 1, opacity: 0.7 }}
                             />
                           ),
+                          inputProps: {
+                            inputMode: "numeric",
+                            pattern: "[0-9]*",
+                            maxLength: 3,
+                          },
                         }}
-                      />
-
+                        error={!!validationErrors.height}
+                        helperText={
+                          validationErrors.height || "Giá trị từ 50cm đến 250cm"
+                        }
+                      />{" "}
                       <TextField
                         label="Cân nặng (kg)"
                         value={healthRecordForm.weight}
-                        onChange={(e) =>
-                          handleFormChange("weight", e.target.value)
-                        }
+                        onChange={(e) => {
+                          // Only allow numeric values
+                          const value = e.target.value;
+                          if (
+                            value === "" ||
+                            (/^\d+$/.test(value) && Number(value) <= 150)
+                          ) {
+                            handleFormChange("weight", value);
+                            // Clear error when user types
+                            if (validationErrors.weight) {
+                              setValidationErrors({
+                                ...validationErrors,
+                                weight: undefined,
+                              });
+                            }
+                          }
+                        }}
                         fullWidth
-                        type="number"
+                        type="text"
+                        required
                         InputProps={{
                           startAdornment: (
                             <WeightIcon
@@ -1684,9 +1777,17 @@ const StudentRecordsPage: React.FC = () => {
                               sx={{ mr: 1, opacity: 0.7 }}
                             />
                           ),
+                          inputProps: {
+                            inputMode: "numeric",
+                            pattern: "[0-9]*",
+                            maxLength: 3,
+                          },
                         }}
+                        error={!!validationErrors.weight}
+                        helperText={
+                          validationErrors.weight || "Giá trị từ 10kg đến 150kg"
+                        }
                       />
-
                       <FormControl fullWidth>
                         <InputLabel>Nhóm máu</InputLabel>
                         <Select

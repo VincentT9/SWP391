@@ -1326,61 +1326,79 @@ const HealthRecordsPage = () => {
                       {" "}
                       <TextField
                         label="Chiều cao (cm)"
-                        type="number"
+                        type="text"
                         value={updatedRecord.height || ""}
                         onChange={(e) => {
-                          setUpdatedRecord({
-                            ...updatedRecord,
-                            height: e.target.value,
-                          });
-                          // Clear error when user types
-                          if (validationErrors.height) {
-                            setValidationErrors({
-                              ...validationErrors,
-                              height: undefined,
+                          // Only allow numeric values
+                          const value = e.target.value;
+                          if (
+                            value === "" ||
+                            (/^\d+$/.test(value) && Number(value) <= 250)
+                          ) {
+                            setUpdatedRecord({
+                              ...updatedRecord,
+                              height: value,
                             });
+                            // Clear error when user types
+                            if (validationErrors.height) {
+                              setValidationErrors({
+                                ...validationErrors,
+                                height: undefined,
+                              });
+                            }
                           }
                         }}
                         InputProps={{
                           inputProps: {
-                            min: 0,
-                            max: 250,
                             inputMode: "numeric",
+                            pattern: "[0-9]*",
+                            maxLength: 3,
                           },
                         }}
                         fullWidth
                         required
                         error={!!validationErrors.height}
-                        helperText={validationErrors.height}
+                        helperText={
+                          validationErrors.height || "Giá trị từ 50cm đến 250cm"
+                        }
                       />{" "}
                       <TextField
                         label="Cân nặng (kg)"
-                        type="number"
+                        type="text"
                         value={updatedRecord.weight || ""}
                         onChange={(e) => {
-                          setUpdatedRecord({
-                            ...updatedRecord,
-                            weight: e.target.value,
-                          });
-                          // Clear error when user types
-                          if (validationErrors.weight) {
-                            setValidationErrors({
-                              ...validationErrors,
-                              weight: undefined,
+                          // Only allow numeric values
+                          const value = e.target.value;
+                          if (
+                            value === "" ||
+                            (/^\d+$/.test(value) && Number(value) <= 150)
+                          ) {
+                            setUpdatedRecord({
+                              ...updatedRecord,
+                              weight: value,
                             });
+                            // Clear error when user types
+                            if (validationErrors.weight) {
+                              setValidationErrors({
+                                ...validationErrors,
+                                weight: undefined,
+                              });
+                            }
                           }
                         }}
                         InputProps={{
                           inputProps: {
-                            min: 0,
-                            max: 150,
                             inputMode: "numeric",
+                            pattern: "[0-9]*",
+                            maxLength: 3,
                           },
                         }}
                         fullWidth
                         required
                         error={!!validationErrors.weight}
-                        helperText={validationErrors.weight}
+                        helperText={
+                          validationErrors.weight || "Giá trị từ 10kg đến 150kg"
+                        }
                       />
                     </Box>
 
