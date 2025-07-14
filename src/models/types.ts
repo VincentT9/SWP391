@@ -282,8 +282,10 @@ export interface MedicationDiaryEntry {
 }
 
 export interface MedicalSupplyUsage {
-  supplyId: string;
-  quantity: number;
+  medicalSupplierId: string;
+  quantityUsed: number;
+  usageDate: string;
+  notes: string;
 }
 
 export interface MedicalIncidentStudent {
@@ -320,7 +322,7 @@ export interface CreateMedicalIncidentRequest {
   actionsTaken: string;
   outcome: string;
   status: number;
-  medicalSupplyUsage: MedicalSupplyUsage[];
+  medicalSupplierUsage: MedicalSupplyUsage[];
 }
 
 export interface MedicalSupplier {

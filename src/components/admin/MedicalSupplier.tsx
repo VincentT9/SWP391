@@ -518,12 +518,12 @@ const MedicalSupplierPage = () => {
           }}
         >
           <Box sx={{ display: "flex", alignItems: "center" }}>
-            <InventoryIcon sx={{ fontSize: 40, color: "#2e7d32", mr: 2 }} />
+            <InventoryIcon sx={{ fontSize: 40, color: "#2980b9", mr: 2 }} />
             <Box>
               <Typography
                 variant="h4"
                 gutterBottom
-                sx={{ fontWeight: "bold", color: "#2e7d32" }}
+                sx={{ fontWeight: "bold", color: "#2980b9" }}
               >
                 Quản lý vật tư y tế
               </Typography>
@@ -661,7 +661,7 @@ const MedicalSupplierPage = () => {
             <TableContainer>
               <Table>
                 <TableHead>
-                  <TableRow sx={{ bgcolor: "#f8f9fa" }}>
+                  <TableRow sx={{ bgcolor: "rgba(41, 128, 185, 0.05)" }}>
                     <TableCell sx={{ fontWeight: "bold" }}>Hình ảnh</TableCell>
                     <TableCell sx={{ fontWeight: "bold" }}>
                       Tên vật tư
@@ -718,7 +718,7 @@ const MedicalSupplierPage = () => {
                                     sx={{
                                       width: 40,
                                       height: 40,
-                                      bgcolor: "#f5f5f5",
+                                      bgcolor: "rgba(41, 128, 185, 0.05)",
                                       color: "#666",
                                       cursor: 'pointer',
                                       transition: 'transform 0.2s',
@@ -737,7 +737,7 @@ const MedicalSupplierPage = () => {
                                 sx={{
                                   width: 40,
                                   height: 40,
-                                  bgcolor: "#f5f5f5",
+                                  bgcolor: "rgba(41, 128, 185, 0.05)",
                                   cursor: 'pointer',
                                 }}
                                 onClick={() => handleImageClick(item)}
@@ -787,7 +787,7 @@ const MedicalSupplierPage = () => {
                             </Typography>
                             {isLowStock && (
                               <WarningIcon
-                                sx={{ color: "#ff9800", fontSize: 16 }}
+                                sx={{ color: "#2980b9", fontSize: 16 }}
                               />
                             )}
                           </Box>
@@ -834,7 +834,7 @@ const MedicalSupplierPage = () => {
             {/* Empty state */}
             {filteredData.length === 0 && (
               <Box sx={{ textAlign: "center", py: 8 }}>
-                <InventoryIcon sx={{ fontSize: 64, color: "#bdbdbd", mb: 2 }} />
+                <InventoryIcon sx={{ fontSize: 64, color: "#2980b9", mb: 2 }} />
                 <Typography variant="h6" color="text.secondary">
                   Không có vật tư nào
                 </Typography>
@@ -875,7 +875,7 @@ const MedicalSupplierPage = () => {
             <Box sx={{ display: 'flex', gap: 3, pt: 2 }}>
               {/* Phần hình ảnh - Cột trái */}
               <Box sx={{ flex: 1 }}>
-                <Typography variant="h6" gutterBottom sx={{ color: '#1976d2', fontWeight: 'bold' }}>
+                <Typography variant="h6" gutterBottom sx={{ color: '#2980b9', fontWeight: 'bold' }}>
                   Hình ảnh vật tư
                 </Typography>
                 
@@ -921,7 +921,7 @@ const MedicalSupplierPage = () => {
                         borderRadius: 2,
                         overflow: 'hidden',
                         mb: 2,
-                        bgcolor: '#f9f9f9'
+                        bgcolor: 'rgba(41, 128, 185, 0.05)'
                       }}
                     >
                       <img
@@ -1016,7 +1016,7 @@ const MedicalSupplierPage = () => {
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      bgcolor: '#f5f5f5',
+                      bgcolor: 'rgba(41, 128, 185, 0.05)',
                       borderRadius: 2,
                       border: '2px dashed #ddd'
                     }}
@@ -1037,7 +1037,7 @@ const MedicalSupplierPage = () => {
               {/* Phần thông tin - Cột phải */}
               <Box sx={{ flex: 1 }}>
                 <Card sx={{ p: 3, height: 'fit-content' }}>
-                  <Typography variant="h6" gutterBottom sx={{ color: '#1976d2', fontWeight: 'bold' }}>
+                  <Typography variant="h6" gutterBottom sx={{ color: '#2980b9', fontWeight: 'bold' }}>
                     Thông tin vật tư
                   </Typography>
                   
@@ -1133,7 +1133,7 @@ const MedicalSupplierPage = () => {
                     />
 
                     {/* Preview thông tin */}
-                    <Box sx={{ mt: 2, p: 2, bgcolor: '#f8f9fa', borderRadius: 1 }}>
+                    <Box sx={{ mt: 2, p: 2, bgcolor: 'rgba(41, 128, 185, 0.05)', borderRadius: 1 }}>
                       <Typography variant="subtitle2" color="primary" gutterBottom>
                         📋 Xem trước thông tin:
                       </Typography>
@@ -1236,7 +1236,7 @@ const MedicalSupplierPage = () => {
                           width: '100%',
                           height: '100%',
                           objectFit: 'contain',
-                          backgroundColor: '#f9f9f9'
+                          backgroundColor: 'rgba(41, 128, 185, 0.05)'
                         }}
                         onError={(e) => {
                           (e.target as HTMLImageElement).src = '/placeholder-image.png';
@@ -1308,7 +1308,7 @@ const MedicalSupplierPage = () => {
                               width: 60,
                               height: 60,
                               cursor: 'pointer',
-                              border: selectedImageIndex === index ? '3px solid #1976d2' : '2px solid #ddd',
+                              border: selectedImageIndex === index ? '3px solid #2980b9' : '2px solid #ddd',
                               transition: 'all 0.2s',
                               '&:hover': {
                                 transform: 'scale(1.1)'
@@ -1330,7 +1330,7 @@ const MedicalSupplierPage = () => {
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      bgcolor: '#f5f5f5',
+                      bgcolor: 'rgba(41, 128, 185, 0.05)',
                       borderRadius: 2,
                       border: '2px dashed #ddd'
                     }}
@@ -1346,7 +1346,7 @@ const MedicalSupplierPage = () => {
               {/* Phần thông tin chi tiết */}
               <Box sx={{ flex: 1 }}>
                 <Card sx={{ p: 3 }}>
-                  <Typography variant="h6" gutterBottom sx={{ color: '#1976d2', fontWeight: 'bold' }}>
+                  <Typography variant="h6" gutterBottom sx={{ color: '#2980b9', fontWeight: 'bold' }}>
                     Thông tin chi tiết
                   </Typography>
                   
@@ -1376,7 +1376,7 @@ const MedicalSupplierPage = () => {
                         <Typography variant="subtitle2" color="text.secondary">
                           Số lượng
                         </Typography>
-                        <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#2e7d32' }}>
+                        <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#2980b9' }}>
                           {selectedDetailItem?.quantity}
                         </Typography>
                       </Box>

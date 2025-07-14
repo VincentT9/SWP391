@@ -124,7 +124,7 @@ const HealthRecordForm: React.FC<HealthRecordFormProps> = ({
               <Typography
                 variant="h6"
                 gutterBottom
-                sx={{ color: "#1976d2", fontWeight: "bold" }}
+                sx={{ color: "#2980b9", fontWeight: "bold" }}
               >
                 Thông tin cơ bản
               </Typography>
@@ -212,7 +212,7 @@ const HealthRecordForm: React.FC<HealthRecordFormProps> = ({
               <Typography
                 variant="h6"
                 gutterBottom
-                sx={{ color: "#ff9800", fontWeight: "bold" }}
+                sx={{ color: "#2980b9", fontWeight: "bold" }}
               >
                 Thông tin dị ứng và bệnh mãn tính
               </Typography>
@@ -259,7 +259,7 @@ const HealthRecordForm: React.FC<HealthRecordFormProps> = ({
               <Typography
                 variant="h6"
                 gutterBottom
-                sx={{ color: "#f44336", fontWeight: "bold" }}
+                sx={{ color: "#2980b9", fontWeight: "bold" }}
               >
                 Lịch sử y tế
               </Typography>
@@ -304,7 +304,7 @@ const HealthRecordForm: React.FC<HealthRecordFormProps> = ({
               <Typography
                 variant="h6"
                 gutterBottom
-                sx={{ color: "#9c27b0", fontWeight: "bold" }}
+                sx={{ color: "#2980b9", fontWeight: "bold" }}
               >
                 Đánh giá thị lực và thính lực
               </Typography>

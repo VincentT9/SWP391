@@ -419,12 +419,12 @@ const AdminPage = () => {
           }}
         >
           <Box sx={{ display: "flex", alignItems: "center" }}>
-            <SecurityIcon sx={{ fontSize: 40, color: "#1976d2", mr: 2 }} />
+            <SecurityIcon sx={{ fontSize: 40, color: "#2980b9", mr: 2 }} />
             <Box>
               <Typography
                 variant="h4"
                 gutterBottom
-                sx={{ fontWeight: "bold", color: "#1976d2" }}
+                sx={{ fontWeight: "bold", color: "#2980b9" }}
               >
                 Quản lý người dùng
               </Typography>
@@ -480,7 +480,7 @@ const AdminPage = () => {
             <TableContainer>
               <Table>
                 <TableHead>
-                  <TableRow sx={{ bgcolor: "#f5f5f5" }}>
+                  <TableRow sx={{ bgcolor: "rgba(41, 128, 185, 0.05)" }}>
                     <TableCell sx={{ fontWeight: "bold" }}>Avatar</TableCell>
                     <TableCell sx={{ fontWeight: "bold" }}>
                       Tên đăng nhập
@@ -527,7 +527,7 @@ const AdminPage = () => {
                         <TableCell>
                           <Avatar
                             src={userData.image || undefined}
-                            sx={{ bgcolor: "#1976d2" }}
+                            sx={{ bgcolor: "#2980b9" }}
                           >
                             {userData.fullName?.charAt(0) ||
                               userData.username?.charAt(0) ||

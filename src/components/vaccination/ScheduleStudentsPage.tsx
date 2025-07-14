@@ -826,7 +826,7 @@ const ScheduleStudentsPage: React.FC = () => {
           borderRadius: 2,
           mb: 3,
           boxShadow: 0,
-          border: "1px solid #e0e0e0",
+          border: "1px solid rgba(41, 128, 185, 0.2)",
         }}
       >
         <Tabs value={tabValue} onChange={handleTabChange} sx={{ px: 2, pt: 1 }}>

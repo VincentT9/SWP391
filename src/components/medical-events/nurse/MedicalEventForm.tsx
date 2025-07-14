@@ -103,12 +103,19 @@ const MedicalEventForm: React.FC<MedicalEventFormProps> = ({
     initialEvent ? initialEvent.parentNotified : false
   );
   const [medicalSupplyUsages, setMedicalSupplyUsages] = useState<MedicalSupplyUsage[]>(
-    initialEvent && initialEvent.medicalSupplyUsages ? [...initialEvent.medicalSupplyUsages] : []
+    initialEvent && initialEvent.medicalSupplyUsages ? 
+    initialEvent.medicalSupplyUsages.map((usage: any) => ({
+      medicalSupplierId: usage.supplyId || usage.medicalSupplierId,
+      quantityUsed: usage.quantity || usage.quantityUsed,
+      usageDate: usage.usageDate || new Date().toISOString(),
+      notes: usage.notes || ""
+    })) : []
   );
   
   // Supply usage states
   const [selectedSupplyId, setSelectedSupplyId] = useState<string>("");
   const [selectedSupplyQuantity, setSelectedSupplyQuantity] = useState<number>(1);
+  const [selectedSupplyNotes, setSelectedSupplyNotes] = useState<string>("");
 
   // Form validation
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -219,13 +226,13 @@ const MedicalEventForm: React.FC<MedicalEventFormProps> = ({
       
       // Check if this supply is already in our list (in case of edit mode)
       const existingSupplyIndex = medicalSupplyUsages.findIndex(
-        supply => supply.supplyId === selectedSupplyId
+        supply => supply.medicalSupplierId === selectedSupplyId
       );
       
       if (existingSupplyIndex >= 0 && initialEvent?.medicalSupplyUsages) {
         // Check if it's an original supply in edit mode
         const isOriginalSupply = initialEvent.medicalSupplyUsages.some(
-          (supply: any) => supply.supplyId === selectedSupplyId
+          (supply: any) => (supply.medicalSupplierId || supply.supplyId) === selectedSupplyId
         );
         
         if (isOriginalSupply) {
@@ -238,7 +245,7 @@ const MedicalEventForm: React.FC<MedicalEventFormProps> = ({
         
         // Update existing supply quantity if it's a new supply
         const updatedSupplies = [...medicalSupplyUsages];
-        updatedSupplies[existingSupplyIndex].quantity += selectedSupplyQuantity;
+        updatedSupplies[existingSupplyIndex].quantityUsed += selectedSupplyQuantity;
         
         // Update the actions taken field with the supply usage information
         setActionsTaken(prev => {
@@ -250,8 +257,10 @@ const MedicalEventForm: React.FC<MedicalEventFormProps> = ({
       } else {
         // Add the supply to the list
         const newSupplyUsage: MedicalSupplyUsage = {
-          supplyId: selectedSupplyId,
-          quantity: selectedSupplyQuantity
+          medicalSupplierId: selectedSupplyId,
+          quantityUsed: selectedSupplyQuantity,
+          usageDate: new Date().toISOString(),
+          notes: selectedSupplyNotes
         };
         
         // Update the actions taken field with the supply usage information
@@ -265,6 +274,7 @@ const MedicalEventForm: React.FC<MedicalEventFormProps> = ({
       
       setSelectedSupplyId("");
       setSelectedSupplyQuantity(1);
+      setSelectedSupplyNotes("");
       
       // Clear any supply errors
       const { supply, supplyQuantity, ...otherErrors } = errors;
@@ -282,7 +292,7 @@ const MedicalEventForm: React.FC<MedicalEventFormProps> = ({
       
       // Check if the supply to remove is from the original event
       const isOriginalSupply = initialEvent.medicalSupplyUsages.some(
-        (supply: any) => supply.supplyId === supplyToRemove.supplyId
+        (supply: any) => (supply.medicalSupplierId || supply.supplyId) === supplyToRemove.medicalSupplierId
       );
       
       if (isOriginalSupply) {
@@ -319,9 +329,9 @@ const MedicalEventForm: React.FC<MedicalEventFormProps> = ({
     // Check medical supply usages
     if (medicalSupplyUsages.length > 0) {
       for (const usage of medicalSupplyUsages) {
-        const supplierInfo = medicalSuppliers.find(s => s.id === usage.supplyId);
+        const supplierInfo = medicalSuppliers.find(s => s.id === usage.medicalSupplierId);
         
-        if (supplierInfo && usage.quantity > supplierInfo.quantity) {
+        if (supplierInfo && usage.quantityUsed > supplierInfo.quantity) {
           newErrors.supplyQuantity = `Vật tư "${supplierInfo.supplyName}" không đủ số lượng (còn ${supplierInfo.quantity} ${supplierInfo.unit})`;
           break;
         }
@@ -359,9 +369,10 @@ const MedicalEventForm: React.FC<MedicalEventFormProps> = ({
           parentNotified: notifyParent,
           parentNotificationDate: notifyParent ? new Date().toISOString() : initialEvent.parentNotificationDate,
           // Only include new supply usages that aren't in the original event
-          medicalSupplyUsage: medicalSupplyUsages.filter(
+          medicalSupplierUsage: medicalSupplyUsages.filter(
             newSupply => !initialEvent.medicalSupplyUsages?.some(
-              (origSupply: any) => origSupply.supplyId === newSupply.supplyId && origSupply.quantity === newSupply.quantity
+              (origSupply: any) => (origSupply.medicalSupplierId || origSupply.supplyId) === newSupply.medicalSupplierId && 
+              (origSupply.quantityUsed || origSupply.quantity) === newSupply.quantityUsed
             )
           )
         };
@@ -384,7 +395,7 @@ const MedicalEventForm: React.FC<MedicalEventFormProps> = ({
           actionsTaken: actionsTaken,
           outcome: outcome,
           status: status,
-          medicalSupplyUsage: medicalSupplyUsages
+          medicalSupplierUsage: medicalSupplyUsages
         };
         
         // If parent notification is enabled for new incidents
@@ -403,14 +414,14 @@ const MedicalEventForm: React.FC<MedicalEventFormProps> = ({
           for (const usage of medicalSupplyUsages) {
             try {
               // Get current supplier details
-              const supplierResponse = await instance.get(`/api/MedicalSupplier/get-supplier-by-id/${usage.supplyId}`);
+              const supplierResponse = await instance.get(`/api/MedicalSupplier/get-supplier-by-id/${usage.medicalSupplierId}`);
               const supplierData = supplierResponse.data;
               
               // Calculate new quantity
-              const newQuantity = Math.max(0, supplierData.quantity - usage.quantity);
+              const newQuantity = Math.max(0, supplierData.quantity - usage.quantityUsed);
               
               // Update the supplier inventory
-              await instance.put(`/api/MedicalSupplier/update-supplier/${usage.supplyId}`, {
+              await instance.put(`/api/MedicalSupplier/update-supplier/${usage.medicalSupplierId}`, {
                 supplyName: supplierData.supplyName,
                 supplyType: supplierData.supplyType,
                 unit: supplierData.unit,
@@ -419,7 +430,7 @@ const MedicalEventForm: React.FC<MedicalEventFormProps> = ({
                 image: supplierData.image
               });
             } catch (err) {
-              console.error(`Error updating supply ${usage.supplyId}:`, err);
+              console.error(`Error updating supply ${usage.medicalSupplierId}:`, err);
             }
           }
         }
@@ -598,57 +609,67 @@ const MedicalEventForm: React.FC<MedicalEventFormProps> = ({
               Vật tư y tế đã sử dụng
             </Typography>
             
-            <Box sx={{ display: "flex", mb: 2, gap: 2 }}>
-              <FormControl fullWidth error={!!errors.supply} sx={{ flex: 2 }}>
-                <InputLabel id="supply-label">Chọn vật tư</InputLabel>
-                <Select
-                  labelId="supply-label"
-                  id="supply-select"
-                  value={selectedSupplyId}
-                  label="Chọn vật tư"
-                  onChange={(e) => setSelectedSupplyId(e.target.value as string)}
-                  disabled={loadingSupplies}
-                >
-                  {loadingSupplies ? (
-                    <MenuItem disabled>Đang tải...</MenuItem>
-                  ) : (
-                    medicalSuppliers.map((supply) => (
-                      <MenuItem key={supply.id} value={supply.id}>
-                        {supply.supplyName} ({supply.quantity} {supply.unit})
-                      </MenuItem>
-                    ))
-                  )}
-                </Select>
-                {errors.supply && <FormHelperText>{errors.supply}</FormHelperText>}
-              </FormControl>
+            <Box sx={{ display: "flex", mb: 2, gap: 2, flexDirection: "column" }}>
+              <Box sx={{ display: "flex", gap: 2 }}>
+                <FormControl fullWidth error={!!errors.supply} sx={{ flex: 2 }}>
+                  <InputLabel id="supply-label">Chọn vật tư</InputLabel>
+                  <Select
+                    labelId="supply-label"
+                    id="supply-select"
+                    value={selectedSupplyId}
+                    label="Chọn vật tư"
+                    onChange={(e) => setSelectedSupplyId(e.target.value as string)}
+                    disabled={loadingSupplies}
+                  >
+                    {loadingSupplies ? (
+                      <MenuItem disabled>Đang tải...</MenuItem>
+                    ) : (
+                      medicalSuppliers.map((supply) => (
+                        <MenuItem key={supply.id} value={supply.id}>
+                          {supply.supplyName} ({supply.quantity} {supply.unit})
+                        </MenuItem>
+                      ))
+                    )}
+                  </Select>
+                  {errors.supply && <FormHelperText>{errors.supply}</FormHelperText>}
+                </FormControl>
+                <TextField
+                  label="Số lượng"
+                  type="number"
+                  value={selectedSupplyQuantity}
+                  onChange={(e) => setSelectedSupplyQuantity(parseInt(e.target.value) || 0)}
+                  error={!!errors.supplyQuantity}
+                  helperText={errors.supplyQuantity}
+                  InputProps={{ inputProps: { min: 1 } }}
+                  sx={{ flex: 1 }}
+                />
+              </Box>
               <TextField
-                label="Số lượng"
-                type="number"
-                value={selectedSupplyQuantity}
-                onChange={(e) => setSelectedSupplyQuantity(parseInt(e.target.value) || 0)}
-                error={!!errors.supplyQuantity}
-                helperText={errors.supplyQuantity}
-                InputProps={{ inputProps: { min: 1 } }}
-                sx={{ flex: 1 }}
+                label="Ghi chú sử dụng (tùy chọn)"
+                value={selectedSupplyNotes}
+                onChange={(e) => setSelectedSupplyNotes(e.target.value)}
+                placeholder="VD: Dùng để băng bó vết thương..."
+                fullWidth
               />
               <Button
                 variant="contained"
                 onClick={addSupplyUsage}
-                sx={{ alignSelf: "center", height: 56 }}
+                sx={{ alignSelf: "flex-start" }}
                 disabled={!selectedSupplyId || loadingSupplies}
               >
-                Thêm
+                Thêm vật tư
               </Button>
             </Box>
             
             {medicalSupplyUsages.length > 0 && (
               <Stack spacing={1}>
                 {medicalSupplyUsages.map((supply, index) => {
-                  const supplierInfo = medicalSuppliers.find(s => s.id === supply.supplyId);
+                  const supplierInfo = medicalSuppliers.find(s => s.id === supply.medicalSupplierId);
                   
                   // Check if this is an original supply in edit mode
                   const isOriginalSupply = isEditMode && initialEvent?.medicalSupplyUsages?.some(
-                    (origSupply: any) => origSupply.supplyId === supply.supplyId && origSupply.quantity === supply.quantity
+                    (origSupply: any) => (origSupply.medicalSupplierId || origSupply.supplyId) === supply.medicalSupplierId && 
+                    (origSupply.quantityUsed || origSupply.quantity) === supply.quantityUsed
                   );
                   
                   return (
@@ -661,7 +682,8 @@ const MedicalEventForm: React.FC<MedicalEventFormProps> = ({
                       border: isOriginalSupply ? '1px solid rgba(41, 128, 185, 0.3)' : 'none'
                     }}>
                       <Typography sx={{ flex: 1 }}>
-                        {supplierInfo ? supplierInfo.supplyName : supply.supplyId} - SL: {supply.quantity} {supplierInfo?.unit}
+                        {supplierInfo ? supplierInfo.supplyName : supply.medicalSupplierId} - SL: {supply.quantityUsed} {supplierInfo?.unit}
+                        {supply.notes && <span style={{ color: '#666', marginLeft: 8 }}>({supply.notes})</span>}
                         {isOriginalSupply && <span style={{ color: '#2980b9', marginLeft: 8 }}>(Đã sử dụng trước đây)</span>}
                       </Typography>
                       {!isOriginalSupply && (

@@ -58,7 +58,6 @@ interface ApiHealthRecord {
   bloodType?: string;
   allergies: string;
   chronicDiseases: string;
-  pastMedicalHistory: string;
   visionLeft: string;
   visionRight: string;
   hearingLeft: string;
@@ -102,7 +101,6 @@ type HealthRecord = {
   bloodType?: string;
   allergies: string;
   chronicDiseases: string;
-  pastMedicalHistory: string;
   visionLeft: string;
   visionRight: string;
   hearingLeft: string;
@@ -211,8 +209,6 @@ const HealthRecordsPage = () => {
                     bloodType: student.healthRecord.bloodType || "",
                     allergies: student.healthRecord.allergies || "",
                     chronicDiseases: student.healthRecord.chronicDiseases || "",
-                    pastMedicalHistory:
-                      student.healthRecord.pastMedicalHistory || "",
                     visionLeft: student.healthRecord.visionLeft || "",
                     visionRight: student.healthRecord.visionRight || "",
                     hearingLeft: student.healthRecord.hearingLeft || "",
@@ -275,7 +271,6 @@ const HealthRecordsPage = () => {
         bloodType: "",
         allergies: "",
         chronicDiseases: "",
-        pastMedicalHistory: "",
         visionLeft: "",
         visionRight: "",
         hearingLeft: "",
@@ -308,7 +303,6 @@ const HealthRecordsPage = () => {
         bloodType: "",
         allergies: "",
         chronicDiseases: "",
-        pastMedicalHistory: "",
         visionLeft: "",
         visionRight: "",
         hearingLeft: "",
@@ -351,7 +345,6 @@ const HealthRecordsPage = () => {
         bloodType: updatedRecord.bloodType || "",
         allergies: updatedRecord.allergies || "",
         chronicDiseases: updatedRecord.chronicDiseases || "",
-        pastMedicalHistory: updatedRecord.pastMedicalHistory || "",
         visionLeft: updatedRecord.visionLeft || "",
         visionRight: updatedRecord.visionRight || "",
         hearingLeft: updatedRecord.hearingLeft || "",
@@ -514,14 +507,14 @@ const HealthRecordsPage = () => {
             <Typography
               variant="h4"
               gutterBottom
-              sx={{ fontWeight: "bold", color: "#1976d2" }}
+              sx={{ fontWeight: "bold", color: "#2980b9" }}
             >
               Hồ sơ sức khỏe học sinh
             </Typography>
           </Box>
           <Card sx={{ textAlign: "center", py: 6, mb: 4 }}>
             <CardContent>
-              <HospitalIcon sx={{ fontSize: 64, color: "#bdbdbd", mb: 2 }} />
+              <HospitalIcon sx={{ fontSize: 64, color: "#2980b9", mb: 2 }} />
               <Typography variant="h6" color="text.secondary" gutterBottom>
                 Không tìm thấy thông tin học sinh nào cho phụ huynh này
               </Typography>
@@ -531,10 +524,13 @@ const HealthRecordsPage = () => {
               </Typography>
               <Button
                 variant="contained"
-                color="primary"
                 size="large"
                 onClick={() => navigate("/health-declaration")}
                 startIcon={<HospitalIcon />}
+                sx={{
+                  bgcolor: "#4caf50",
+                  "&:hover": { bgcolor: "#45a049" }
+                }}
               >
                 Khai báo sức khỏe học sinh
               </Button>
@@ -572,7 +568,7 @@ const HealthRecordsPage = () => {
               gutterBottom
               sx={{
                 fontWeight: "600",
-                color: "#1565c0", // Màu xanh đậm hơn
+                color: "#2980b9", // Màu xanh đậm hơn
                 mb: 1.5, // Tăng khoảng cách với dòng tiếp theo
                 fontSize: { xs: "1.8rem", md: "2.2rem" }, // Responsive font size
               }}
@@ -597,7 +593,7 @@ const HealthRecordsPage = () => {
               sx={{
                 borderRadius: 3,
                 overflow: "hidden",
-                border: "1px solid #e0e0e0",
+                border: "1px solid rgba(41, 128, 185, 0.2)",
                 mb: 4,
               }}
             >
@@ -608,7 +604,7 @@ const HealthRecordsPage = () => {
                 scrollButtons="auto"
                 aria-label="student tabs"
                 sx={{
-                  background: "#f8fafc", // Nền nhẹ cho tabs
+                  background: "rgba(41, 128, 185, 0.05)", // Nền nhẹ cho tabs
                   "& .MuiTab-root": {
                     fontWeight: 500,
                     textTransform: "none",
@@ -618,7 +614,7 @@ const HealthRecordsPage = () => {
                   },
                   "& .Mui-selected": {
                     fontWeight: 600,
-                    backgroundColor: "rgba(25, 118, 210, 0.04)",
+                    backgroundColor: "rgba(41, 128, 185, 0.04)",
                   },
                 }}
               >
@@ -630,7 +626,7 @@ const HealthRecordsPage = () => {
                         <Avatar
                           sx={{
                             bgcolor:
-                              selectedTab === index ? "#1976d2" : "#90caf9",
+                              selectedTab === index ? "#2980b9" : "rgba(41, 128, 185, 0.5)",
                             width: 32,
                             height: 32,
                             mr: 1.5,
@@ -644,7 +640,7 @@ const HealthRecordsPage = () => {
                     sx={{
                       textTransform: "none",
                       fontWeight: selectedTab === index ? "bold" : "normal",
-                      color: selectedTab === index ? "#1976d2" : "inherit",
+                      color: selectedTab === index ? "#2980b9" : "inherit",
                     }}
                   />
                 ))}
@@ -657,7 +653,7 @@ const HealthRecordsPage = () => {
                   }}
                   sx={{
                     textTransform: "none",
-                    color: "#4caf50",
+                    color: "#2980b9",
                     fontWeight: 600,
                   }}
                 />
@@ -677,7 +673,7 @@ const HealthRecordsPage = () => {
               borderRadius: 3,
               boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
               overflow: "hidden",
-              border: "1px solid #e0e0e0",
+              border: "1px solid rgba(41, 128, 185, 0.2)",
             }}
           >
             <CardContent sx={{ p: { xs: 2, sm: 4 } }}>
@@ -742,7 +738,6 @@ const HealthRecordsPage = () => {
                   {/* Phần bên phải hiển thị nút cập nhật */}
                   <Button
                     variant="outlined"
-                    color="primary"
                     onClick={handleOpenUpdateDialog}
                     startIcon={<EditIcon />}
                     size="medium"
@@ -753,9 +748,12 @@ const HealthRecordsPage = () => {
                       px: 2.5,
                       fontWeight: 500,
                       borderWidth: "1.5px",
+                      borderColor: "#4caf50",
+                      color: "#4caf50",
                       "&:hover": {
                         borderWidth: "1.5px",
-                        bgcolor: "rgba(25, 118, 210, 0.04)",
+                        bgcolor: "rgba(76, 175, 80, 0.04)",
+                        borderColor: "#45a049",
                       },
                     }}
                   >
@@ -777,7 +775,7 @@ const HealthRecordsPage = () => {
                     alignItems: "center",
                   }}
                 >
-                  <InfoIcon sx={{ mr: 1, color: "#1976d2" }} />
+                  <InfoIcon sx={{ mr: 1, color: "#2980b9" }} />
                   Chỉ số sức khỏe
                 </Typography>
 
@@ -947,7 +945,7 @@ const HealthRecordsPage = () => {
                 </Box>
               </Box>
 
-              <Divider sx={{ my: 4, borderColor: "#e0e0e0" }} />
+              <Divider sx={{ my: 4, borderColor: "rgba(41, 128, 185, 0.2)" }} />
 
               {/* ===== CÁC MỤC THÔNG TIN KHÁC ===== */}
               {/* Sử dụng style tương tự cho các phần còn lại */}
@@ -964,7 +962,7 @@ const HealthRecordsPage = () => {
                     fontWeight: 600,
                   }}
                 >
-                  <WarningIcon sx={{ mr: 1, color: "#ff9800" }} />
+                  <WarningIcon sx={{ mr: 1, color: "#2980b9" }} />
                   Dị ứng
                 </Typography>
 
@@ -1010,7 +1008,7 @@ const HealthRecordsPage = () => {
 
               <Box sx={{ mb: 3 }}>
                 <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                  <HospitalIcon sx={{ color: "#f44336", mr: 1 }} />
+                  <HospitalIcon sx={{ color: "#2980b9", mr: 1 }} />
                   <Typography variant="subtitle1" fontWeight="bold">
                     Bệnh mãn tính
                   </Typography>
@@ -1104,21 +1102,10 @@ const HealthRecordsPage = () => {
 
               <Box sx={{ mb: 3 }}>
                 <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                  <EventIcon sx={{ color: "#9c27b0", mr: 1 }} />
+                  <EventIcon sx={{ color: "#2980b9", mr: 1 }} />
                   <Typography variant="subtitle1" fontWeight="bold">
                     Lịch sử y tế
                   </Typography>
-                </Box>
-
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="subtitle2" gutterBottom>
-                    Tiền sử bệnh
-                  </Typography>
-                  <Box sx={{ p: 2, bgcolor: "rgba(41, 128, 185, 0.08)", borderRadius: 1 }}>
-                    <Typography variant="body2">
-                      {healthRecord.pastMedicalHistory || "Không có thông tin"}
-                    </Typography>
-                  </Box>
                 </Box>
 
                 <Box>
@@ -1160,11 +1147,11 @@ const HealthRecordsPage = () => {
               py: 8,
               borderRadius: 3,
               boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
-              border: "1px solid #e0e0e0",
+              border: "1px solid rgba(41, 128, 185, 0.2)",
             }}
           >
             <CardContent>
-              <HospitalIcon sx={{ fontSize: 64, color: "#bdbdbd", mb: 2 }} />
+              <HospitalIcon sx={{ fontSize: 64, color: "#2980b9", mb: 2 }} />
               <Typography variant="h6" color="text.secondary">
                 Không tìm thấy hồ sơ sức khỏe
               </Typography>
@@ -1174,7 +1161,6 @@ const HealthRecordsPage = () => {
               </Typography>
               <Button
                 variant="contained"
-                color="primary"
                 onClick={() => {
                   if (selectedStudent) {
                     navigate("/health-declaration", {
@@ -1189,6 +1175,10 @@ const HealthRecordsPage = () => {
                   } else {
                     toast.error("Vui lòng chọn học sinh trước khi khai báo");
                   }
+                }}
+                sx={{
+                  bgcolor: "#4caf50",
+                  "&:hover": { bgcolor: "#45a049" }
                 }}
               >
                 Khai báo sức khỏe
@@ -1226,7 +1216,7 @@ const HealthRecordsPage = () => {
               variant="h6"
               sx={{ fontWeight: 600, display: "flex", alignItems: "center" }}
             >
-              <EditIcon sx={{ mr: 1, color: "#1976d2" }} />
+              <EditIcon sx={{ mr: 1, color: "#2980b9" }} />
               Cập nhật hồ sơ sức khỏe
             </Typography>
             <IconButton onClick={handleCloseUpdateDialog} size="small">
@@ -1455,22 +1445,6 @@ const HealthRecordsPage = () => {
                       </Typography>
 
                       <TextField
-                        label="Tiền sử bệnh"
-                        multiline
-                        rows={3}
-                        fullWidth
-                        placeholder="Nhập thông tin về tiền sử bệnh tật, phẫu thuật hoặc những vấn đề sức khỏe đáng chú ý trong quá khứ"
-                        value={updatedRecord.pastMedicalHistory || ""}
-                        onChange={(e) =>
-                          setUpdatedRecord({
-                            ...updatedRecord,
-                            pastMedicalHistory: e.target.value,
-                          })
-                        }
-                        sx={{ mb: 2 }}
-                      />
-
-                      <TextField
                         label="Lịch sử tiêm chủng"
                         multiline
                         rows={2}
@@ -1527,8 +1501,11 @@ const HealthRecordsPage = () => {
             <Button
               onClick={handleUpdateHealthRecord}
               variant="contained"
-              color="primary"
               disabled={loading}
+              sx={{
+                bgcolor: "#4caf50",
+                "&:hover": { bgcolor: "#45a049" }
+              }}
             >
               {loading ? (
                 <>

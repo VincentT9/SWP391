@@ -527,7 +527,7 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
             <Box
               sx={{
                 display: "flex",
-                backgroundColor: "#f5f5f5",
+                backgroundColor: "rgba(41, 128, 185, 0.05)",
                 padding: "8px 16px",
                 borderRadius: "4px",
                 mb: 2,
@@ -536,7 +536,7 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
             >
               <Typography
                 variant="subtitle1"
-                sx={{ fontWeight: "medium", color: "#3f51b5" }}
+                sx={{ fontWeight: "medium", color: "#2980b9" }}
               >
                 Tổng số học sinh: <strong>{students.length}</strong>
               </Typography>

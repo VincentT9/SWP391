@@ -109,26 +109,27 @@ const NurseMedicalEventsDashboard: React.FC<
       await instance.put(`/api/medical-incident/update/${selectedEvent.id}`, updateData);
       
       // If there are new medical supplies to add, process them
-      if (incidentData.medicalSupplyUsage && incidentData.medicalSupplyUsage.length > 0) {
+      if (incidentData.medicalSupplierUsage && incidentData.medicalSupplierUsage.length > 0) {
         // Get only the new supplies (those not in the original event)
         const originalSupplies = selectedEvent.medicalSupplyUsages || [];
-        const newSupplies = incidentData.medicalSupplyUsage.filter(
+        const newSupplies = incidentData.medicalSupplierUsage.filter(
           (newSupply: any) => !originalSupplies.some(
-            (origSupply: any) => origSupply.supplyId === newSupply.supplyId && origSupply.quantity === newSupply.quantity
+            (origSupply: any) => (origSupply.medicalSupplierId || origSupply.supplyId) === (newSupply.medicalSupplierId || newSupply.supplyId) && 
+            (origSupply.quantityUsed || origSupply.quantity) === (newSupply.quantityUsed || newSupply.quantity)
           )
         );
         
         // Update supplier quantities for any new supplies added
         for (const supply of newSupplies) {
           // Get current supplier details
-          const supplierResponse = await instance.get(`/api/MedicalSupplier/get-supplier-by-id/${supply.supplyId}`);
+          const supplierResponse = await instance.get(`/api/MedicalSupplier/get-supplier-by-id/${supply.medicalSupplierId || supply.supplyId}`);
           const supplierData = supplierResponse.data;
           
           // Calculate new quantity
-          const newQuantity = Math.max(0, supplierData.quantity - supply.quantity);
+          const newQuantity = Math.max(0, supplierData.quantity - (supply.quantityUsed || supply.quantity));
           
           // Update the supplier inventory
-          await instance.put(`/api/MedicalSupplier/update-supplier/${supply.supplyId}`, {
+          await instance.put(`/api/MedicalSupplier/update-supplier/${supply.medicalSupplierId || supply.supplyId}`, {
             ...supplierData,
             quantity: newQuantity
           });

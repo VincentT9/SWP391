@@ -446,12 +446,12 @@ const StudentManagementPage: React.FC = () => {
           }}
         >
           <Box sx={{ display: "flex", alignItems: "center" }}>
-            <SchoolIcon sx={{ fontSize: 40, color: "#1976d2", mr: 2 }} />
+            <SchoolIcon sx={{ fontSize: 40, color: "#2980b9", mr: 2 }} />
             <Box>
               <Typography
                 variant="h4"
                 gutterBottom
-                sx={{ fontWeight: "bold", color: "#1976d2" }}
+                sx={{ fontWeight: "bold", color: "#2980b9" }}
               >
                 Quản lý học sinh
               </Typography>
@@ -533,7 +533,7 @@ const StudentManagementPage: React.FC = () => {
             <TableContainer>
               <Table>
                 <TableHead>
-                  <TableRow sx={{ bgcolor: "#f5f5f5" }}>
+                  <TableRow sx={{ bgcolor: "rgba(41, 128, 185, 0.05)" }}>
                     <TableCell sx={{ fontWeight: "bold" }}>
                       Mã học sinh
                     </TableCell>
@@ -846,7 +846,7 @@ const StudentManagementPage: React.FC = () => {
                 }}
               >
                 <Table size="small">
-                  <TableHead sx={{ bgcolor: "#f5f5f5" }}>
+                  <TableHead sx={{ bgcolor: "rgba(41, 128, 185, 0.05)" }}>
                     <TableRow>
                       <TableCell>StudentCode</TableCell>
                       <TableCell>FullName</TableCell>

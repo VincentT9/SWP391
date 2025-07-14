@@ -31,7 +31,7 @@ import { motion, AnimatePresence } from "framer-motion";
 const adminColors = {
   primary: "#2980b9", // FPT Blue
   primaryLight: "#5dade2",
-  secondary: "#f19936", // FPT Orange
+  secondary: "#2980b9", // FPT Orange
   accent: "#2ecc71", // FPT Green accent
   background: "#f8f9fa",
   surface: "#ffffff",
@@ -40,8 +40,8 @@ const adminColors = {
   text: "#2c3e50",
   textSecondary: "#7f8c8d",
   success: "#2ecc71", // FPT Green
-  warning: "#f39c12", // FPT Orange variant
-  error: "#e74c3c",
+  warning: "#2980b9", // FPT Orange variant
+  error: "#2980b9",
   border: "#ecf0f1",
 };
 

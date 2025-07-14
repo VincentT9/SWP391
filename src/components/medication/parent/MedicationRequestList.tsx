@@ -63,43 +63,51 @@ const MedicationRequestList: React.FC<MedicationRequestListProps> = ({
   };
 
   return (
-    <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-      <Typography variant="h6" gutterBottom>
+    <Paper elevation={3} sx={{ p: 3, mb: 3, borderRadius: 2 }}>
+      <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, color: 'primary.main' }}>
         Danh sách thuốc đã gửi
       </Typography>
 
       {requests.length === 0 ? (
-        <Typography variant="body1" color="textSecondary">
-          Chưa có yêu cầu gửi thuốc nào.
-        </Typography>
+        <Box sx={{ textAlign: 'center', py: 4 }}>
+          <Typography variant="body1" color="text.secondary">
+            Chưa có yêu cầu gửi thuốc nào.
+          </Typography>
+        </Box>
       ) : (
-        <TableContainer>
+        <TableContainer sx={{ borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
           <Table size="small">
             <TableHead>
-              <TableRow>
-                <TableCell>Tên học sinh</TableCell>
-                <TableCell>Tên thuốc và thành phần</TableCell>
-                <TableCell>Số lần uống/ngày</TableCell>
-                <TableCell>Số ngày cần uống</TableCell>
-                <TableCell align="center">Ngày bắt đầu</TableCell>
-                <TableCell align="center">Ngày kết thúc</TableCell>
-                <TableCell align="center">Trạng thái</TableCell>
-                <TableCell align="center">Tác vụ</TableCell>
+              <TableRow sx={{ bgcolor: 'grey.50' }}>
+                <TableCell sx={{ fontWeight: 600 }}>Tên học sinh</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Tên thuốc và thành phần</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Số ngày cần uống</TableCell>
+                <TableCell align="center" sx={{ fontWeight: 600 }}>Ngày bắt đầu</TableCell>
+                <TableCell align="center" sx={{ fontWeight: 600 }}>Ngày kết thúc</TableCell>
+                <TableCell align="center" sx={{ fontWeight: 600 }}>Trạng thái</TableCell>
+                <TableCell align="center" sx={{ fontWeight: 600 }}>Tác vụ</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {requests.map((request) => (
-                <TableRow key={request.id}>
-                  <TableCell>{request.studentName}</TableCell>
+              {[...requests]
+                .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                .map((request) => (
+                <TableRow key={request.id} sx={{ '&:hover': { bgcolor: 'grey.50' } }}>
+                  <TableCell>
+                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                      {request.studentName}
+                    </Typography>
+                  </TableCell>
                   <TableCell>
                     <Tooltip title="Xem chi tiết">
                       <Box
                         sx={{
-                          maxWidth: 120,
+                          maxWidth: 160,
                           overflow: "hidden",
                           textOverflow: "ellipsis",
                           whiteSpace: "nowrap",
                           cursor: "pointer",
+                          '&:hover': { color: 'primary.main' }
                         }}
                         onClick={() => handleOpenDetail(request)}
                       >
@@ -110,13 +118,20 @@ const MedicationRequestList: React.FC<MedicationRequestListProps> = ({
                       </Box>
                     </Tooltip>
                   </TableCell>
-                  <TableCell>{request.dosesPerDay} lần/ngày</TableCell>
-                  <TableCell>{request.daysRequired} ngày</TableCell>
-                  <TableCell align="center">
-                    {format(new Date(request.startDate), "dd/MM/yyyy")}
+                  <TableCell>
+                    <Typography variant="body2">
+                      {request.daysRequired} ngày
+                    </Typography>
                   </TableCell>
                   <TableCell align="center">
-                    {format(new Date(request.endDate), "dd/MM/yyyy")}
+                    <Typography variant="body2" color="text.secondary">
+                      {format(new Date(request.startDate), "dd/MM/yyyy")}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="center">
+                    <Typography variant="body2" color="text.secondary">
+                      {format(new Date(request.endDate), "dd/MM/yyyy")}
+                    </Typography>
                   </TableCell>
                   <TableCell align="center">
                     {getStatusChip(request.status)}
@@ -127,6 +142,7 @@ const MedicationRequestList: React.FC<MedicationRequestListProps> = ({
                         display: "flex",
                         justifyContent: "center",
                         alignItems: "center",
+                        gap: 0.5
                       }}
                     >
                       <Tooltip title="Xem nhật ký uống thuốc">
@@ -136,27 +152,27 @@ const MedicationRequestList: React.FC<MedicationRequestListProps> = ({
                             color="primary"
                             onClick={() =>
                               onViewLogs(request.id, request.studentId)
-                            } // Truyền cả studentId
+                            }
                             disabled={request.status === "requested"}
+                            sx={{ 
+                              borderRadius: 1,
+                              '&:hover': { bgcolor: 'primary.50' }
+                            }}
                           >
                             <VisibilityIcon fontSize="small" />
                           </IconButton>
                         </span>
                       </Tooltip>
 
-                      <Box
-                        sx={{
-                          mx: 0.5,
-                          height: 20,
-                          borderLeft: "1px solid #e0e0e0",
-                        }}
-                      ></Box>
-
                       <Tooltip title="Xem chi tiết">
                         <span>
                           <IconButton
                             size="small"
                             color="default"
+                            sx={{ 
+                              borderRadius: 1,
+                              '&:hover': { bgcolor: 'grey.100' }
+                            }}
                             onClick={() => onViewDetail(request.id)}
                           >
                             <InfoOutlinedIcon fontSize="small" />

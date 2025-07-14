@@ -95,7 +95,6 @@ const HealthDeclarationForm = () => {
       bloodType: "",
       allergies: "",
       chronicDiseases: "",
-      pastMedicalHistory: "",
       visionLeft: "",
       visionRight: "",
       hearingLeft: "",
@@ -180,7 +179,6 @@ const HealthDeclarationForm = () => {
         bloodType: data.bloodType || "",
         allergies: data.allergies || "",
         chronicDiseases: data.chronicDiseases || "",
-        pastMedicalHistory: data.pastMedicalHistory || "",
         visionLeft: data.visionLeft || "",
         visionRight: data.visionRight || "",
         hearingLeft: data.hearingLeft || "",
@@ -281,7 +279,7 @@ const HealthDeclarationForm = () => {
         <Typography
           variant="h4"
           gutterBottom
-          sx={{ fontWeight: "bold", color: "#1976d2" }}
+          sx={{ fontWeight: "bold", color: "#2980b9" }}
         >
           Khai báo sức khỏe học sinh
         </Typography>
@@ -301,7 +299,7 @@ const HealthDeclarationForm = () => {
                 <Typography
                   variant="h6"
                   gutterBottom
-                  sx={{ color: "#1976d2", fontWeight: "bold" }}
+                  sx={{ color: "#2980b9", fontWeight: "bold" }}
                 >
                   Thông tin cơ bản về sức khỏe
                 </Typography>
@@ -339,7 +337,12 @@ const HealthDeclarationForm = () => {
                       onClick={searchStudent}
                       disabled={searchingStudent || !studentCode.trim()}
                       startIcon={<SearchIcon />}
-                      sx={{ height: { sm: 56 }, minWidth: 120 }}
+                      sx={{ 
+                        height: { sm: 56 }, 
+                        minWidth: 120,
+                        bgcolor: "#4caf50",
+                        "&:hover": { bgcolor: "#45a049" }
+                      }}
                     >
                       Tìm kiếm
                     </Button>
@@ -355,8 +358,8 @@ const HealthDeclarationForm = () => {
                     sx={{
                       p: 2,
                       borderRadius: 1,
-                      bgcolor: "#e3f2fd",
-                      border: "1px solid #90caf9",
+                      bgcolor: "rgba(41, 128, 185, 0.1)",
+                      border: "1px solid rgba(41, 128, 185, 0.5)",
                     }}
                   >
                     <Typography
@@ -521,7 +524,7 @@ const HealthDeclarationForm = () => {
                 <Typography
                   variant="h6"
                   gutterBottom
-                  sx={{ color: "#ff9800", fontWeight: "bold", mb: 3 }}
+                  sx={{ color: "#2980b9", fontWeight: "bold", mb: 3 }}
                 >
                   Thông tin dị ứng và bệnh mãn tính
                 </Typography>
@@ -568,27 +571,12 @@ const HealthDeclarationForm = () => {
                 <Typography
                   variant="h6"
                   gutterBottom
-                  sx={{ color: "#f44336", fontWeight: "bold", mb: 3 }}
+                  sx={{ color: "#2980b9", fontWeight: "bold", mb: 3 }}
                 >
                   Lịch sử y tế
                 </Typography>
 
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                  <Controller
-                    name="pastMedicalHistory"
-                    control={control}
-                    render={({ field }) => (
-                      <TextField
-                        {...field}
-                        fullWidth
-                        label="Tiền sử bệnh"
-                        multiline
-                        rows={3}
-                        placeholder="Nhập thông tin về tiền sử bệnh tật, phẫu thuật hoặc những vấn đề sức khỏe đáng chú ý trong quá khứ"
-                      />
-                    )}
-                  />
-
                   <Controller
                     name="vaccinationHistory"
                     control={control}
@@ -613,7 +601,7 @@ const HealthDeclarationForm = () => {
                 <Typography
                   variant="h6"
                   gutterBottom
-                  sx={{ color: "#9c27b0", fontWeight: "bold", mb: 3 }}
+                  sx={{ color: "#2980b9", fontWeight: "bold", mb: 3 }}
                 >
                   Đánh giá thị lực và thính lực
                 </Typography>
@@ -706,7 +694,7 @@ const HealthDeclarationForm = () => {
                 <Typography
                   variant="h6"
                   gutterBottom
-                  sx={{ color: "#4caf50", fontWeight: "bold" }}
+                  sx={{ color: "#2980b9", fontWeight: "bold" }}
                 >
                   Ghi chú khác
                 </Typography>
@@ -769,8 +757,8 @@ const HealthDeclarationForm = () => {
                 display: "flex",
                 alignItems: "center",
                 gap: 1,
-                bgcolor: "#f8f9fa",
-                borderBottom: "1px solid #e0e0e0",
+                bgcolor: "rgba(41, 128, 185, 0.05)",
+                borderBottom: "1px solid rgba(41, 128, 185, 0.2)",
                 py: 2,
               }}
             >

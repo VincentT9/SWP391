@@ -328,16 +328,9 @@ const MedicationAdministrationForm: React.FC<MedicationAdministrationFormProps> 
               <Typography variant="h6">
                 Chi tiết thuốc
               </Typography>
-              {checkingStatus ? (
+              {checkingStatus && (
                 <CircularProgress size={20} />
-              ) : isCompletedToday ? (
-                <Chip 
-                  label={`Hôm nay đã uống thuốc (${todayDiaryCount} lần ghi nhận)`} 
-                  color="success" 
-                  size="small"
-                  sx={{ fontWeight: 600 }}
-                />
-              ) : null}
+              )}
             </Box>
 
             <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
@@ -371,6 +364,7 @@ const MedicationAdministrationForm: React.FC<MedicationAdministrationFormProps> 
           {/* Action Buttons */}
           <Box sx={{ 
             width: { xs: '100%', md: '16.67%' },
+            minWidth: '200px',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center'
@@ -382,14 +376,34 @@ const MedicationAdministrationForm: React.FC<MedicationAdministrationFormProps> 
               height="100%"
             >
               {isCompletedToday ? (
-                <Alert severity="info" sx={{ textAlign: 'center', fontSize: '0.875rem' }}>
-                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                <Stack spacing={1}>
+                  <Typography 
+                    variant="body2" 
+                    color="success.main"
+                    sx={{ 
+                      textAlign: 'center', 
+                      fontWeight: 600,
+                      p: 1.5,
+                      border: '1px solid',
+                      borderColor: 'success.main',
+                      borderRadius: 1,
+                      bgcolor: 'success.50'
+                    }}
+                  >
                     Hôm nay đã uống thuốc
                   </Typography>
-                  <Typography variant="caption" sx={{ display: 'block', mt: 0.5 }}>
+                  <Typography 
+                    variant="caption" 
+                    color="text.secondary"
+                    sx={{ 
+                      textAlign: 'center', 
+                      fontStyle: 'italic',
+                      whiteSpace: 'nowrap'
+                    }}
+                  >
                     Không thể thực hiện thêm thao tác
                   </Typography>
-                </Alert>
+                </Stack>
               ) : (
                 <>
                   <Button
