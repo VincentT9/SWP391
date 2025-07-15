@@ -22,6 +22,7 @@ import {
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import DeleteIcon from "@mui/icons-material/Delete"; // Thêm import
 import { format } from "date-fns";
+import { useNavigate } from "react-router-dom";
 import instance from "../../utils/axiosConfig"; // Thêm import
 import { toast } from "react-toastify"; // Thêm import
 import { isAdmin } from "../../utils/roleUtils";
@@ -39,6 +40,7 @@ const VaccinationProgramList: React.FC<VaccinationProgramListProps> = ({
   getStatusLabel,
   onRefresh,
 }) => {
+  const navigate = useNavigate();
   const [confirmDeleteOpen, setConfirmDeleteOpen] = React.useState(false);
   const [campaignToDelete, setCampaignToDelete] = React.useState<any>(null);
   const [isDeleting, setIsDeleting] = React.useState(false);
@@ -50,6 +52,11 @@ const VaccinationProgramList: React.FC<VaccinationProgramListProps> = ({
     } catch (error) {
       return "Invalid date";
     }
+  };
+
+  // Hàm xử lý click vào campaign để navigate đến trang chi tiết
+  const handleCampaignClick = (campaign: any) => {
+    navigate(`/vaccination/campaign/${campaign.id}`);
   };
 
   // Thêm hàm xử lý xóa chương trình
@@ -155,7 +162,7 @@ const VaccinationProgramList: React.FC<VaccinationProgramListProps> = ({
                 <TableRow
                   key={campaign.id}
                   hover
-                  onClick={() => onCampaignSelect(campaign)}
+                  onClick={() => handleCampaignClick(campaign)}
                   sx={{ cursor: "pointer" }}
                 >
                   <TableCell sx={{ maxWidth: 250 }}>
@@ -190,7 +197,7 @@ const VaccinationProgramList: React.FC<VaccinationProgramListProps> = ({
                           color="primary"
                           onClick={(e) => {
                             e.stopPropagation();
-                            onCampaignSelect(campaign);
+                            handleCampaignClick(campaign);
                           }}
                         >
                           <VisibilityIcon />
