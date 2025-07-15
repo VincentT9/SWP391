@@ -29,6 +29,10 @@ import {
   CircularProgress,
   Snackbar,
   Fab,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem as SelectMenuItem,
 } from '@mui/material';
 import {
   Notifications as NotificationsIcon,
@@ -44,28 +48,36 @@ import {
   Add as AddIcon,
   Edit as EditIcon,
   Refresh as RefreshIcon,
+  Link as LinkIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../auth/AuthContext';
-import axiosInstance from '../../utils/axiosConfig';
+import instance from '../../utils/axiosConfig';
 import PageHeader from '../common/PageHeader';
 
 interface Notification {
   id: string;
+  campaignId: string;
   title: string;
-  message: string;
-  type: 'info' | 'warning' | 'success' | 'medical' | 'event';
+  content: string;
+  returnUrl: string;
+  createdAt: string;
+  updatedAt: string;
   isRead: boolean;
-  timestamp: Date;
-  priority: 'low' | 'medium' | 'high';
-  relatedUserId?: string;
-  createdBy?: string;
-  targetRole?: string;
+  campaign?: Campaign;
+}
+
+interface Campaign {
+  id: string;
+  name: string;
+  description?: string;
+  startDate?: string;
+  endDate?: string;
 }
 
 interface NotificationFormData {
+  campaignId: string;
   title: string;
-  content: string;
-  type: string;
+  returnUrl: string;
 }
 
 
@@ -73,6 +85,7 @@ interface NotificationFormData {
 const NotificationsPage: React.FC = () => {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedNotification, setSelectedNotification] = useState<string | null>(null);
   const [tabValue, setTabValue] = useState(0);
@@ -87,9 +100,9 @@ const NotificationsPage: React.FC = () => {
   
   // Form data
   const [formData, setFormData] = useState<NotificationFormData>({
+    campaignId: '',
     title: '',
-    content: '',
-    type: ''
+    returnUrl: ''
   });
 
   // Check if user is admin
@@ -101,32 +114,47 @@ const NotificationsPage: React.FC = () => {
 
   useEffect(() => {
     fetchNotifications();
+    fetchCampaigns();
   }, []);
+
+  const fetchCampaigns = async () => {
+    try {
+      const response = await instance.get('/api/Campaign/get-all-campaigns');
+      setCampaigns(response.data);
+    } catch (error) {
+      console.error('Error fetching campaigns:', error);
+    }
+  };
 
   const fetchNotifications = async () => {
     setLoading(true);
     try {
-      const response = await axiosInstance.get('/api/Notification/get-all-notifications');
+      let apiUrl = '/api/Notification/get-all-notifications';
+      
+      // If user is Parent, use the endpoint to get notifications by userId
+      if (isParent && user?.id) {
+        apiUrl = `/api/Notification/get-notifications-by-user-id/${user.id}`;
+      }
+      
+      const response = await instance.get(apiUrl);
       
       // Transform API response to match our interface
       const transformedNotifications = response.data.map((notif: any) => ({
-        id: notif.id || notif.notificationId,
+        id: notif.id,
+        campaignId: notif.campaignId,
         title: notif.title,
-        message: notif.content || notif.message,  // Use content from API, fallback to message
-        type: notif.type || 'info',
-        isRead: notif.isRead || false,
-        timestamp: new Date(notif.createdAt || notif.timestamp || Date.now()),
-        priority: 'medium', // Default since API doesn't provide this
-        relatedUserId: notif.relatedUserId,
-        createdBy: notif.createdBy,
-        targetRole: notif.targetRole
+        content: notif.content || '', // Map content từ API
+        returnUrl: notif.returnUrl,
+        createdAt: notif.createdAt,
+        updatedAt: notif.updatedAt,
+        isRead: false, // Default since API doesn't provide this
+        campaign: notif.campaign
       }));
       
       setNotifications(transformedNotifications);
     } catch (error) {
       console.error('Error fetching notifications:', error);
       setError('Không thể tải thông báo. Vui lòng thử lại.');
-      // Fallback to mock data for demo
       setNotifications([]);
     } finally {
       setLoading(false);
@@ -138,12 +166,12 @@ const NotificationsPage: React.FC = () => {
     
     try {
       const payload = {
+        campaignId: formData.campaignId,
         title: formData.title,
-        content: formData.content,
-        type: formData.type
+        returnUrl: formData.returnUrl
       };
 
-      await axiosInstance.post('/api/Notification/create-notification', payload);
+      await instance.post('/api/Notification/create-notification', payload);
 
       setSuccess('Tạo thông báo thành công!');
       setOpenCreateDialog(false);
@@ -160,12 +188,12 @@ const NotificationsPage: React.FC = () => {
     
     try {
       const payload = {
+        campaignId: formData.campaignId,
         title: formData.title,
-        content: formData.content,
-        type: formData.type
+        returnUrl: formData.returnUrl
       };
 
-      await axiosInstance.put(`/api/Notification/update-notification/${editingNotification.id}`, payload);
+      await instance.put(`/api/Notification/update-notification/${editingNotification.id}`, payload);
 
       setSuccess('Cập nhật thông báo thành công!');
       setOpenEditDialog(false);
@@ -182,7 +210,7 @@ const NotificationsPage: React.FC = () => {
     if (!canManageNotifications) return;
     
     try {
-      await axiosInstance.delete(`/api/Notification/delete-notification/${notificationId}`);
+      await instance.delete(`/api/Notification/delete-notification/${notificationId}`);
 
       setSuccess('Xóa thông báo thành công!');
       fetchNotifications();
@@ -195,18 +223,18 @@ const NotificationsPage: React.FC = () => {
 
   const resetForm = () => {
     setFormData({
+      campaignId: '',
       title: '',
-      content: '',
-      type: ''
+      returnUrl: ''
     });
   };
 
   const handleEditClick = (notification: Notification) => {
     setEditingNotification(notification);
     setFormData({
+      campaignId: notification.campaignId,
       title: notification.title,
-      content: notification.message,
-      type: notification.type
+      returnUrl: notification.returnUrl
     });
     setOpenEditDialog(true);
     handleMenuClose();
@@ -219,13 +247,8 @@ const NotificationsPage: React.FC = () => {
         return notifications;
       case 1: // Unread
         return notifications.filter(n => !n.isRead);
-      case 2: // Important (based on type)
-        return notifications.filter(n => 
-          n.type?.toLowerCase().includes('medical') || 
-          n.type?.toLowerCase().includes('warning') ||
-          n.type?.toLowerCase().includes('cảnh báo') ||
-          n.type?.toLowerCase().includes('y tế')
-        );
+      case 2: // Campaign related (important)
+        return notifications.filter(n => n.campaign && n.campaign.name);
       default:
         return notifications;
     }
@@ -357,26 +380,22 @@ const NotificationsPage: React.FC = () => {
     }
   };
 
-  const formatTime = (timestamp: Date) => {
+  const formatTime = (timestamp: string) => {
+    const date = new Date(timestamp);
     const now = new Date();
-    const diffInMinutes = Math.floor((now.getTime() - timestamp.getTime()) / (1000 * 60));
+    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
     
     if (diffInMinutes < 60) {
       return `${diffInMinutes} phút trước`;
     } else if (diffInMinutes < 1440) {
       return `${Math.floor(diffInMinutes / 60)} giờ trước`;
     } else {
-      return timestamp.toLocaleDateString('vi-VN');
+      return date.toLocaleDateString('vi-VN');
     }
   };
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
-  const importantCount = notifications.filter(n => 
-    n.type?.toLowerCase().includes('medical') || 
-    n.type?.toLowerCase().includes('warning') ||
-    n.type?.toLowerCase().includes('cảnh báo') ||
-    n.type?.toLowerCase().includes('y tế')
-  ).length;
+  const campaignCount = notifications.filter(n => n.campaign && n.campaign.name).length;
   const filteredNotifications = getFilteredNotifications();
 
   if (!user?.isAuthenticated || !canViewNotifications) {
@@ -399,7 +418,13 @@ const NotificationsPage: React.FC = () => {
       <Box sx={{ my: 4 }}>
         <PageHeader 
           title="Thông báo"
-          subtitle="Quản lý và theo dõi các thông báo hệ thống"
+          subtitle={
+            isAdmin 
+              ? "Quản lý và theo dõi các thông báo hệ thống" 
+              : isParent 
+                ? "Theo dõi các thông báo liên quan đến con em bạn"
+                : "Theo dõi các thông báo hệ thống"
+          }
           showRefresh={true}
           onRefresh={fetchNotifications}
           actions={
@@ -421,7 +446,7 @@ const NotificationsPage: React.FC = () => {
           <Tabs value={tabValue} onChange={(e, newValue) => setTabValue(newValue)}>
             <Tab label={`Tất cả (${notifications.length})`} />
             <Tab label={`Chưa đọc (${unreadCount})`} />
-            <Tab label={`Quan trọng (${importantCount})`} />
+            <Tab label={`Chiến dịch (${campaignCount})`} />
           </Tabs>
         </Box>
 
@@ -449,7 +474,7 @@ const NotificationsPage: React.FC = () => {
                     <ListItem
                       sx={{
                         bgcolor: notification.isRead ? 'transparent' : 'rgba(33, 150, 243, 0.05)',
-                        borderLeft: `4px solid ${getTypeColor(notification.type)}`,
+                        borderLeft: `4px solid #2980b9`,
                         '&:hover': {
                           bgcolor: 'rgba(0, 0, 0, 0.04)',
                         },
@@ -457,7 +482,7 @@ const NotificationsPage: React.FC = () => {
                     >
                       <ListItemAvatar>
                         <Avatar sx={{ bgcolor: 'transparent' }}>
-                          {getNotificationIcon(notification.type)}
+                          <InfoIcon sx={{ color: '#2980b9' }} />
                         </Avatar>
                       </ListItemAvatar>
                       <ListItemText
@@ -473,12 +498,12 @@ const NotificationsPage: React.FC = () => {
                               {notification.title}
                             </Typography>
                             
-                            {notification.type && (
+                            {notification.campaign && (
                               <Chip
-                                label={notification.type}
+                                label={notification.campaign.name}
                                 size="small"
                                 sx={{
-                                  bgcolor: getTypeColor(notification.type),
+                                  bgcolor: '#3498db',
                                   color: 'white',
                                   fontSize: '10px',
                                   height: '20px',
@@ -500,12 +525,36 @@ const NotificationsPage: React.FC = () => {
                         }
                         secondary={
                           <Box>
-                            <Typography variant="body2" sx={{ mb: 1 }}>
-                              {notification.message}
-                            </Typography>
-                            <Typography variant="caption" color="textSecondary">
-                              {formatTime(notification.timestamp)}
-                            </Typography>
+                            {notification.content && (
+                              <Typography variant="body2" color="textSecondary" sx={{ mb: 1 }}>
+                                {notification.content}
+                              </Typography>
+                            )}
+                            {notification.returnUrl ? (
+                              <Box sx={{ mt: 0.5 }}>
+                                <Button
+                                  size="small"
+                                  startIcon={<LinkIcon />}
+                                  href={`http://localhost:3000${notification.returnUrl}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  sx={{ 
+                                    fontSize: '0.75rem',
+                                    textTransform: 'none',
+                                    color: '#2980b9',
+                                    '&:hover': {
+                                      backgroundColor: 'rgba(41, 128, 185, 0.1)'
+                                    }
+                                  }}
+                                >
+                                  {`localhost:3000${notification.returnUrl}`}
+                                </Button>
+                              </Box>
+                            ) : (
+                              <Typography variant="caption" color="textSecondary" sx={{ fontStyle: 'italic' }}>
+                                Không có link chi tiết
+                              </Typography>
+                            )}
                           </Box>
                         }
                       />
@@ -595,8 +644,32 @@ const NotificationsPage: React.FC = () => {
           <DialogTitle>Tạo thông báo mới</DialogTitle>
           <DialogContent>
             <Box sx={{ pt: 1 }}>
+              <FormControl fullWidth margin="dense" sx={{ mb: 2 }}>
+                <InputLabel>Chọn chiến dịch</InputLabel>
+                <Select
+                  value={formData.campaignId}
+                  onChange={(e) => {
+                    const selectedCampaign = campaigns.find(c => c.id === e.target.value);
+                    setFormData({ 
+                      ...formData, 
+                      campaignId: e.target.value,
+                      title: selectedCampaign ? selectedCampaign.name : formData.title,
+                      returnUrl: selectedCampaign ? `/vaccination/campaign/${selectedCampaign.id}` : formData.returnUrl
+                    });
+                  }}
+                >
+                  <SelectMenuItem value="">
+                    <em>Chọn chiến dịch</em>
+                  </SelectMenuItem>
+                  {campaigns.map((campaign) => (
+                    <SelectMenuItem key={campaign.id} value={campaign.id}>
+                      {campaign.name}
+                    </SelectMenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
               <TextField
-                autoFocus
                 margin="dense"
                 label="Tiêu đề"
                 fullWidth
@@ -604,28 +677,17 @@ const NotificationsPage: React.FC = () => {
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 sx={{ mb: 2 }}
-              />
-              
-              <TextField
-                margin="dense"
-                label="Nội dung"
-                fullWidth
-                multiline
-                rows={4}
-                variant="outlined"
-                value={formData.content}
-                onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                sx={{ mb: 2 }}
+                helperText="Để trống để sử dụng tên chiến dịch"
               />
 
               <TextField
                 margin="dense"
-                label="Loại thông báo"
+                label="Link chi tiết (returnUrl)"
                 fullWidth
                 variant="outlined"
-                value={formData.type}
-                onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                placeholder="Ví dụ: info, warning, success, medical, event"
+                value={formData.returnUrl}
+                onChange={(e) => setFormData({ ...formData, returnUrl: e.target.value })}
+                helperText="Link sẽ được tự động tạo khi chọn chiến dịch"
               />
             </Box>
           </DialogContent>
@@ -634,7 +696,7 @@ const NotificationsPage: React.FC = () => {
             <Button 
               onClick={createNotification}
               variant="contained"
-              disabled={!formData.title.trim() || !formData.content.trim()}
+              disabled={!formData.campaignId || !formData.title.trim()}
             >
               Tạo thông báo
             </Button>
@@ -651,8 +713,32 @@ const NotificationsPage: React.FC = () => {
           <DialogTitle>Chỉnh sửa thông báo</DialogTitle>
           <DialogContent>
             <Box sx={{ pt: 1 }}>
+              <FormControl fullWidth margin="dense" sx={{ mb: 2 }}>
+                <InputLabel>Chọn chiến dịch</InputLabel>
+                <Select
+                  value={formData.campaignId}
+                  onChange={(e) => {
+                    const selectedCampaign = campaigns.find(c => c.id === e.target.value);
+                    setFormData({ 
+                      ...formData, 
+                      campaignId: e.target.value,
+                      title: selectedCampaign ? selectedCampaign.name : formData.title,
+                      returnUrl: selectedCampaign ? `/vaccination/campaign/${selectedCampaign.id}` : formData.returnUrl
+                    });
+                  }}
+                >
+                  <SelectMenuItem value="">
+                    <em>Chọn chiến dịch</em>
+                  </SelectMenuItem>
+                  {campaigns.map((campaign) => (
+                    <SelectMenuItem key={campaign.id} value={campaign.id}>
+                      {campaign.name}
+                    </SelectMenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
               <TextField
-                autoFocus
                 margin="dense"
                 label="Tiêu đề"
                 fullWidth
@@ -660,28 +746,17 @@ const NotificationsPage: React.FC = () => {
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 sx={{ mb: 2 }}
+                helperText="Để trống để sử dụng tên chiến dịch"
               />
               
               <TextField
                 margin="dense"
-                label="Nội dung"
-                fullWidth
-                multiline
-                rows={4}
-                variant="outlined"
-                value={formData.content}
-                onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                sx={{ mb: 2 }}
-              />
-
-              <TextField
-                margin="dense"
-                label="Loại thông báo"
+                label="Link chi tiết (returnUrl)"
                 fullWidth
                 variant="outlined"
-                value={formData.type}
-                onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                placeholder="Ví dụ: info, warning, success, medical, event"
+                value={formData.returnUrl}
+                onChange={(e) => setFormData({ ...formData, returnUrl: e.target.value })}
+                helperText="Link sẽ được tự động tạo khi chọn chiến dịch"
               />
             </Box>
           </DialogContent>
@@ -690,9 +765,9 @@ const NotificationsPage: React.FC = () => {
             <Button 
               onClick={updateNotification}
               variant="contained"
-              disabled={!formData.title.trim() || !formData.content.trim()}
+              disabled={!formData.campaignId || !formData.title.trim()}
             >
-              Cập nhật
+              Cập nhật thông báo
             </Button>
           </DialogActions>
         </Dialog>

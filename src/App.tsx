@@ -20,6 +20,7 @@ import UserProfilePage from "./components/user/UserProfilePage";
 import AdminPage from "./components/admin/AdminPage";
 import LoginPage from "./components/user/LoginPage";
 import RegisterPage from "./components/user/RegisterPage";
+import ForgotPasswordPage from "./components/user/ForgotPasswordPage";
 import NotificationsPage from "./components/notifications/NotificationsPage";
 import MedicalSupplier from "./components/admin/MedicalSupplier";
 import StudentManagementPage from "./components/admin/StudentManagementPage";
@@ -43,6 +44,7 @@ function App() {
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/homepage" element={<HomePage />} />
             <Route path="/" element={<LayoutSelector />}>
               <Route index element={<HomePage />} />
@@ -68,7 +70,7 @@ function App() {
                 element={<StudentManagementPage />}
               />
               <Route
-                path="/vaccination/:campaignId"
+                path="vaccination/campaign/:campaignId"
                 element={<VaccinationProgramDetailsPage />}
               />
               <Route
