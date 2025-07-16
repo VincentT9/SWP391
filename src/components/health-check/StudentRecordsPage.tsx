@@ -1310,18 +1310,6 @@ const StudentRecordsPage: React.FC = () => {
           </Card>
         )}
         {/* Record Detail Dialog - Enhanced styling */}{" "}
-        {/* Health Records History Section */}
-        <Box sx={{ mb: 4 }}>
-          <Typography
-            variant="h5"
-            sx={{ mb: 3, fontWeight: "bold", color: "#2980b9" }}
-          >
-            Bản ghi sức khỏe
-          </Typography>
-          <Card sx={{ mb: 3, borderRadius: 2 }}>
-            <CardContent>{/* Place for health records table */}</CardContent>
-          </Card>
-        </Box>
         <Dialog
           open={openDialog}
           onClose={handleCloseDialog}
