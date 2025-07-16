@@ -39,6 +39,8 @@ import {
   Refresh as RefreshIcon,
   Add as AddIcon,
   Edit as EditIcon,
+  Favorite as FavoriteIcon,
+  MonitorHeart as MonitorHeartIcon,
 } from "@mui/icons-material";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
@@ -50,6 +52,45 @@ import instance from "../../utils/axiosConfig";
 // ===== KHAI BÁO KIỂU DỮ LIỆU =====
 // Định nghĩa kiểu BloodType cho nhóm máu
 type BloodType = "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-" | "";
+
+// Định nghĩa kiểu cho Vaccination Result
+interface VaccinationResult {
+  id: string;
+  dosageGiven: string;
+  sideEffects: string;
+  notes: string;
+  createAt: string;
+  updateAt: string;
+  createdBy: string;
+  updatedBy: string | null;
+}
+
+// Định nghĩa kiểu cho Health Checkup Result
+interface HealthCheckupResult {
+  height: number;
+  weight: number;
+  visionLeftResult: string;
+  visionRightResult: string;
+  hearingLeftResult: string;
+  hearingRightResult: string;
+  bloodPressureSys: number;
+  bloodPressureDia: number;
+  heartRate: number;
+  dentalCheckupResult: string;
+  otherResults: string;
+  abnormalSigns: string;
+  recommendations: string;
+}
+
+// Định nghĩa kiểu cho Schedule Detail
+interface ScheduleDetail {
+  id: string;
+  scheduleId: string;
+  student: ApiStudent | null;
+  vaccinationResult: VaccinationResult | null;
+  healthCheckupResult: HealthCheckupResult | null;
+  vaccinationDate: string;
+}
 
 // Định nghĩa kiểu API Health Record
 interface ApiHealthRecord {
@@ -125,6 +166,10 @@ const HealthRecordsPage = () => {
     height?: string;
     weight?: string;
   }>({});
+
+  // State cho lịch sử khám sức khỏe và tiêm phòng
+  const [healthHistory, setHealthHistory] = useState<ScheduleDetail[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
 
   // State cho việc chọn học sinh trên tab
   const [selectedTab, setSelectedTab] = useState(0);
@@ -242,7 +287,6 @@ const HealthRecordsPage = () => {
       setLoading(false);
     }
   };
-
   // Use the extracted fetchData function inside useEffect
   useEffect(() => {
     fetchData();
@@ -253,6 +297,13 @@ const HealthRecordsPage = () => {
   const selectedStudent = students.length > 0 ? students[selectedTab] : null;
   // Lấy hồ sơ sức khỏe của học sinh đã chọn
   const healthRecord = selectedStudent?.healthRecord || null;
+
+  // Fetch health history when a student is selected
+  useEffect(() => {
+    if (selectedStudent && selectedStudent.id) {
+      fetchHealthHistory(selectedStudent.id);
+    }
+  }, [selectedStudent]);
 
   // ===== QUẢN LÝ FORM CẬP NHẬT =====
   // State lưu trữ dữ liệu đang chỉnh sửa - cập nhật theo cấu trúc mới
@@ -284,11 +335,39 @@ const HealthRecordsPage = () => {
       });
     }
   }, [healthRecord, selectedStudent]);
-
+  // ===== LẤY LỊCH SỬ KHÁM SỨC KHỎE VÀ TIÊM PHÒNG =====
+  const fetchHealthHistory = async (studentId: string) => {
+    try {
+      setHistoryLoading(true);
+      const response = await instance.get(
+        `/api/ScheduleDetail/get-schedule-details-by-student-id/${studentId}`
+      );
+      if (response.data) {
+        // Sort the history data by date in descending order (newest first)
+        const sortedData = [...response.data].sort((a, b) => {
+          return (
+            new Date(b.vaccinationDate).getTime() -
+            new Date(a.vaccinationDate).getTime()
+          );
+        });
+        setHealthHistory(sortedData);
+      }
+    } catch (error) {
+      console.error("Error fetching health history:", error);
+      toast.error("Không thể tải lịch sử kiểm tra sức khỏe và tiêm phòng");
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
   // ===== XỬ LÝ CHUYỂN TAB HỌC SINH =====
   // Xử lý khi người dùng chuyển tab học sinh
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setSelectedTab(newValue);
+
+    // Fetch health history when selecting a new student
+    if (students[newValue] && students[newValue].id) {
+      fetchHealthHistory(students[newValue].id);
+    }
   };
 
   // ===== XỬ LÝ DIALOG CẬP NHẬT =====
@@ -1206,6 +1285,349 @@ const HealthRecordsPage = () => {
                   {healthRecord.otherNotes || "Không có ghi chú bổ sung"}
                 </Typography>
               </Box>
+            </Box>
+
+            {/* ===== LỊCH SỬ KIỂM TRA SỨC KHỎE VÀ TIÊM PHÒNG ===== */}
+            <Divider sx={{ my: 4 }} />
+
+            <Box sx={{ mb: 2 }}>
+              <Typography
+                variant="subtitle1"
+                fontWeight="bold"
+                sx={{
+                  mb: 3,
+                  fontSize: "1.1rem",
+                  color: "#333",
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                <EventIcon sx={{ mr: 1, color: "#2980b9" }} />
+                Lịch sử kiểm tra sức khỏe và tiêm phòng
+              </Typography>
+
+              {historyLoading ? (
+                <Box sx={{ display: "flex", justifyContent: "center", my: 3 }}>
+                  <CircularProgress size={30} />
+                </Box>
+              ) : healthHistory.length > 0 ? (
+                <Box sx={{ mb: 2 }}>
+                  {healthHistory.map((detail, index) => (
+                    <Paper
+                      key={detail.id}
+                      elevation={0}
+                      sx={{
+                        p: 3,
+                        mb: 2,
+                        borderRadius: 2,
+                        border: "1px solid rgba(41, 128, 185, 0.2)",
+                        bgcolor: "rgba(41, 128, 185, 0.04)",
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          mb: 2,
+                          justifyContent: "space-between",
+                        }}
+                      >
+                        <Typography variant="subtitle1" fontWeight="bold">
+                          {new Date(detail.vaccinationDate).toLocaleDateString(
+                            "vi-VN",
+                            {
+                              day: "numeric",
+                              month: "numeric",
+                              year: "numeric",
+                            }
+                          )}
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            bgcolor: detail.healthCheckupResult
+                              ? "rgba(25, 118, 210, 0.1)"
+                              : "rgba(76, 175, 80, 0.1)",
+                            color: detail.healthCheckupResult
+                              ? "#1976d2"
+                              : "#4caf50",
+                            px: 2,
+                            py: 0.5,
+                            borderRadius: 5,
+                            fontWeight: 500,
+                          }}
+                        >
+                          {detail.healthCheckupResult
+                            ? "Kiểm tra sức khỏe"
+                            : "Tiêm phòng"}
+                        </Typography>
+                      </Box>
+
+                      {detail.healthCheckupResult && (
+                        <Box sx={{ mt: 2 }}>
+                          <Typography
+                            variant="subtitle2"
+                            gutterBottom
+                            color="primary"
+                          >
+                            Kết quả kiểm tra sức khỏe
+                          </Typography>
+
+                          <Box
+                            sx={{
+                              display: "grid",
+                              gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+                              gap: 2,
+                              mt: 1,
+                            }}
+                          >
+                            <Box sx={{ display: "flex", alignItems: "center" }}>
+                              <HeightIcon
+                                sx={{ color: "#2980b9", fontSize: 20, mr: 1 }}
+                              />
+                              <Typography variant="body2" sx={{ mr: 1 }}>
+                                Chiều cao:
+                              </Typography>
+                              <Typography variant="body2" fontWeight="medium">
+                                {detail.healthCheckupResult.height} cm
+                              </Typography>
+                            </Box>
+
+                            <Box sx={{ display: "flex", alignItems: "center" }}>
+                              <WeightIcon
+                                sx={{ color: "#2980b9", fontSize: 20, mr: 1 }}
+                              />
+                              <Typography variant="body2" sx={{ mr: 1 }}>
+                                Cân nặng:
+                              </Typography>
+                              <Typography variant="body2" fontWeight="medium">
+                                {detail.healthCheckupResult.weight} kg
+                              </Typography>
+                            </Box>
+
+                            <Box sx={{ display: "flex", alignItems: "center" }}>
+                              <FavoriteIcon
+                                sx={{ color: "#e91e63", fontSize: 20, mr: 1 }}
+                              />
+                              <Typography variant="body2" sx={{ mr: 1 }}>
+                                Nhịp tim:
+                              </Typography>
+                              <Typography variant="body2" fontWeight="medium">
+                                {detail.healthCheckupResult.heartRate} nhịp/phút
+                              </Typography>
+                            </Box>
+
+                            <Box sx={{ display: "flex", alignItems: "center" }}>
+                              <MonitorHeartIcon
+                                sx={{ color: "#e91e63", fontSize: 20, mr: 1 }}
+                              />
+                              <Typography variant="body2" sx={{ mr: 1 }}>
+                                Huyết áp:
+                              </Typography>
+                              <Typography variant="body2" fontWeight="medium">
+                                {detail.healthCheckupResult.bloodPressureSys}/
+                                {detail.healthCheckupResult.bloodPressureDia}{" "}
+                                mmHg
+                              </Typography>
+                            </Box>
+                          </Box>
+
+                          {(detail.healthCheckupResult.visionLeftResult ||
+                            detail.healthCheckupResult.visionRightResult) && (
+                            <Box sx={{ mt: 2 }}>
+                              <Typography
+                                variant="body2"
+                                fontWeight="medium"
+                                gutterBottom
+                              >
+                                Thị lực:
+                              </Typography>
+                              <Box sx={{ display: "flex", gap: 3, ml: 2 }}>
+                                <Typography variant="body2">
+                                  Mắt trái:{" "}
+                                  {detail.healthCheckupResult
+                                    .visionLeftResult || "Không có kết quả"}
+                                </Typography>
+                                <Typography variant="body2">
+                                  Mắt phải:{" "}
+                                  {detail.healthCheckupResult
+                                    .visionRightResult || "Không có kết quả"}
+                                </Typography>
+                              </Box>
+                            </Box>
+                          )}
+
+                          {(detail.healthCheckupResult.hearingLeftResult ||
+                            detail.healthCheckupResult.hearingRightResult) && (
+                            <Box sx={{ mt: 2 }}>
+                              <Typography
+                                variant="body2"
+                                fontWeight="medium"
+                                gutterBottom
+                              >
+                                Thính lực:
+                              </Typography>
+                              <Box sx={{ display: "flex", gap: 3, ml: 2 }}>
+                                <Typography variant="body2">
+                                  Tai trái:{" "}
+                                  {detail.healthCheckupResult
+                                    .hearingLeftResult || "Không có kết quả"}
+                                </Typography>
+                                <Typography variant="body2">
+                                  Tai phải:{" "}
+                                  {detail.healthCheckupResult
+                                    .hearingRightResult || "Không có kết quả"}
+                                </Typography>
+                              </Box>
+                            </Box>
+                          )}
+
+                          {detail.healthCheckupResult.dentalCheckupResult && (
+                            <Box sx={{ mt: 2 }}>
+                              <Typography
+                                variant="body2"
+                                fontWeight="medium"
+                                gutterBottom
+                              >
+                                Khám răng:
+                              </Typography>
+                              <Typography variant="body2" sx={{ ml: 2 }}>
+                                {detail.healthCheckupResult.dentalCheckupResult}
+                              </Typography>
+                            </Box>
+                          )}
+
+                          {detail.healthCheckupResult.abnormalSigns && (
+                            <Box sx={{ mt: 2 }}>
+                              <Typography
+                                variant="body2"
+                                fontWeight="medium"
+                                gutterBottom
+                              >
+                                Dấu hiệu bất thường:
+                              </Typography>
+                              <Typography variant="body2" sx={{ ml: 2 }}>
+                                {detail.healthCheckupResult.abnormalSigns}
+                              </Typography>
+                            </Box>
+                          )}
+
+                          {detail.healthCheckupResult.recommendations && (
+                            <Box sx={{ mt: 2 }}>
+                              <Typography
+                                variant="body2"
+                                fontWeight="medium"
+                                gutterBottom
+                              >
+                                Khuyến nghị:
+                              </Typography>
+                              <Typography variant="body2" sx={{ ml: 2 }}>
+                                {detail.healthCheckupResult.recommendations}
+                              </Typography>
+                            </Box>
+                          )}
+                        </Box>
+                      )}
+
+                      {detail.vaccinationResult && (
+                        <Box sx={{ mt: 2 }}>
+                          <Typography
+                            variant="subtitle2"
+                            gutterBottom
+                            color="primary"
+                          >
+                            Kết quả tiêm phòng
+                          </Typography>
+
+                          <Box
+                            sx={{
+                              display: "grid",
+                              gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+                              gap: 2,
+                              mt: 1,
+                            }}
+                          >
+                            <Box>
+                              <Typography
+                                variant="body2"
+                                fontWeight="medium"
+                                gutterBottom
+                              >
+                                Liều lượng:
+                              </Typography>
+                              <Typography variant="body2">
+                                {detail.vaccinationResult.dosageGiven}
+                              </Typography>
+                            </Box>
+
+                            {detail.vaccinationResult.sideEffects && (
+                              <Box>
+                                <Typography
+                                  variant="body2"
+                                  fontWeight="medium"
+                                  gutterBottom
+                                >
+                                  Tác dụng phụ:
+                                </Typography>
+                                <Typography variant="body2">
+                                  {detail.vaccinationResult.sideEffects}
+                                </Typography>
+                              </Box>
+                            )}
+                          </Box>
+
+                          {detail.vaccinationResult.notes && (
+                            <Box sx={{ mt: 2 }}>
+                              <Typography
+                                variant="body2"
+                                fontWeight="medium"
+                                gutterBottom
+                              >
+                                Ghi chú:
+                              </Typography>
+                              <Typography variant="body2">
+                                {detail.vaccinationResult.notes}
+                              </Typography>
+                            </Box>
+                          )}
+
+                          <Box
+                            sx={{
+                              mt: 1,
+                              display: "flex",
+                              justifyContent: "flex-end",
+                            }}
+                          >
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
+                              Ngày tạo:{" "}
+                              {new Date(
+                                detail.vaccinationResult.createAt
+                              ).toLocaleDateString("vi-VN")}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      )}
+                    </Paper>
+                  ))}
+                </Box>
+              ) : (
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 3,
+                    textAlign: "center",
+                    borderRadius: 2,
+                    border: "1px dashed rgba(41, 128, 185, 0.3)",
+                  }}
+                >
+                  <Typography variant="body1" color="text.secondary">
+                    Chưa có lịch sử kiểm tra sức khỏe hoặc tiêm phòng
+                  </Typography>
+                </Paper>
+              )}
             </Box>
           </CardContent>
         </Card>
