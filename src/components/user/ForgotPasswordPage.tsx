@@ -12,6 +12,7 @@ import {
 import { useForm, Controller } from "react-hook-form";
 import { toast } from "react-toastify";
 import instance from "../../utils/axiosConfig";
+import { sub } from "date-fns";
 
 type FormData = {
   username: string;
@@ -42,15 +43,22 @@ const ForgotPasswordPage = () => {
       setSuccessMessage(null);
 
       // Gọi API để lấy thông tin user theo username
-      const userResponse = await instance.get(`/api/User/get-user-by-username/${data.username}`);
-      
+      const userResponse = await instance.get(
+        `/api/User/get-user-by-username/${data.username}`
+      );
+
       // Kiểm tra dữ liệu trả về từ API
       const userData = userResponse.data;
-      
+
       // Kiểm tra xem username và email có thuộc cùng một người dùng không
-      if (userData && userData.email && userData.email.toLowerCase().trim() === data.email.toLowerCase().trim()) {
+      if (
+        userData &&
+        userData.email &&
+        userData.email.toLowerCase().trim() === data.email.toLowerCase().trim()
+      ) {
         // Username và email khớp - thuộc cùng 1 người dùng
         const emailData = {
+          subject: "Khôi phục mật khẩu - FPTMED",
           recipient: data.email,
           body: `Khôi phục mật khẩu - FPTMED
 
@@ -60,39 +68,40 @@ Bạn đã yêu cầu khôi phục mật khẩu cho tài khoản:
 • Tên đăng nhập: ${userData.username || data.username}
 • Email: ${userData.email}
 
-MẬT KHẨU CỦA BẠN: ${userData.password || 'Liên hệ admin'}
+MẬT KHẨU CỦA BẠN: ${userData.password || "Liên hệ admin"}
 
 Vui lòng đăng nhập và đổi mật khẩu ngay lập tức vì lý do bảo mật.
 
 Trân trọng,
-FPTMED Team`
+FPTMED Team`,
         };
 
-        await instance.post('/api/Auth/send-email', emailData);
-        
+        await instance.post("/api/Auth/send-email", emailData);
+
         setSuccessMessage(
           "Mật khẩu đã được gửi đến email của bạn. Vui lòng kiểm tra hộp thư để lấy mật khẩu và đăng nhập. Bạn sẽ được chuyển về trang đăng nhập trong 5 giây."
         );
         toast.success("Đã gửi mật khẩu vào email của bạn!");
-        
+
         // Chuyển về trang đăng nhập sau 5 giây
         setTimeout(() => {
           navigate("/login");
         }, 5000);
       } else {
         // Username và email không khớp - không thuộc cùng 1 người dùng
-        setErrorMessage("Thông tin người dùng không đúng. Username và email không thuộc cùng một tài khoản.");
+        setErrorMessage(
+          "Thông tin người dùng không đúng. Username và email không thuộc cùng một tài khoản."
+        );
         toast.error("Thông tin của người dùng không đúng!");
       }
     } catch (error: any) {
       console.error("Forgot password error:", error);
-      
+
       if (error.response?.status === 404) {
         toast.error("Thông tin của người dùng không đúng!");
       } else if (error.response?.status === 400) {
         toast.error("Thông tin của người dùng không đúng!");
       } else {
-       
         toast.error("Thông tin người dùng không đúng");
       }
     } finally {
@@ -137,8 +146,11 @@ FPTMED Team`
         <Typography variant="h5" sx={{ mb: 2, textAlign: "center" }}>
           Quên mật khẩu
         </Typography>
-        
-        <Typography variant="body2" sx={{ mb: 3, textAlign: "center", opacity: 0.9 }}>
+
+        <Typography
+          variant="body2"
+          sx={{ mb: 3, textAlign: "center", opacity: 0.9 }}
+        >
           Nhập tên đăng nhập và email để nhận mật khẩu qua email
         </Typography>
 
