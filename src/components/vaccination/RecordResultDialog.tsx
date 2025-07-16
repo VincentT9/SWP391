@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -65,7 +65,6 @@ const RecordResultDialog: React.FC<RecordResultDialogProps> = ({
     abnormalSigns: string;
     recommendations: string;
   };
-
   const [healthForm, setHealthForm] = useState<HealthFormData>({
     height: "",
     weight: "",
@@ -82,13 +81,8 @@ const RecordResultDialog: React.FC<RecordResultDialogProps> = ({
     recommendations: "",
   });
 
-  const [submitting, setSubmitting] = useState(false);
-
-  // Add validation state
+  const [submitting, setSubmitting] = useState(false); // Add validation state
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
-
-  // Add new state to track form validity
-  const [isFormValid, setIsFormValid] = useState<boolean>(false);
 
   // New state for consultation feature
   const [showConsultation, setShowConsultation] = useState<boolean>(false);
@@ -100,13 +94,18 @@ const RecordResultDialog: React.FC<RecordResultDialogProps> = ({
   const [isSubmittingConsultation, setIsSubmittingConsultation] =
     useState<boolean>(false);
   const [resultId, setResultId] = useState<string>("");
-
   // Handle vaccination form changes
   const handleVaccChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setVaccForm((prev) => ({ ...prev, [name]: value }));
-  };
 
+    // Clear previous error for this field
+    setFormErrors((prev) => ({ ...prev, [name]: "" }));
+
+    setVaccForm((prev) => ({ ...prev, [name]: value }));
+
+    // Validate form after changes
+    validateVaccinationForm();
+  };
   // Update the handleHealthChange function to validate inputs
   const handleHealthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -132,13 +131,55 @@ const RecordResultDialog: React.FC<RecordResultDialogProps> = ({
           [name]: "Giá trị không được âm",
         }));
       }
+
+      // Specific validations for height and weight
+      if (name === "height" && value) {
+        if (numValue < 50) {
+          setFormErrors((prev) => ({
+            ...prev,
+            [name]: "Chiều cao quá thấp (tối thiểu 50cm)",
+          }));
+        } else if (numValue > 250) {
+          setFormErrors((prev) => ({
+            ...prev,
+            [name]: "Chiều cao quá cao (tối đa 250cm)",
+          }));
+        }
+      }
+
+      if (name === "weight" && value) {
+        if (numValue < 10) {
+          setFormErrors((prev) => ({
+            ...prev,
+            [name]: "Cân nặng quá thấp (tối thiểu 10kg)",
+          }));
+        } else if (numValue > 200) {
+          setFormErrors((prev) => ({
+            ...prev,
+            [name]: "Cân nặng quá cao (tối đa 200kg)",
+          }));
+        }
+      }
     }
 
     setHealthForm((prev) => ({ ...prev, [name]: value }));
-  };
 
+    // Trigger validation after value change
+    if (campaignType === 0) {
+      validateVaccinationForm();
+    } else {
+      validateHealthForm();
+    }
+  };
   // Submit vaccination results
   const handleVaccSubmit = async () => {
+    // Validate form before submission
+    if (!validateVaccinationForm()) {
+      toast.error("Vui lòng điền đầy đủ thông tin bắt buộc");
+      markAllRequiredFields();
+      return;
+    }
+
     try {
       setSubmitting(true);
 
@@ -174,63 +215,102 @@ const RecordResultDialog: React.FC<RecordResultDialogProps> = ({
     } finally {
       setSubmitting(false);
     }
-  };
-
-  // Modify handleHealthSubmit to store result ID for potential consultation
+  }; // Modify handleHealthSubmit to store result ID for potential consultation
   const handleHealthSubmit = async () => {
-    // Validate all numeric fields before submission
-    const errors: { [key: string]: string } = {};
+    // First perform a full validation of the form
+    if (!validateHealthForm()) {
+      toast.error("Vui lòng điền đầy đủ thông tin bắt buộc");
+      markAllRequiredFields();
+      return;
+    }
 
-    // Define numeric fields with proper typing
-    const numericFields: { key: keyof HealthFormData; label: string }[] = [
-      { key: "height", label: "Chiều cao" },
-      { key: "weight", label: "Cân nặng" },
-      { key: "bloodPressureSys", label: "Huyết áp tâm thu" },
-      { key: "bloodPressureDia", label: "Huyết áp tâm trương" },
-      { key: "heartRate", label: "Nhịp tim" },
-    ];
-
-    // Check each numeric field with proper typing
-    numericFields.forEach((field) => {
-      const value = parseFloat(healthForm[field.key]);
-      if (healthForm[field.key] && (isNaN(value) || value < 0)) {
-        errors[field.key] = `${field.label} không được âm`;
-      }
-    });
-
-    // If there are errors, show them and don't submit
-    if (Object.keys(errors).length > 0) {
-      setFormErrors(errors);
+    // Kiểm tra scheduleDetailId
+    if (!scheduleDetailId) {
+      console.error("Missing scheduleDetailId:", scheduleDetailId);
+      toast.error(
+        "Lỗi: Thiếu thông tin lịch khám. Vui lòng thử làm mới trang."
+      );
       return;
     }
 
     try {
       setSubmitting(true);
 
+      // Chuyển đổi đúng định dạng và kiểm tra dữ liệu trước khi gửi
       const payload = {
         scheduleDetailId,
-        height: healthForm.height ? parseFloat(healthForm.height) : null,
-        weight: healthForm.weight ? parseFloat(healthForm.weight) : null,
-        visionLeftResult: healthForm.visionLeftResult,
-        visionRightResult: healthForm.visionRightResult,
-        hearingLeftResult: healthForm.hearingLeftResult,
-        hearingRightResult: healthForm.hearingRightResult,
-        bloodPressureSys: healthForm.bloodPressureSys
-          ? parseFloat(healthForm.bloodPressureSys)
-          : null,
-        bloodPressureDia: healthForm.bloodPressureDia
-          ? parseFloat(healthForm.bloodPressureDia)
-          : null,
-        heartRate: healthForm.heartRate
-          ? parseFloat(healthForm.heartRate)
-          : null,
-        dentalCheckupResult: healthForm.dentalCheckupResult,
-        otherResults: healthForm.otherResults,
-        abnormalSigns: healthForm.abnormalSigns,
-        recommendations: healthForm.recommendations,
+        height:
+          healthForm.height && healthForm.height.trim() !== ""
+            ? parseFloat(healthForm.height)
+            : null,
+        weight:
+          healthForm.weight && healthForm.weight.trim() !== ""
+            ? parseFloat(healthForm.weight)
+            : null,
+        visionLeftResult: healthForm.visionLeftResult || "",
+        visionRightResult: healthForm.visionRightResult || "",
+        hearingLeftResult: healthForm.hearingLeftResult || "",
+        hearingRightResult: healthForm.hearingRightResult || "",
+        bloodPressureSys:
+          healthForm.bloodPressureSys &&
+          healthForm.bloodPressureSys.trim() !== ""
+            ? parseFloat(healthForm.bloodPressureSys)
+            : null,
+        bloodPressureDia:
+          healthForm.bloodPressureDia &&
+          healthForm.bloodPressureDia.trim() !== ""
+            ? parseFloat(healthForm.bloodPressureDia)
+            : null,
+        heartRate:
+          healthForm.heartRate && healthForm.heartRate.trim() !== ""
+            ? parseFloat(healthForm.heartRate)
+            : null,
+        dentalCheckupResult: healthForm.dentalCheckupResult || "",
+        otherResults: healthForm.otherResults || "",
+        abnormalSigns: healthForm.abnormalSigns || "",
+        recommendations: healthForm.recommendations || "",
       };
 
-      const response = await instance.post("/api/HealthCheckupResult", payload);
+      // Log payload trước khi gửi để debug
+      console.log("Sending payload to API:", JSON.stringify(payload));
+
+      // Kiểm tra lại dữ liệu payload một lần nữa
+      if (
+        payload.scheduleDetailId === null ||
+        payload.scheduleDetailId === undefined
+      ) {
+        throw new Error("Missing scheduleDetailId in payload");
+      }
+
+      // Kiểm tra các trường số có đúng định dạng không
+      const numericFields = [
+        "height",
+        "weight",
+        "bloodPressureSys",
+        "bloodPressureDia",
+        "heartRate",
+      ];
+      for (const field of numericFields) {
+        if (
+          payload[field as keyof typeof payload] !== null &&
+          (typeof payload[field as keyof typeof payload] !== "number" ||
+            isNaN(payload[field as keyof typeof payload] as number))
+        ) {
+          throw new Error(`Invalid numeric value for ${field}`);
+        }
+      }
+
+      // Gọi API với timeout dài hơn để xử lý các vấn đề mạng
+      const response = await instance.post(
+        "/api/HealthCheckupResult",
+        payload,
+        {
+          timeout: 15000, // Tăng timeout lên 15 giây
+        }
+      );
+
+      // Log response nhận về
+      console.log("API response received:", response);
 
       // Store the returned ID for consultation creation
       if (response.data && response.data.id) {
@@ -255,9 +335,49 @@ const RecordResultDialog: React.FC<RecordResultDialogProps> = ({
         onSuccess();
         onClose();
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error submitting health checkup result:", error);
-      toast.error("Không thể lưu kết quả khám sức khỏe. Vui lòng thử lại.");
+
+      // Hiển thị thông báo lỗi chi tiết hơn
+      let errorMessage = "Không thể lưu kết quả khám sức khỏe. ";
+
+      if (error.response) {
+        // Server trả về response với mã lỗi
+        console.error("Error response status:", error.response.status);
+        console.error("Error response data:", error.response.data);
+
+        if (error.response.status === 500) {
+          errorMessage += "Đã thực hiện ghi nhận kết quả";
+
+          // Log thêm chi tiết nếu có
+          if (error.response.data) {
+            console.error(
+              "Error details:",
+              JSON.stringify(error.response.data)
+            );
+          }
+        } else if (error.response.data && error.response.data.message) {
+          errorMessage += error.response.data.message;
+        } else if (
+          error.response.data &&
+          typeof error.response.data === "string"
+        ) {
+          errorMessage += error.response.data;
+        } else {
+          errorMessage += `Lỗi: ${error.response.status}`;
+        }
+      } else if (error.request) {
+        // Request đã được gửi nhưng không nhận được response
+        console.error("No response received:", error.request);
+        errorMessage +=
+          "Không nhận được phản hồi từ máy chủ. Vui lòng kiểm tra kết nối mạng.";
+      } else {
+        // Có lỗi khi thiết lập request
+        console.error("Error message:", error.message);
+        errorMessage += error.message || "Lỗi không xác định.";
+      }
+
+      toast.error(errorMessage);
     } finally {
       setSubmitting(false);
     }
@@ -341,20 +461,26 @@ const RecordResultDialog: React.FC<RecordResultDialogProps> = ({
       ...consultationData,
       status: event.target.value as number,
     });
-  };
-
-  // Validate vaccination form
+  }; // Validate vaccination form
   const validateVaccinationForm = useCallback(() => {
     // Check if the required dosage field is filled
+    const missingFields: { [key: string]: string } = {};
+
     if (!vaccForm.dosageGiven || vaccForm.dosageGiven.trim() === "") {
-      setIsFormValid(false);
+      missingFields.dosageGiven = "Liều lượng đã tiêm là trường bắt buộc";
+    }
+
+    // Update form errors with missing required fields
+    if (Object.keys(missingFields).length > 0) {
+      setFormErrors((prev) => ({
+        ...prev,
+        ...missingFields,
+      }));
       return false;
     }
-    setIsFormValid(true);
-    return true;
-  }, [vaccForm.dosageGiven]);
 
-  // Validate health checkup form
+    return true;
+  }, [vaccForm.dosageGiven]); // Validate health checkup form
   const validateHealthForm = useCallback(() => {
     // Define required fields - adjust as needed based on your requirements
     const required = [
@@ -365,20 +491,145 @@ const RecordResultDialog: React.FC<RecordResultDialogProps> = ({
       "heartRate",
     ];
 
-    // Check if all required fields are filled
+    // Store current errors
+    const currentErrors: { [key: string]: string } = {};
+
+    // Kiểm tra các trường bắt buộc
+    required.forEach((field) => {
+      const value = healthForm[field as keyof HealthFormData];
+      if (!value || value.trim() === "") {
+        currentErrors[field] = `Trường này là bắt buộc`;
+      }
+    });
+
+    // Validate numeric fields with better type checking and reasonable value ranges
+    if (healthForm.height && healthForm.height.trim() !== "") {
+      const heightValue = parseFloat(healthForm.height);
+      if (isNaN(heightValue)) {
+        currentErrors.height = "Chiều cao phải là số";
+      } else if (heightValue < 30) {
+        currentErrors.height = "Chiều cao quá thấp (tối thiểu 30cm)";
+      } else if (heightValue > 250) {
+        currentErrors.height = "Chiều cao quá cao (tối đa 250cm)";
+      }
+    }
+
+    if (healthForm.weight && healthForm.weight.trim() !== "") {
+      const weightValue = parseFloat(healthForm.weight);
+      if (isNaN(weightValue)) {
+        currentErrors.weight = "Cân nặng phải là số";
+      } else if (weightValue < 2) {
+        currentErrors.weight = "Cân nặng quá thấp (tối thiểu 2kg)";
+      } else if (weightValue > 200) {
+        currentErrors.weight = "Cân nặng quá cao (tối đa 200kg)";
+      }
+    }
+
+    // Validate blood pressure and heart rate
+    if (
+      healthForm.bloodPressureSys &&
+      healthForm.bloodPressureSys.trim() !== ""
+    ) {
+      const bpSys = parseFloat(healthForm.bloodPressureSys);
+      if (isNaN(bpSys)) {
+        currentErrors.bloodPressureSys = "Huyết áp tâm thu phải là số";
+      } else if (bpSys < 50 || bpSys > 250) {
+        currentErrors.bloodPressureSys =
+          "Huyết áp tâm thu không hợp lệ (50-250 mmHg)";
+      }
+    }
+
+    if (
+      healthForm.bloodPressureDia &&
+      healthForm.bloodPressureDia.trim() !== ""
+    ) {
+      const bpDia = parseFloat(healthForm.bloodPressureDia);
+      if (isNaN(bpDia)) {
+        currentErrors.bloodPressureDia = "Huyết áp tâm trương phải là số";
+      } else if (bpDia < 30 || bpDia > 150) {
+        currentErrors.bloodPressureDia =
+          "Huyết áp tâm trương không hợp lệ (30-150 mmHg)";
+      }
+    }
+
+    if (healthForm.heartRate && healthForm.heartRate.trim() !== "") {
+      const hr = parseFloat(healthForm.heartRate);
+      if (isNaN(hr)) {
+        currentErrors.heartRate = "Nhịp tim phải là số";
+      } else if (hr < 30 || hr > 250) {
+        currentErrors.heartRate = "Nhịp tim không hợp lệ (30-250 nhịp/phút)";
+      }
+    }
+
+    // Update form errors with all current errors
+    setFormErrors(currentErrors);
+
+    // Check if all required fields are filled and no errors exist
     const allRequiredFilled = required.every(
       (field) =>
         healthForm[field as keyof HealthFormData] &&
         healthForm[field as keyof HealthFormData].trim() !== ""
     );
 
-    setIsFormValid(allRequiredFilled);
-    return allRequiredFilled;
+    const hasNoErrors = Object.keys(currentErrors).length === 0;
+
+    return allRequiredFilled && hasNoErrors;
   }, [healthForm]);
+  // Thêm useEffect để reset form errors khi component được mở
+  useEffect(() => {
+    if (open) {
+      // Reset form errors khi mở form
+      setFormErrors({});
+    }
+  }, [open]);
 
   // Get current date for date picker min date
   const today = new Date();
   today.setHours(0, 0, 0, 0); // Reset time part to start of day
+
+  // Thêm hàm đánh dấu tất cả các trường bắt buộc
+  const markAllRequiredFields = () => {
+    if (campaignType === 0) {
+      // Đánh dấu các trường bắt buộc cho form tiêm chủng
+      const missingFields: { [key: string]: string } = {};
+
+      if (!vaccForm.dosageGiven || vaccForm.dosageGiven.trim() === "") {
+        missingFields.dosageGiven = "Liều lượng đã tiêm là trường bắt buộc";
+      }
+
+      if (Object.keys(missingFields).length > 0) {
+        setFormErrors((prev) => ({
+          ...prev,
+          ...missingFields,
+        }));
+      }
+    } else {
+      // Đánh dấu các trường bắt buộc cho form khám sức khỏe
+      const required = [
+        "height",
+        "weight",
+        "bloodPressureSys",
+        "bloodPressureDia",
+        "heartRate",
+      ];
+
+      const missingFields: { [key: string]: string } = {};
+
+      required.forEach((field) => {
+        const value = healthForm[field as keyof HealthFormData];
+        if (!value || value.trim() === "") {
+          missingFields[field] = `Trường này là bắt buộc`;
+        }
+      });
+
+      if (Object.keys(missingFields).length > 0) {
+        setFormErrors((prev) => ({
+          ...prev,
+          ...missingFields,
+        }));
+      }
+    }
+  };
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
@@ -422,6 +673,7 @@ const RecordResultDialog: React.FC<RecordResultDialogProps> = ({
             {campaignType === 0 ? (
               // Vaccination form
               <Box>
+                {" "}
                 <TextField
                   fullWidth
                   label="Liều lượng đã tiêm"
@@ -430,8 +682,9 @@ const RecordResultDialog: React.FC<RecordResultDialogProps> = ({
                   onChange={handleVaccChange}
                   margin="normal"
                   required
+                  error={!!formErrors.dosageGiven}
+                  helperText={formErrors.dosageGiven}
                 />
-
                 <TextField
                   fullWidth
                   label="Tác dụng phụ (nếu có)"
@@ -442,7 +695,6 @@ const RecordResultDialog: React.FC<RecordResultDialogProps> = ({
                   multiline
                   rows={3}
                 />
-
                 <TextField
                   fullWidth
                   label="Ghi chú"
@@ -718,7 +970,7 @@ const RecordResultDialog: React.FC<RecordResultDialogProps> = ({
           <>
             <Button onClick={onClose} disabled={submitting}>
               Hủy
-            </Button>
+            </Button>{" "}
             <Button
               variant="contained"
               color="primary"
