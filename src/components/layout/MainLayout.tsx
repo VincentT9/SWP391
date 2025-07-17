@@ -94,7 +94,7 @@ const menuCategories: MenuCategory[] = [
   },
   // Promo menu items - chỉ hiển thị khi chưa đăng nhập
   {
-    name: "Gửi thuốc đến trường",
+    name: "Gửi thuốc cho con",
     path: "/promo/medication-delivery",
   },
   {

@@ -14,6 +14,7 @@ import {
   Card,
   CardContent,
   CardActions,
+  CircularProgress,
 } from "@mui/material";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
@@ -23,7 +24,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { format } from "date-fns";
 
 interface VaccinationProgramFormProps {
-  onSave: (data: any) => void;
+  onSave: (data: any) => Promise<any>;
   onCancel: () => void;
 }
 
@@ -45,8 +46,8 @@ const VaccinationProgramForm: React.FC<VaccinationProgramFormProps> = ({
       notes: string;
     }>
   >([]);
-
   const [errors, setErrors] = useState<any>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -144,9 +145,10 @@ const VaccinationProgramForm: React.FC<VaccinationProgramFormProps> = ({
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (validateForm()) {
+      setIsSubmitting(true); // Set loading state
+
       // Chuyển đổi dữ liệu lịch sang định dạng API
       const formattedSchedules = schedules.map((schedule) => ({
         scheduledDate: schedule.scheduledDate.toISOString(),
@@ -154,11 +156,21 @@ const VaccinationProgramForm: React.FC<VaccinationProgramFormProps> = ({
         notes: schedule.notes,
       }));
 
-      onSave({
-        ...formData,
-        schedules: formattedSchedules,
-      });
+      try {
+        // Wait for the save operation to complete
+        await onSave({
+          ...formData,
+          schedules: formattedSchedules,
+        });
+        // No need to reset isSubmitting here as the component will unmount
+        // if the save was successful
+      } catch (error) {
+        // If there's an error, we need to reset the submitting state
+        setIsSubmitting(false);
+        console.error("Error saving form:", error);
+      }
     }
+    // If validation fails, do not call onSave and keep the form visible
   };
 
   return (
@@ -178,7 +190,6 @@ const VaccinationProgramForm: React.FC<VaccinationProgramFormProps> = ({
           helperText={errors.campaignName}
           required
         />
-
         <TextField
           fullWidth
           margin="normal"
@@ -192,7 +203,6 @@ const VaccinationProgramForm: React.FC<VaccinationProgramFormProps> = ({
           multiline
           rows={3}
         />
-
         <FormControl fullWidth margin="normal" required>
           <InputLabel>Loại chương trình</InputLabel>
           <Select
@@ -205,9 +215,7 @@ const VaccinationProgramForm: React.FC<VaccinationProgramFormProps> = ({
           </Select>
           <FormHelperText>Chọn loại chương trình</FormHelperText>
         </FormControl>
-
         <Divider sx={{ my: 3 }} />
-
         {/* Phần thêm lịch - thay thế Grid bằng Box với flexbox */}
         <Box sx={{ mb: 2 }}>
           <Typography variant="h6" gutterBottom>
@@ -317,14 +325,23 @@ const VaccinationProgramForm: React.FC<VaccinationProgramFormProps> = ({
               ))}
             </Box>
           )}
-        </Box>
-
+        </Box>{" "}
         <Box sx={{ mt: 3, display: "flex", justifyContent: "flex-end" }}>
-          <Button onClick={onCancel} sx={{ mr: 1 }}>
+          <Button onClick={onCancel} sx={{ mr: 1 }} disabled={isSubmitting}>
             Hủy
-          </Button>
-          <Button variant="contained" color="primary" onClick={handleSubmit}>
-            Lưu
+          </Button>{" "}
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+            startIcon={
+              isSubmitting ? (
+                <CircularProgress size={20} color="inherit" />
+              ) : null
+            }
+          >
+            {isSubmitting ? "Đang lưu..." : "Lưu"}
           </Button>
         </Box>
       </Box>

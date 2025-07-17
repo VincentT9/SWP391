@@ -43,7 +43,7 @@ const menuItems = [
   { label: "Trang chủ", path: "/" },
   { label: "Hồ sơ sức khỏe", path: "/health-records" },
   { label: "Sự kiện y tế", path: "/medical-events" },
-  { label: "Thuốc cho con", path: "/medication" },
+  { label: "Gửi thuốc cho con", path: "/medication" },
   // { label: "Tiêm phòng", path: "/vaccination" },
   { label: "Thông báo", path: "/notifications" },
 ];
