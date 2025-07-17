@@ -354,7 +354,7 @@ const HealthRecordsPage = () => {
       }
     } catch (error) {
       console.error("Error fetching health history:", error);
-      toast.error("Không thể tải lịch sử kiểm tra sức khỏe và tiêm phòng");
+      // toast.error("Không thể tải lịch sử kiểm tra sức khỏe và tiêm phòng");
     } finally {
       setHistoryLoading(false);
     }
@@ -423,10 +423,10 @@ const HealthRecordsPage = () => {
       newErrors.height = "Chiều cao phải lớn hơn 0";
       isValid = false;
     } else if (height < 50) {
-      newErrors.height = "Chiều cao không chuẩn so với học sinh";
+      newErrors.height = "Chiều cao từ 50 - 250 cm là hợp lệ";
       isValid = false;
     } else if (height > 250) {
-      newErrors.height = "Chiều cao không chuẩn so với học sinh";
+      newErrors.height = "Chiều cao từ 50 - 250 cm là hợp lệ";
       isValid = false;
     }
 
@@ -442,10 +442,10 @@ const HealthRecordsPage = () => {
       newErrors.weight = "Cân nặng phải lớn hơn 0";
       isValid = false;
     } else if (weight < 10) {
-      newErrors.weight = "Cân nặng không chuẩn so với học sinh";
+      newErrors.weight = "Cân nặng từ 10 - 150 kg là hợp lệ";
       isValid = false;
     } else if (weight > 150) {
-      newErrors.weight = "Cân nặng không chuẩn so với học sinh";
+      newErrors.weight = "Cân nặng từ 10 - 150 kg là hợp lệ";
       isValid = false;
     }
 
