@@ -33,7 +33,7 @@ type PasswordFormData = {
   confirmPassword: string;
 };
 
-const ForgotPasswordPage = () => {
+const ForgotPassword = () => {
   // States for managing the workflow
   const [activeStep, setActiveStep] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -184,6 +184,7 @@ const ForgotPasswordPage = () => {
   const handleClickShowPassword = () => {
     setShowPassword(!showPassword);
   };
+
   const steps = ["Nhập Email", "Xác thực OTP", "Đặt lại mật khẩu"];
 
   return (
@@ -278,7 +279,7 @@ const ForgotPasswordPage = () => {
                   variant="outlined"
                   error={!!emailForm.formState.errors.email}
                   helperText={emailForm.formState.errors.email?.message}
-                  disabled={loading || !!successMessage}
+                  disabled={loading}
                   sx={{
                     mb: 3,
                     backgroundColor: "white",
@@ -288,11 +289,12 @@ const ForgotPasswordPage = () => {
                 />
               )}
             />
+
             <Button
               type="submit"
               fullWidth
               variant="contained"
-              disabled={loading || !!successMessage}
+              disabled={loading}
               sx={{
                 mt: 1,
                 mb: 2,
@@ -309,27 +311,16 @@ const ForgotPasswordPage = () => {
               {loading ? (
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                   <CircularProgress size={20} color="inherit" />
-                  Đang gửi email...
+                  Đang gửi...
                 </Box>
               ) : (
-                "Gửi mật khẩu"
+                "Gửi mã OTP"
               )}
-            </Button>{" "}
-            <Box sx={{ textAlign: "center" }}>
-              <Typography variant="body2" color="white">
-                Nhớ mật khẩu?{" "}
-                <RouterLink
-                  to="/login"
-                  style={{ color: "yellow", textDecoration: "none" }}
-                >
-                  Đăng nhập
-                </RouterLink>
-              </Typography>
-            </Box>
+            </Button>
           </Box>
         )}
 
-        {/* Step 2: OTP verification */}
+        {/* Step 2: OTP Verification form */}
         {activeStep === 1 && (
           <Box
             component="form"
@@ -342,9 +333,9 @@ const ForgotPasswordPage = () => {
               control={otpForm.control}
               rules={{
                 required: "Mã OTP là bắt buộc",
-                minLength: {
-                  value: 6,
-                  message: "Mã OTP phải có ít nhất 6 ký tự",
+                pattern: {
+                  value: /^[0-9]+$/,
+                  message: "Mã OTP chỉ bao gồm các số",
                 },
               }}
               render={({ field }) => (
@@ -352,11 +343,11 @@ const ForgotPasswordPage = () => {
                   {...field}
                   fullWidth
                   id="otp"
-                  placeholder="Nhập mã OTP đã được gửi đến email của bạn"
+                  placeholder="Nhập mã OTP từ email của bạn"
                   variant="outlined"
                   error={!!otpForm.formState.errors.otp}
                   helperText={otpForm.formState.errors.otp?.message}
-                  disabled={loading || !!successMessage}
+                  disabled={loading}
                   sx={{
                     mb: 3,
                     backgroundColor: "white",
@@ -371,7 +362,7 @@ const ForgotPasswordPage = () => {
               type="submit"
               fullWidth
               variant="contained"
-              disabled={loading || !!successMessage}
+              disabled={loading}
               sx={{
                 mt: 1,
                 mb: 2,
@@ -394,10 +385,28 @@ const ForgotPasswordPage = () => {
                 "Xác thực OTP"
               )}
             </Button>
+
+            <Button
+              fullWidth
+              variant="outlined"
+              onClick={() => setActiveStep(0)}
+              sx={{
+                mb: 2,
+                py: 1.5,
+                color: "white",
+                borderColor: "white",
+                "&:hover": {
+                  borderColor: "white",
+                  opacity: 0.9,
+                },
+              }}
+            >
+              Quay lại
+            </Button>
           </Box>
         )}
 
-        {/* Step 3: Reset password */}
+        {/* Step 3: Reset Password form */}
         {activeStep === 2 && (
           <Box
             component="form"
@@ -427,13 +436,7 @@ const ForgotPasswordPage = () => {
                   helperText={
                     passwordForm.formState.errors.newPassword?.message
                   }
-                  disabled={loading || !!successMessage}
-                  sx={{
-                    mb: 3,
-                    backgroundColor: "white",
-                    borderRadius: 1,
-                    "& .MuiOutlinedInput-notchedOutline": { border: "none" },
-                  }}
+                  disabled={loading}
                   InputProps={{
                     endAdornment: (
                       <InputAdornment position="end">
@@ -441,17 +444,24 @@ const ForgotPasswordPage = () => {
                           aria-label="toggle password visibility"
                           onClick={handleClickShowPassword}
                           edge="end"
+                          sx={{ color: "#2980b9" }}
                         >
                           {showPassword ? <VisibilityOff /> : <Visibility />}
                         </IconButton>
                       </InputAdornment>
                     ),
                   }}
+                  sx={{
+                    mb: 2,
+                    backgroundColor: "white",
+                    borderRadius: 1,
+                    "& .MuiOutlinedInput-notchedOutline": { border: "none" },
+                  }}
                 />
               )}
             />
 
-            <Typography sx={{ mb: 1 }}>Xác nhận mật khẩu mới:</Typography>
+            <Typography sx={{ mb: 1 }}>Xác nhận mật khẩu:</Typography>
             <Controller
               name="confirmPassword"
               control={passwordForm.control}
@@ -467,19 +477,13 @@ const ForgotPasswordPage = () => {
                   fullWidth
                   type={showPassword ? "text" : "password"}
                   id="confirmPassword"
-                  placeholder="Xác nhận mật khẩu mới"
+                  placeholder="Nhập lại mật khẩu mới"
                   variant="outlined"
                   error={!!passwordForm.formState.errors.confirmPassword}
                   helperText={
                     passwordForm.formState.errors.confirmPassword?.message
                   }
-                  disabled={loading || !!successMessage}
-                  sx={{
-                    mb: 3,
-                    backgroundColor: "white",
-                    borderRadius: 1,
-                    "& .MuiOutlinedInput-notchedOutline": { border: "none" },
-                  }}
+                  disabled={loading}
                   InputProps={{
                     endAdornment: (
                       <InputAdornment position="end">
@@ -487,11 +491,18 @@ const ForgotPasswordPage = () => {
                           aria-label="toggle password visibility"
                           onClick={handleClickShowPassword}
                           edge="end"
+                          sx={{ color: "#2980b9" }}
                         >
                           {showPassword ? <VisibilityOff /> : <Visibility />}
                         </IconButton>
                       </InputAdornment>
                     ),
+                  }}
+                  sx={{
+                    mb: 3,
+                    backgroundColor: "white",
+                    borderRadius: 1,
+                    "& .MuiOutlinedInput-notchedOutline": { border: "none" },
                   }}
                 />
               )}
@@ -501,7 +512,7 @@ const ForgotPasswordPage = () => {
               type="submit"
               fullWidth
               variant="contained"
-              disabled={loading || !!successMessage}
+              disabled={loading}
               sx={{
                 mt: 1,
                 mb: 2,
@@ -524,11 +535,41 @@ const ForgotPasswordPage = () => {
                 "Đặt lại mật khẩu"
               )}
             </Button>
+
+            <Button
+              fullWidth
+              variant="outlined"
+              onClick={() => setActiveStep(1)}
+              sx={{
+                mb: 2,
+                py: 1.5,
+                color: "white",
+                borderColor: "white",
+                "&:hover": {
+                  borderColor: "white",
+                  opacity: 0.9,
+                },
+              }}
+            >
+              Quay lại
+            </Button>
           </Box>
         )}
+
+        <Box sx={{ textAlign: "center", mt: 2 }}>
+          <Typography variant="body2" color="white">
+            Nhớ mật khẩu?{" "}
+            <RouterLink
+              to="/login"
+              style={{ color: "yellow", textDecoration: "none" }}
+            >
+              Đăng nhập
+            </RouterLink>
+          </Typography>
+        </Box>
       </Paper>
     </Box>
   );
 };
 
-export default ForgotPasswordPage;
+export default ForgotPassword;

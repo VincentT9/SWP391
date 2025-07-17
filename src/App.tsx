@@ -20,7 +20,7 @@ import UserProfilePage from "./components/user/UserProfilePage";
 import AdminPage from "./components/admin/AdminPage";
 import LoginPage from "./components/user/LoginPage";
 import RegisterPage from "./components/user/RegisterPage";
-import ForgotPasswordPage from "./components/user/ForgotPasswordPage";
+import ForgotPassword from "./components/user/ForgotPassword";
 import NotificationsPage from "./components/notifications/NotificationsPage";
 import MedicalSupplier from "./components/admin/MedicalSupplier";
 import StudentManagementPage from "./components/admin/StudentManagementPage";
@@ -44,16 +44,22 @@ function App() {
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
-            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/homepage" element={<HomePage />} />
             <Route path="/" element={<LayoutSelector />}>
               <Route index element={<HomePage />} />
               <Route path="landing" element={<LandingPage />} />
-              <Route path="promo/medication-delivery" element={<MedicationDeliveryPromo />} />
+              <Route
+                path="promo/medication-delivery"
+                element={<MedicationDeliveryPromo />}
+              />
               <Route path="promo/vaccination" element={<VaccinationPromo />} />
               <Route path="promo/health-check" element={<HealthCheckPromo />} />
               <Route path="health-records" element={<HealthRecordsPage />} />
-              <Route path="health-declaration" element={<HealthDeclarationFormPage />} />
+              <Route
+                path="health-declaration"
+                element={<HealthDeclarationFormPage />}
+              />
               <Route path="medication" element={<MedicationPage />} />
               <Route path="medication/nurse" element={<MedicationPage />} />
               <Route path="medication/parent" element={<MedicationPage />} />
