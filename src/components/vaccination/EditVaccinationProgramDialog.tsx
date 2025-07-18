@@ -134,6 +134,7 @@ const EditVaccinationProgramDialog: React.FC<
         description: editFormData.description,
         status: editFormData.status,
         type: editFormData.type,
+        schedules: campaign.schedules || [], // Thêm schedules để không bị mất khi cập nhật
       };
 
       await instance.put(
@@ -149,6 +150,7 @@ const EditVaccinationProgramDialog: React.FC<
         campaign.description = editFormData.description;
         campaign.status = editFormData.status;
         campaign.type = editFormData.type;
+        // Không cần cập nhật schedules vì chúng ta đã giữ nguyên
       }
 
       // Đóng dialog và thông báo cho component cha
