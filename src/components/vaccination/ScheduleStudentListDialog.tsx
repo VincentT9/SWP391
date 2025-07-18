@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -90,14 +90,7 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
   const [consentFormExists, setConsentFormExists] = useState(false);
 
   // Fetch danh sách học sinh trong lịch
-  useEffect(() => {
-    if (open && schedule) {
-      fetchStudents();
-      checkExistingConsentForms();
-    }
-  }, [open, schedule]);
-
-  const fetchStudents = async () => {
+  const fetchStudents = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -117,6 +110,7 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
             className: item.student.class,
             dateOfBirth: item.student.dateOfBirth,
             gender: item.student.gender,
+            parentId: item.student.parentId, // Add parentId for notifications
             status: item.vaccinationResult || item.healthCheckupResult ? 1 : 0, // 1 = completed, 0 = not done
             vaccinationDate: item.vaccinationDate,
             hasResult: !!item.vaccinationResult || !!item.healthCheckupResult,
@@ -143,10 +137,10 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [schedule?.id]);
 
   // Hàm kiểm tra phiếu đồng ý đã tồn tại chưa
-  const checkExistingConsentForms = async () => {
+  const checkExistingConsentForms = useCallback(async () => {
     try {
       if (!schedule || !schedule.campaignId) return;
 
@@ -168,7 +162,14 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
       // Giả định rằng không có lỗi nghĩa là không có phiếu đồng ý
       setConsentFormExists(false);
     }
-  };
+  }, [schedule]);
+
+  useEffect(() => {
+    if (open && schedule) {
+      fetchStudents();
+      checkExistingConsentForms();
+    }
+  }, [open, schedule, fetchStudents, checkExistingConsentForms]);
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value);
@@ -408,12 +409,12 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
     try {
       setIsCreatingConsentForms(true);
 
-      // Lấy campaignId từ schedule
-      const campaignId = schedule.campaignId;
+      // Sử dụng scheduleId thay vì campaignId
+      const scheduleId = schedule.id;
 
-      // Kiểm tra campaignId
-      if (!campaignId) {
-        toast.error("Không tìm thấy ID chiến dịch. Vui lòng kiểm tra lại.");
+      // Kiểm tra scheduleId
+      if (!scheduleId) {
+        toast.error("Không tìm thấy ID lịch. Vui lòng kiểm tra lại.");
         return;
       }
 
@@ -428,7 +429,7 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
       for (const student of students) {
         try {
           const requestBody = {
-            campaignId: campaignId,
+            campaignId: schedule.campaignId, // Vẫn cần campaignId để backend xử lý
             studentId: student.studentId,
             isApproved: isApproved,
             consentDate: new Date(consentFormData.consentDate).toISOString(),
@@ -457,6 +458,10 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
         toast.success(
           `Đã tạo ${successCount}/${students.length} phiếu đồng ý cho học sinh`
         );
+        
+        // Send notifications to parents với scheduleId
+        await sendNotificationToParents(scheduleId, students);
+        
         setConsentFormDialogOpen(false);
       } else {
         toast.error(
@@ -483,6 +488,43 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
       }
     } finally {
       setIsCreatingConsentForms(false);
+    }
+  };
+
+  // Function to send notifications to parents
+  const sendNotificationToParents = async (scheduleId: string, students: any[]) => {
+    try {
+      // Gửi notification cho từng student riêng biệt
+      const notificationPromises = students.map(async (student) => {
+        // Kiểm tra nếu student có parentId
+        if (!student.parentId) {
+          console.warn(`Student ${student.studentName} does not have parentId`);
+          return;
+        }
+        
+        const notificationData = {
+          recipientId: student.parentId,
+          title: "Phiếu đồng ý tiêm chủng/khám sức khỏe",
+          message: `Bạn có phiếu đồng ý cần phản hồi cho con em: ${student.studentName}. Vui lòng đăng nhập để điền phiếu đồng ý.`,
+          type: "CONSENT_FORM",
+          returnUrl: `/consent-forms`,
+          data: {
+            studentId: student.studentId,
+            scheduleId: scheduleId,
+            studentName: student.studentName,
+            scheduleName: schedule?.name || "Lịch tiêm/khám"
+          }
+        };
+
+        return instance.post("/api/Notification/send", notificationData);
+      });
+
+      await Promise.all(notificationPromises.filter(Boolean));
+      toast.success(`Đã gửi thông báo tới ${students.filter(s => s.parentId).length} phụ huynh`);
+      console.log(`Successfully sent notifications for ${students.length} students`);
+    } catch (error) {
+      console.error("Error sending notifications to parents:", error);
+      toast.warning("Đã tạo phiếu đồng ý nhưng có lỗi khi gửi thông báo");
     }
   };
 
@@ -739,6 +781,17 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
           </Box>
         </DialogContent>
         <DialogActions>
+          {(isAdmin() || isMedicalStaff()) && (
+            <Button
+              onClick={() => setConsentFormDialogOpen(true)}
+              color="primary"
+              variant="contained"
+              startIcon={<DescriptionIcon />}
+              disabled={students.length === 0}
+            >
+              Gửi phiếu đồng ý
+            </Button>
+          )}
           <Button onClick={onClose} color="primary">
             Đóng
           </Button>

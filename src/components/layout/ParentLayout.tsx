@@ -43,14 +43,17 @@ const menuItems = [
   { label: "Trang chủ", path: "/" },
   { label: "Hồ sơ sức khỏe", path: "/health-records" },
   { label: "Sự kiện y tế", path: "/medical-events" },
-  { label: "Thuốc cho con", path: "/medication" },
-  { label: "Tiêm phòng", path: "/vaccination" },
+  { label: "Gửi thuốc", path: "/medication" },
+  { label: "Phiếu đồng ý", path: "/consent-forms" },
+  // { label: "Tiêm phòng", path: "/vaccination" },
   { label: "Thông báo", path: "/notifications" },
 ];
 
 const ParentLayout: React.FC = () => {
   const { user, logout } = useAuth();
-  const [userMenuAnchor, setUserMenuAnchor] = useState<null | HTMLElement>(null);
+  const [userMenuAnchor, setUserMenuAnchor] = useState<null | HTMLElement>(
+    null
+  );
   const location = useLocation();
   const navigate = useNavigate();
   const theme = useTheme();
@@ -75,11 +78,11 @@ const ParentLayout: React.FC = () => {
   return (
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
       <CssBaseline />
-      
+
       {/* AppBar - Blue background matching homepage */}
-      <AppBar 
-        position="sticky" 
-        sx={{ 
+      <AppBar
+        position="sticky"
+        sx={{
           bgcolor: colors.primary,
           color: "white",
           boxShadow: `0 4px 20px rgba(0,0,0,0.08)`,
@@ -102,17 +105,19 @@ const ParentLayout: React.FC = () => {
             >
               <Box
                 component="img"
-                src="https://musical-indigo-mongoose.myfilebase.com/ipfs/QmPfdMNtJhcNfztJtxK88SXCrqWm54KuSWHKBW4TNhPr3x"
+                src="https://musical-indigo-mongoose.myfilebase.com/ipfs/Qmf9vib7J7Rm85u4CTK5WCXXTQ6dxzoKWjwCrkVjiXhT35"
                 alt="FPT"
                 sx={{
-                  height: { xs: 34, md: 40 },
+                  height: { xs: 45, md: 55 },
                   width: "auto",
                 }}
               />
             </Box>
 
             {/* Navigation Menu */}
-            <Box sx={{ flexGrow: 1, display: "flex", justifyContent: "center" }}>
+            <Box
+              sx={{ flexGrow: 1, display: "flex", justifyContent: "center" }}
+            >
               <Box
                 sx={{
                   display: "flex",
@@ -127,7 +132,9 @@ const ParentLayout: React.FC = () => {
                     component={Link}
                     to={item.path}
                     sx={{
-                      color: isActive(item.path) ? "white" : "rgba(255,255,255,0.8)",
+                      color: isActive(item.path)
+                        ? "white"
+                        : "rgba(255,255,255,0.8)",
                       fontWeight: isActive(item.path) ? 600 : 500,
                       fontSize: { xs: "0.8rem", md: "0.9rem" },
                       px: { xs: 1.5, md: 2.5 },
@@ -194,15 +201,30 @@ const ParentLayout: React.FC = () => {
               </Avatar>
               {!isMobile && (
                 <Box sx={{ textAlign: "left" }}>
-                  <Typography variant="body2" sx={{ fontWeight: 600, color: "white" }}>
+                  <Typography
+                    variant="body2"
+                    sx={{ fontWeight: 600, color: "white" }}
+                  >
                     {user?.username}
                   </Typography>
-                  <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.7)" }}>
+                  <Typography
+                    variant="caption"
+                    sx={{ color: "rgba(255,255,255,0.7)" }}
+                  >
                     Phụ huynh
                   </Typography>
                 </Box>
               )}
-              <Box component="span" sx={{ ml: 0.5, color: "rgba(255,255,255,0.7)", fontSize: '0.8rem' }}>▼</Box>
+              <Box
+                component="span"
+                sx={{
+                  ml: 0.5,
+                  color: "rgba(255,255,255,0.7)",
+                  fontSize: "0.8rem",
+                }}
+              >
+                ▼
+              </Box>
             </Box>
 
             {/* User Menu Dropdown */}
@@ -221,22 +243,22 @@ const ParentLayout: React.FC = () => {
                 },
               }}
             >
-              <MenuItem 
-                component={Link} 
-                to="/profile" 
+              <MenuItem
+                component={Link}
+                to="/profile"
                 onClick={handleUserMenuClose}
                 sx={{ py: 1.5 }}
               >
                 <ListItemText primary="Trang cá nhân" />
               </MenuItem>
-              <MenuItem 
+              <MenuItem
                 onClick={handleLogout}
-                sx={{ 
+                sx={{
                   py: 1.5,
                   color: colors.error,
                 }}
               >
-                <ListItemText 
+                <ListItemText
                   primary="Đăng xuất"
                   primaryTypographyProps={{ color: colors.error }}
                 />
@@ -262,4 +284,3 @@ const ParentLayout: React.FC = () => {
 };
 
 export default ParentLayout;
-

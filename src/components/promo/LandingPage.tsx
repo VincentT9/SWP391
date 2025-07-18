@@ -219,7 +219,7 @@ const LandingPage: React.FC = () => {
         </motion.div>
       </Container>
 
-      {/* CTA Section */}
+      CTA Section
       <Container maxWidth="lg" sx={{ py: 10 }}>
         <Box
           sx={{

@@ -1,12 +1,9 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import {
   Box,
   Button,
   TextField,
   Typography,
-  Snackbar,
-  Alert,
   Card,
   CardContent,
   Dialog,
@@ -16,10 +13,9 @@ import {
   Avatar,
   Stack,
   CircularProgress,
-  Chip,
 } from "@mui/material";
 import { toast } from "react-toastify";
-import { format, addDays, parseISO, isToday as isTodayDateFns } from "date-fns";
+import { format, addDays, parseISO } from "date-fns";
 import instance from "../../../utils/axiosConfig";
 
 const BASE_API = process.env.REACT_APP_BASE_URL;
@@ -76,7 +72,6 @@ const MedicationAdministrationForm: React.FC<MedicationAdministrationFormProps> 
   onMedicationAdministered,
 }) => {
   const [description, setDescription] = useState("");
-  const [openSnackbar, setOpenSnackbar] = useState(false);
   const [notGivenDialogOpen, setNotGivenDialogOpen] = useState(false);
   const [givenDialogOpen, setGivenDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -265,10 +260,6 @@ const MedicationAdministrationForm: React.FC<MedicationAdministrationFormProps> 
     }
   };
 
-  const handleCloseSnackbar = () => {
-    setOpenSnackbar(false);
-  };
-
   // Calculate the end date based on startDate + numberOfDayToTake
   const startDate = parseISO(medicationRequest.startDate);
   const startDateOnly = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
@@ -326,7 +317,7 @@ const MedicationAdministrationForm: React.FC<MedicationAdministrationFormProps> 
           }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
               <Typography variant="h6">
-                Chi tiết thuốc
+                Chi tiết thuốc và thông tin y tá phụ trách
               </Typography>
               {checkingStatus && (
                 <CircularProgress size={20} />
@@ -344,6 +335,10 @@ const MedicationAdministrationForm: React.FC<MedicationAdministrationFormProps> 
 
               <Typography variant="body1">
                 <strong>Hướng dẫn:</strong> {medicationRequest.instructions}
+              </Typography>
+
+              <Typography variant="body1">
+                <strong>Y tá phụ trách:</strong> {medicationRequest.medicalStaffName || "Chưa có y tá phụ trách"}
               </Typography>
 
               <Typography variant="body1">
@@ -513,17 +508,6 @@ const MedicationAdministrationForm: React.FC<MedicationAdministrationFormProps> 
           </Button>
         </DialogActions>
       </Dialog>
-
-      <Snackbar
-        open={openSnackbar}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <Alert onClose={handleCloseSnackbar} severity="success">
-          Đã cập nhật thông tin uống thuốc!
-        </Alert>
-      </Snackbar>
     </Card>
   );
 };

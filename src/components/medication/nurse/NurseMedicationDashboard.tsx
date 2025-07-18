@@ -1,13 +1,11 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Container, Box, Typography, Tabs, Tab, Divider } from "@mui/material";
+import { Container, Box, Typography, Tabs, Tab } from "@mui/material";
 import { format, addDays, parseISO } from "date-fns";
 import NurseMedicationList from "./NurseMedicationList";
 import MedicationAdministrationForm from "./MedicationAdministrationForm";
-import DailyMedicationManager from "./DailyMedicationManager";
 import { MedicationRequest } from "../../../models/types";
 import MedicationRequestList from "./MedicationRequestList";
 import CompletedExpiredRequestsList from "./CompletedExpiredRequestsList";
-import axios from "axios";
 import { toast } from "react-toastify";
 import instance from "../../../utils/axiosConfig";
 import PageHeader from "../../common/PageHeader";
@@ -83,6 +81,17 @@ const NurseMedicationDashboard: React.FC<NurseMedicationDashboardProps> = ({
     setRefreshKey(prev => prev + 1);
   }, []);
 
+  // Function to fetch medical staff name by ID
+  const fetchMedicalStaffName = async (medicalStaffId: string): Promise<string> => {
+    try {
+      const response = await instance.get(`${API_BASE_URL}/api/User/get-user-by-id/${medicalStaffId}`);
+      return response.data.fullName || "Không rõ";
+    } catch (error) {
+      console.error(`Error fetching medical staff name for ID ${medicalStaffId}:`, error);
+      return "Không rõ";
+    }
+  };
+
   const fetchMedicationRequests = async () => {
     setIsLoading(true);
     try {
@@ -91,32 +100,26 @@ const NurseMedicationDashboard: React.FC<NurseMedicationDashboardProps> = ({
         `${API_BASE_URL}/api/MedicationRequest/get-all-medication-requests`
       );
 
-      setApiMedicationRequests(response.data);
-      
-      // Convert API format to local format for compatibility with existing components
-      const convertedRequests = response.data.map((req: ApiMedicationRequest) => {
+      // Fetch medical staff names for each request
+      const requestsWithStaffNames = await Promise.all(
+        response.data.map(async (req: ApiMedicationRequest) => {
+          let medicalStaffName = null;
+          if (req.medicalStaffId) {
+            medicalStaffName = await fetchMedicalStaffName(req.medicalStaffId);
+          }
+          
+          return {
+            ...req,
+            medicalStaffName
+          };
+        })
+      );
 
-        // Calculate end date by adding numberOfDayToTake to startDate
-        const startDate = parseISO(req.startDate);
-        const calculatedEndDate = addDays(startDate, req.numberOfDayToTake - 1); // subtract 1 because first day counts
-        const endDateStr = format(calculatedEndDate, 'yyyy-MM-dd');
-        
-        return {
-          id: req.id,
-          studentId: req.studentCode,
-          studentName: req.studentName,
-          medicationName: req.medicationName,
-          dosage: req.dosage,
-          instructions: req.instructions,
-          startDate: req.startDate,
-          endDate: endDateStr, // Use calculated end date
-          status: statusNumberToString(req.status),
-          receivedBy: req.medicalStaffId || null,
-          updatedAt: new Date(),
-        };
-      });
+      setApiMedicationRequests(requestsWithStaffNames);
       
-      setRequests(convertedRequests);
+      // For backwards compatibility, we'll keep the empty requests array
+      // since other components use apiMedicationRequests instead
+      setRequests([]);
     } catch (error) {
     
       console.error("Error fetching medication requests:", error);
@@ -161,9 +164,24 @@ const NurseMedicationDashboard: React.FC<NurseMedicationDashboardProps> = ({
         
         return isInDateRange;
       });
+
+      // Fetch medical staff names for today's medications
+      const medicationsWithStaffNames = await Promise.all(
+        medicationsForToday.map(async (req: ApiMedicationRequest) => {
+          let medicalStaffName = null;
+          if (req.medicalStaffId) {
+            medicalStaffName = await fetchMedicalStaffName(req.medicalStaffId);
+          }
+          
+          return {
+            ...req,
+            medicalStaffName
+          };
+        })
+      );
       
 
-      setTodayMedications(medicationsForToday);
+      setTodayMedications(medicationsWithStaffNames);
     } catch (error) {
       console.error("Error fetching today's medications:", error);
       // toast.error("Không thể tải danh sách thuốc cần cho uống hôm nay.");
@@ -210,14 +228,8 @@ const NurseMedicationDashboard: React.FC<NurseMedicationDashboardProps> = ({
   ) => {
     try {
       // Don't create diary entry here since MedicationAdministrationForm already creates it
-      // Just show success message and refresh the list
-
-      
-      if (wasAdministered) {
-        toast.success("Đã ghi nhận thông tin dùng thuốc của học sinh");
-      } else {
-        toast.info("Đã ghi nhận thông tin hủy lần uống thuốc");
-      }
+      // Don't show success message here since MedicationAdministrationForm already shows it
+      // Just refresh the list to get updated data
       
       // Refresh the medications list to get updated data
       await fetchTodayMedications();
@@ -246,9 +258,80 @@ const NurseMedicationDashboard: React.FC<NurseMedicationDashboardProps> = ({
             <Tab label="Thuốc cần cho uống" />
             <Tab label="Yêu cầu đã xác nhận" />
             <Tab label="Yêu cầu chờ xử lý" />
-            <Tab label="Yêu cầu hoàn thành & quá hạn" />
+            <Tab label="Yêu cầu đã xử lý" />
           </Tabs>
         </Box>
+
+        {/* Hiển thị thống kê tổng quan - Hidden for nurse dashboard */}
+        {false && !isLoading && (requests.length > 0 || todayMedications.length > 0) && (
+          <Box sx={{ mb: 3, p: 3, bgcolor: 'background.paper', borderRadius: 2, border: 1, borderColor: 'divider' }}>
+            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, color: 'primary.main', mb: 2 }}>
+              Tổng quan yêu cầu thuốc
+            </Typography>
+            <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 2 }}>
+              <Box sx={{ 
+                p: 2, 
+                bgcolor: 'info.50', 
+                borderRadius: 1, 
+                border: 1, 
+                borderColor: 'info.200',
+                textAlign: 'center'
+              }}>
+                <Typography variant="h4" sx={{ fontWeight: 700, color: 'info.main' }}>
+                  {todayMedications.length}
+                </Typography>
+                <Typography variant="body2" sx={{ fontWeight: 500, color: 'info.main' }}>
+                  Cần uống hôm nay
+                </Typography>
+              </Box>
+              <Box sx={{ 
+                p: 2, 
+                bgcolor: 'success.50', 
+                borderRadius: 1, 
+                border: 1, 
+                borderColor: 'success.200',
+                textAlign: 'center'
+              }}>
+                <Typography variant="h4" sx={{ fontWeight: 700, color: 'success.main' }}>
+                  {requests.filter(r => r.status === 'received').length}
+                </Typography>
+                <Typography variant="body2" sx={{ fontWeight: 500, color: 'success.main' }}>
+                  Đã nhận
+                </Typography>
+              </Box>
+              <Box sx={{ 
+                p: 2, 
+                bgcolor: 'primary.50', 
+                borderRadius: 1, 
+                border: 1, 
+                borderColor: 'primary.200',
+                textAlign: 'center'
+              }}>
+                <Typography variant="h4" sx={{ fontWeight: 700, color: 'primary.main' }}>
+                  {apiMedicationRequests.filter(r => r.status === 0).length}
+                </Typography>
+                <Typography variant="body2" sx={{ fontWeight: 500, color: 'primary.main' }}>
+                  Chờ xử lý
+                </Typography>
+              </Box>
+              <Box sx={{ 
+                p: 2, 
+                bgcolor: 'warning.50', 
+                borderRadius: 1, 
+                border: 1, 
+                borderColor: 'warning.200',
+                textAlign: 'center'
+              }}>
+                <Typography variant="h4" sx={{ fontWeight: 700, color: 'warning.main' }}>
+                  {apiMedicationRequests.filter(r => r.status === 2 || r.status === 3).length}
+                </Typography>
+                <Typography variant="body2" sx={{ fontWeight: 500, color: 'warning.main' }}>
+                  Đã xử lý & Hủy
+                </Typography>
+              </Box>
+            </Box>
+          </Box>
+        )}
 
         {tabValue === 0 && (
           <Box>
@@ -283,7 +366,7 @@ const NurseMedicationDashboard: React.FC<NurseMedicationDashboardProps> = ({
 
         {tabValue === 1 && (
           <NurseMedicationList
-            requests={requests.filter(req => req.status === "received" && req.receivedBy === nurseId)}
+            requests={apiMedicationRequests.filter(req => req.status === 1 && req.medicalStaffId === nurseId)}
             onReceiveMedication={handleReceiveMedication}
             isLoading={isLoading}
             nurseId={nurseId}

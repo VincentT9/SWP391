@@ -66,27 +66,27 @@ interface MenuCategory {
 const adminMenuCategories: MenuCategory[] = [
   {
     title: "Quản lý chung",
-    roles: ["Admin","MedicalStaff"], // Chỉ Admin mới thấy
+    roles: ["Admin", "MedicalStaff"], // Chỉ Admin mới thấy
     items: [
       {
         name: "Quản lý học sinh",
         path: "/admin/students",
         description: "Danh sách và thông tin học sinh",
-        roles: ["Admin"]
+        roles: ["Admin"],
       },
       {
         name: "Quản lý người dùng",
         path: "/user-management",
         description: "Quản lý tài khoản người dùng",
-        roles: ["Admin"]
+        roles: ["Admin"],
       },
       {
         name: "Kho vật tư",
         path: "/medical-supplier",
-        description: "Quản lý nhà cung cấp",
-        roles: ["Admin", "MedicalStaff"]
-      }
-    ]
+        description: "Quản lý vật tư y tế",
+        roles: ["Admin", "MedicalStaff"],
+      },
+    ],
   },
   {
     title: "Hoạt động y tế",
@@ -96,33 +96,39 @@ const adminMenuCategories: MenuCategory[] = [
         name: "Sự kiện y tế",
         path: "/medical-events",
         description: "Quản lý sự kiện y tế",
-        roles: ["Admin", "MedicalStaff"]
+        roles: ["Admin", "MedicalStaff"],
       },
       {
         name: "Hồ sơ sức khỏe",
         path: "/health-check",
         description: "Hồ sơ khám sức khỏe học sinh",
-        roles: ["Admin", "MedicalStaff"]
-      }
-    ]
+        roles: ["Admin", "MedicalStaff"],
+      },
+    ],
   },
   {
     title: "Thuốc & Tiêm phòng",
     roles: ["Admin", "MedicalStaff"], // Cả Admin và MedicalStaff
     items: [
       {
-        name: "Quản lý thuốc",
+        name: "Quản lý yêu cầu gửi thuốc",
         path: "/medication/nurse",
-        description: "Quản lý thuốc và đơn thuốc",
-        roles: ["Admin", "MedicalStaff"]
+        description: "Quản lý yêu cầu gửi thuốc từ phụ huynh",
+        roles: ["MedicalStaff"],
       },
       {
-        name: "Chương trình tiêm phòng",
+        name: "Chương trình tiêm phòng & khám sức khỏe định kỳ",
         path: "/vaccination",
-        description: "Quản lý tiêm phòng",
-        roles: ["Admin", "MedicalStaff"]
-      }
-    ]
+        description: "Quản lý tiêm phòng và khám sức khỏe định kỳ",
+        roles: ["Admin", "MedicalStaff"],
+      },
+      {
+        name: "Phiếu đồng ý",
+        path: "/consent-forms",
+        description: "Quản lý phiếu đồng ý tiêm phòng",
+        roles: ["Admin", "MedicalStaff"],
+      },
+    ],
   },
   {
     title: "Khác",
@@ -132,16 +138,16 @@ const adminMenuCategories: MenuCategory[] = [
         name: "Thông báo",
         path: "/notifications",
         description: "Quản lý thông báo",
-        roles: ["Admin", "MedicalStaff"]
+        roles: ["Admin", "MedicalStaff"],
       },
       {
         name: "Trang cá nhân",
         path: "/profile",
         description: "Thông tin cá nhân",
-        roles: ["Admin", "MedicalStaff"]
-      }
-    ]
-  }
+        roles: ["Admin", "MedicalStaff"],
+      },
+    ],
+  },
 ];
 
 const pageVariants = {
@@ -151,20 +157,22 @@ const pageVariants = {
 };
 
 const pageTransition = {
-  type: "tween",
-  ease: "easeInOut",
+  type: "tween" as const,
+  ease: "easeInOut" as const,
   duration: 0.3,
 };
 
 const AdminLayout = () => {
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
-  const [userMenuAnchor, setUserMenuAnchor] = useState<null | HTMLElement>(null);
-  
+  const [userMenuAnchor, setUserMenuAnchor] = useState<null | HTMLElement>(
+    null
+  );
+
   const location = useLocation();
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-  
+
   const { user, logout } = useAuth();
 
   const handleDrawerToggle = () => {
@@ -186,20 +194,28 @@ const AdminLayout = () => {
   };
 
   const isActivePath = (path: string) => {
-    return location.pathname === path || 
-           (path !== "/" && location.pathname.startsWith(path));
+    return (
+      location.pathname === path ||
+      (path !== "/" && location.pathname.startsWith(path))
+    );
   };
 
   // Filter menu items based on user role
   const getFilteredMenuCategories = () => {
     if (!user?.role) return [];
-    
-    return adminMenuCategories.filter(category => {
+
+    return adminMenuCategories.filter((category) => {
       // If category has no role restriction or user role is in allowed roles
-      if (!category.roles || category.roles.includes(user.role as "Admin" | "MedicalStaff")) {
+      if (
+        !category.roles ||
+        category.roles.includes(user.role as "Admin" | "MedicalStaff")
+      ) {
         // Filter items within the category
-        category.items = category.items.filter(item => {
-          return !item.roles || item.roles.includes(user.role as "Admin" | "MedicalStaff");
+        category.items = category.items.filter((item) => {
+          return (
+            !item.roles ||
+            item.roles.includes(user.role as "Admin" | "MedicalStaff")
+          );
         });
         // Only show category if it has at least one item
         return category.items.length > 0;
@@ -210,82 +226,82 @@ const AdminLayout = () => {
 
   // Sidebar content
   const drawerContent = (
-    <Box sx={{ 
-      height: '100%', 
-      backgroundColor: adminColors.sidebar,
-      display: 'flex',
-      flexDirection: 'column'
-    }}>
+    <Box
+      sx={{
+        height: "100%",
+        backgroundColor: adminColors.sidebar,
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
       {/* Sidebar header */}
-      <Box sx={{ p: 3, borderBottom: `1px solid ${adminColors.border}`, flexShrink: 0 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-          <Box sx={{
-            width: 40,
-            height: 40,
-            borderRadius: '8px',
-            background: `linear-gradient(135deg, ${adminColors.primary}, ${adminColors.accent})`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            mr: 2,
-            color: 'white',
-            fontSize: '1.2rem',
-            fontWeight: 'bold'
-          }}>
-            ⚕️
-          </Box>
+      <Box
+        sx={{
+          p: 3,
+          borderBottom: `1px solid ${adminColors.border}`,
+          flexShrink: 0,
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
           <Box>
-            <Typography variant="h6" sx={{ 
-              color: adminColors.sidebarText, 
-              fontWeight: 'bold',
-              lineHeight: 1
-            }}>
-              {user?.role === 'Admin' ? 'Quản trị viên' : 'Nhân viên y tế'}
+            <Typography
+              variant="h6"
+              sx={{
+                color: adminColors.sidebarText,
+                fontWeight: "bold",
+                lineHeight: 1,
+              }}
+            >
+              {user?.role === "Admin" ? "Quản trị viên" : "Nhân viên y tế"}
             </Typography>
-            <Typography variant="caption" sx={{ 
-              color: 'rgba(255,255,255,0.7)',
-              lineHeight: 1
-            }}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: "rgba(255,255,255,0.7)",
+                lineHeight: 1,
+              }}
+            >
               Hệ thống sức khỏe học đường
             </Typography>
           </Box>
         </Box>
-      
       </Box>
 
       {/* Navigation menu */}
-      <Box sx={{ 
-        flexGrow: 1, 
-        overflow: 'hidden',
-        py: 2,
-        '&:hover': {
-          overflow: 'auto'
-        },
-        // Hide scrollbar but keep functionality
-        '&::-webkit-scrollbar': {
-          display: 'none'
-        },
-        '-ms-overflow-style': 'none',
-        'scrollbar-width': 'none'
-      }}>
+      <Box
+        sx={{
+          flexGrow: 1,
+          overflow: "hidden",
+          py: 2,
+          "&:hover": {
+            overflow: "auto",
+          },
+          // Hide scrollbar but keep functionality
+          "&::-webkit-scrollbar": {
+            display: "none",
+          },
+          "-ms-overflow-style": "none",
+          "scrollbar-width": "none",
+        }}
+      >
         {getFilteredMenuCategories().map((category) => (
           <Box key={category.title} sx={{ mb: 3 }}>
             {/* Category Title */}
             <Typography
               variant="overline"
               sx={{
-                color: 'rgba(255,255,255,0.7)',
+                color: "rgba(255,255,255,0.7)",
                 fontWeight: 600,
-                fontSize: '0.7rem',
-                letterSpacing: '1px',
+                fontSize: "0.7rem",
+                letterSpacing: "1px",
                 px: 3,
                 pb: 1,
-                display: 'block'
+                display: "block",
               }}
             >
               {category.title}
             </Typography>
-            
+
             {/* Category Items - Always visible */}
             <List>
               {category.items.map((item) => (
@@ -298,23 +314,31 @@ const AdminLayout = () => {
                       mx: 2,
                       mb: 0.5,
                       borderRadius: 1,
-                      backgroundColor: isActivePath(item.path) ? adminColors.primary : 'transparent',
-                      color: isActivePath(item.path) ? 'white' : 'rgba(255,255,255,0.9)',
-                      '&:hover': {
-                        backgroundColor: isActivePath(item.path) ? adminColors.primary : 'rgba(255,255,255,0.1)',
+                      backgroundColor: isActivePath(item.path)
+                        ? adminColors.primary
+                        : "transparent",
+                      color: isActivePath(item.path)
+                        ? "white"
+                        : "rgba(255,255,255,0.9)",
+                      "&:hover": {
+                        backgroundColor: isActivePath(item.path)
+                          ? adminColors.primary
+                          : "rgba(255,255,255,0.1)",
                       },
                     }}
                   >
-                    <ListItemText 
+                    <ListItemText
                       primary={item.name}
                       secondary={item.description}
                       primaryTypographyProps={{
-                        variant: 'body2',
-                        fontWeight: isActivePath(item.path) ? 600 : 400
+                        variant: "body2",
+                        fontWeight: isActivePath(item.path) ? 600 : 400,
                       }}
                       secondaryTypographyProps={{
-                        variant: 'caption',
-                        color: isActivePath(item.path) ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.6)'
+                        variant: "caption",
+                        color: isActivePath(item.path)
+                          ? "rgba(255,255,255,0.8)"
+                          : "rgba(255,255,255,0.6)",
                       }}
                     />
                   </ListItemButton>
@@ -328,19 +352,25 @@ const AdminLayout = () => {
   );
 
   return (
-    <Box sx={{ display: "flex", minHeight: "100vh", backgroundColor: adminColors.background }}>
+    <Box
+      sx={{
+        display: "flex",
+        minHeight: "100vh",
+        backgroundColor: adminColors.background,
+      }}
+    >
       <CssBaseline />
-      
+
       {/* App Bar */}
-      <AppBar 
-        position="fixed" 
-        sx={{ 
+      <AppBar
+        position="fixed"
+        sx={{
           width: { md: `calc(100% - ${DRAWER_WIDTH}px)` },
           ml: { md: `${DRAWER_WIDTH}px` },
           backgroundColor: adminColors.surface,
           color: adminColors.text,
-          boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
-          borderBottom: `1px solid ${adminColors.border}`
+          boxShadow: "0 2px 10px rgba(0,0,0,0.08)",
+          borderBottom: `1px solid ${adminColors.border}`,
         }}
       >
         <Toolbar sx={{ minHeight: 64 }}>
@@ -349,18 +379,20 @@ const AdminLayout = () => {
             color="inherit"
             edge="start"
             onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { md: 'none' } }}
+            sx={{ mr: 2, display: { md: "none" } }}
           >
-            <Box component="span" sx={{ fontSize: '1.5rem' }}>☰</Box>
+            <Box component="span" sx={{ fontSize: "1.5rem" }}>
+              ☰
+            </Box>
           </IconButton>
 
           {/* Page title */}
           <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 600 }}>
             {/* Dynamic title based on current route */}
             {getFilteredMenuCategories()
-              .flatMap(cat => cat.items)
-              .find(item => isActivePath(item.path))?.name || 
-              (user?.role === 'Admin' ? 'Quản trị hệ thống' : 'Y tế học đường')}
+              .flatMap((cat) => cat.items)
+              .find((item) => isActivePath(item.path))?.name ||
+              (user?.role === "Admin" ? "Quản trị hệ thống" : "Y tế học đường")}
           </Typography>
 
           {/* User menu */}
@@ -375,28 +407,35 @@ const AdminLayout = () => {
               gap: 1,
               p: 1,
               borderRadius: 2,
-              '&:hover': {
+              "&:hover": {
                 backgroundColor: adminColors.background,
               },
             }}
           >
-            <Avatar sx={{ 
-              width: 36, 
-              height: 36, 
-              backgroundColor: adminColors.primary,
-              fontSize: '0.9rem'
-            }}>
-              {user?.name?.charAt(0)?.toUpperCase() || 'A'}
+            <Avatar
+              sx={{
+                width: 36,
+                height: 36,
+                backgroundColor: adminColors.primary,
+                fontSize: "0.9rem",
+              }}
+            >
+              {user?.name?.charAt(0)?.toUpperCase() || "A"}
             </Avatar>
-            <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
+            <Box sx={{ display: { xs: "none", sm: "block" } }}>
               <Typography variant="subtitle2" sx={{ fontWeight: 500 }}>
-                {user?.name || 'Admin'}
+                {user?.name || "Admin"}
               </Typography>
-              <Typography variant="caption" sx={{ color: adminColors.textSecondary }}>
-                {user?.role || 'Quản trị viên'}
+              <Typography
+                variant="caption"
+                sx={{ color: adminColors.textSecondary }}
+              >
+                {user?.role || "Quản trị viên"}
               </Typography>
             </Box>
-            <Box component="span" sx={{ fontSize: '0.7rem', ml: 0.5 }}>▼</Box>
+            <Box component="span" sx={{ fontSize: "0.7rem", ml: 0.5 }}>
+              ▼
+            </Box>
           </Box>
         </Toolbar>
       </AppBar>
@@ -413,23 +452,23 @@ const AdminLayout = () => {
           onClose={handleDrawerToggle}
           ModalProps={{ keepMounted: true }}
           sx={{
-            display: { xs: 'block', md: 'none' },
-            '& .MuiDrawer-paper': {
-              boxSizing: 'border-box',
+            display: { xs: "block", md: "none" },
+            "& .MuiDrawer-paper": {
+              boxSizing: "border-box",
               width: DRAWER_WIDTH,
             },
           }}
         >
           {drawerContent}
         </Drawer>
-        
+
         {/* Desktop drawer */}
         <Drawer
           variant="permanent"
           sx={{
-            display: { xs: 'none', md: 'block' },
-            '& .MuiDrawer-paper': {
-              boxSizing: 'border-box',
+            display: { xs: "none", md: "block" },
+            "& .MuiDrawer-paper": {
+              boxSizing: "border-box",
               width: DRAWER_WIDTH,
             },
           }}
@@ -444,17 +483,17 @@ const AdminLayout = () => {
         anchorEl={userMenuAnchor}
         open={Boolean(userMenuAnchor)}
         onClose={handleUserMenuClose}
-        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+        transformOrigin={{ horizontal: "right", vertical: "top" }}
+        anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
       >
-        <MenuItem onClick={() => navigate('/profile')}>
+        <MenuItem onClick={() => navigate("/profile")}>
           <ListItemText primary="Thông tin cá nhân" />
         </MenuItem>
 
         <Divider />
         <MenuItem onClick={handleLogout}>
-          <ListItemText 
-            primary="Đăng xuất" 
+          <ListItemText
+            primary="Đăng xuất"
             primaryTypographyProps={{ color: adminColors.error }}
           />
         </MenuItem>

@@ -47,8 +47,8 @@ const pageVariants = {
 };
 
 const pageTransition = {
-  type: "tween",
-  ease: "easeInOut",
+  type: "tween" as const,
+  ease: "easeInOut" as const,
   duration: 0.3,
 };
 
@@ -94,15 +94,15 @@ const menuCategories: MenuCategory[] = [
   },
   // Promo menu items - chỉ hiển thị khi chưa đăng nhập
   {
-    name: "Gửi thuốc đến trường",
+    name: "Gửi thuốc cho con",
     path: "/promo/medication-delivery",
   },
   {
     name: "Chương trình tiêm phòng",
-    path: "/promo/vaccination", 
+    path: "/promo/vaccination",
   },
   {
-    name: "Dịch vụ y tế học đường",
+    name: "Khám sức khỏe định kỳ",
     path: "/promo/health-check",
   },
   // Main features - chỉ hiển thị khi đã đăng nhập
@@ -112,7 +112,7 @@ const menuCategories: MenuCategory[] = [
     path: "/medication/parent",
   },
   {
-    name: "Quản lý thuốc học sinh", 
+    name: "Quản lý thuốc học sinh",
     role: ["MedicalStaff", "Admin"],
     path: "/medication/nurse",
   },
@@ -125,6 +125,11 @@ const menuCategories: MenuCategory[] = [
     name: "Theo dõi tiêm phòng con",
     role: ["Parent"],
     path: "/vaccination/parent",
+  },
+  {
+    name: "Phiếu đồng ý",
+    role: ["Parent", "MedicalStaff", "Admin"],
+    path: "/consent-forms",
   },
   {
     name: "Xử lý sự cố y tế",
@@ -183,15 +188,18 @@ const MainLayout = () => {
   const { user, logout } = useAuth();
 
   // Filter menu categories based on user role
-  const visibleCategories = menuCategories.filter(category => {
+  const visibleCategories = menuCategories.filter((category) => {
     // If user is not authenticated, only show home and promo pages
     if (!user?.isAuthenticated) {
-      return category.name === "Trang chủ" || 
-             category.path?.startsWith("/promo/");
+      return (
+        category.name === "Trang chủ" || category.path?.startsWith("/promo/")
+      );
     }
     // If authenticated, show based on role but EXCLUDE promo pages
-    return !category.path?.startsWith("/promo/") &&
-           (!category.role || category.role.includes(user?.role || ''));
+    return (
+      !category.path?.startsWith("/promo/") &&
+      (!category.role || category.role.includes(user?.role || ""))
+    );
   });
 
   // Set active tab based on current location
@@ -289,10 +297,10 @@ const MainLayout = () => {
             >
               <Box
                 component="img"
-                src="https://musical-indigo-mongoose.myfilebase.com/ipfs/QmPfdMNtJhcNfztJtxK88SXCrqWm54KuSWHKBW4TNhPr3x"
-                alt="FPTMED"
+                src="https://musical-indigo-mongoose.myfilebase.com/ipfs/Qmf9vib7J7Rm85u4CTK5WCXXTQ6dxzoKWjwCrkVjiXhT35"
+                alt="Y tế học đường"
                 sx={{
-                  height: { xs: 34, md: 40 },
+                  height: { xs: 45, md: 55 },
                   transition: "all 0.2s ease",
                 }}
               />
@@ -307,7 +315,9 @@ const MainLayout = () => {
                 onClick={handleMobileMenuToggle}
                 sx={{ mr: 2 }}
               >
-                <Box component="span" sx={{ fontSize: '1.2rem' }}>☰</Box>
+                <Box component="span" sx={{ fontSize: "1.2rem" }}>
+                  ☰
+                </Box>
               </IconButton>
             )}
 
@@ -359,49 +369,57 @@ const MainLayout = () => {
                   },
                 }}
               >
-
-                {visibleCategories.map((category, index) => ( // Use visibleCategories instead of filtering inline
-                  <Tab
-                    key={category.name}
-                    label={
-                      <Box sx={{ display: "flex", alignItems: "center" }}>
-                        <Typography
-                          component="span"
-                          sx={{ fontWeight: "inherit" }}
-                        >
-                          {category.name}
-                        </Typography>
-                        {category.badge && (
-                          <Chip
-                            size="small"
-                            label={category.badge}
-                            sx={{
-                              ml: 1,
-                              height: 18,
-                              minWidth: 18,
-                              fontSize: "0.7rem",
-                              fontWeight: 700,
-                              bgcolor: "rgba(255, 255, 255, 0.9)",
-                              color: colors.primary,
-                            }}
-                          />
-                        )}
-                        {category.submenu && (
-                          <Box component="span" sx={{ ml: 0.5, fontSize: '0.8rem' }}>▼</Box>
-                        )}
-                      </Box>
-                    }
-                    onClick={
-                      category.submenu
-                        ? (e) => {
-                            e.preventDefault();
-                            handleMenuOpen(e, category.name);
-                          }
-                        : undefined
-                    }
-                  />
-                ))}
-
+                {visibleCategories.map(
+                  (
+                    category,
+                    index // Use visibleCategories instead of filtering inline
+                  ) => (
+                    <Tab
+                      key={category.name}
+                      label={
+                        <Box sx={{ display: "flex", alignItems: "center" }}>
+                          <Typography
+                            component="span"
+                            sx={{ fontWeight: "inherit" }}
+                          >
+                            {category.name}
+                          </Typography>
+                          {category.badge && (
+                            <Chip
+                              size="small"
+                              label={category.badge}
+                              sx={{
+                                ml: 1,
+                                height: 18,
+                                minWidth: 18,
+                                fontSize: "0.7rem",
+                                fontWeight: 700,
+                                bgcolor: "rgba(255, 255, 255, 0.9)",
+                                color: colors.primary,
+                              }}
+                            />
+                          )}
+                          {category.submenu && (
+                            <Box
+                              component="span"
+                              sx={{ ml: 0.5, fontSize: "0.8rem" }}
+                            >
+                              ▼
+                            </Box>
+                          )}
+                        </Box>
+                      }
+                      onClick={
+                        category.submenu
+                          ? (e) => {
+                              e.preventDefault();
+                              handleMenuOpen(e, category.name);
+                            }
+                          : undefined
+                      }
+                    />
+                  )
+                )}
               </Tabs>
             )}
 
@@ -512,7 +530,16 @@ const MainLayout = () => {
                             {user?.role}
                           </Typography>
                         </Box>
-                        <Box component="span" sx={{ ml: 0.5, color: "rgba(255, 255, 255, 0.7)", fontSize: '0.8rem' }}>▼</Box>
+                        <Box
+                          component="span"
+                          sx={{
+                            ml: 0.5,
+                            color: "rgba(255, 255, 255, 0.7)",
+                            fontSize: "0.8rem",
+                          }}
+                        >
+                          ▼
+                        </Box>
                       </>
                     )}
                   </Box>

@@ -34,7 +34,7 @@ const VaccinationProgramDetailsPage: React.FC = () => {
   };
 
   const handleBack = () => {
-    navigate("/vaccination");
+    navigate(-1);
   };
 
   const getStatusLabel = (status: number) => {
@@ -54,7 +54,7 @@ const VaccinationProgramDetailsPage: React.FC = () => {
 
   const handleDeleteSuccess = () => {
     toast.success("Đã xóa chương trình thành công");
-    navigate("/vaccination");
+    navigate(-1);
   };
 
   if (loading) {

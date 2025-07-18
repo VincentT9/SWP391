@@ -677,13 +677,8 @@ const ScheduleStudentsPage: React.FC = () => {
           variant="outlined"
           startIcon={<ArrowBackIcon />}
           onClick={() => {
-            // Điều hướng về trang chi tiết chương trình nếu có campaignId
-            if (schedule?.campaignId) {
-              navigate(`/vaccination/${schedule.campaignId}`);
-            } else {
-              // Nếu không có campaignId, quay lại trang trước đó
-              navigate(-1);
-            }
+            // Quay lại trang trước đó
+            navigate(-1);
           }}
         >
           Quay lại

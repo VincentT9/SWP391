@@ -188,7 +188,7 @@ const AdminPage = () => {
             <Button variant="outlined" onClick={() => navigate("/")}>
               Về trang chủ
             </Button>
-            <Button variant="contained" onClick={() => window.history.back()}>
+            <Button variant="contained" onClick={() => navigate(-1)}>
               Quay lại
             </Button>
           </Box>

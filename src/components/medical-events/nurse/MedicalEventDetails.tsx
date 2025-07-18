@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Typography,
   Box,
@@ -13,24 +13,41 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  DialogContentText,
 } from "@mui/material";
 import { format, parseISO } from "date-fns";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
 import { MedicalIncident } from "../../../models/types";
+import { isAdmin, isMedicalStaff } from "../../../utils/roleUtils";
+import axiosInstance from "../../../utils/axiosConfig";
 
 interface MedicalEventDetailsProps {
   event: MedicalIncident;
   onBack: () => void;
   onEdit?: (event: MedicalIncident) => void;
-  isNurse?: boolean;
+  onDelete?: (eventId: string) => void;
+  onRefresh?: () => void;
 }
 
 const MedicalEventDetails: React.FC<MedicalEventDetailsProps> = ({
   event,
   onBack,
   onEdit,
-  isNurse = false,
+  onDelete,
+  onRefresh,
 }) => {
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  
+  // Check user permissions
+  const canEdit = isAdmin() || isMedicalStaff();
+  const canDelete = isAdmin() || isMedicalStaff();
   const getEventTypeLabel = (type: number) => {
     switch (type) {
       case 0:
@@ -81,6 +98,28 @@ const MedicalEventDetails: React.FC<MedicalEventDetailsProps> = ({
     }
   };
 
+  const handleDelete = async () => {
+    if (!event.id) return;
+    
+    setIsDeleting(true);
+    try {
+      await axiosInstance.delete(`/api/medical-incident/delete/${event.id}`);
+      setDeleteDialogOpen(false);
+      if (onDelete) {
+        onDelete(event.id);
+      }
+      if (onRefresh) {
+        onRefresh();
+      }
+      onBack(); // Navigate back after successful deletion
+    } catch (error) {
+      console.error("Error deleting medical incident:", error);
+      // You might want to show an error message to the user here
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <Paper sx={{ p: 3 }}>
       <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
@@ -89,15 +128,29 @@ const MedicalEventDetails: React.FC<MedicalEventDetailsProps> = ({
         </Button>
         <Typography variant="h5" sx={{ flexGrow: 1 }}>Chi tiết sự kiện y tế</Typography>
         
-        {isNurse && onEdit && (
-          <Button 
-            variant="contained" 
-            color="primary" 
-            onClick={() => onEdit(event)}
-          >
-            Chỉnh sửa
-          </Button>
-        )}
+        <Stack direction="row" spacing={2}>
+          {canEdit && onEdit && (
+            <Button 
+              variant="contained" 
+              color="primary" 
+              startIcon={<EditIcon />}
+              onClick={() => onEdit(event)}
+            >
+              Chỉnh sửa
+            </Button>
+          )}
+          
+          {canDelete && (
+            <Button 
+              variant="outlined" 
+              color="error" 
+              startIcon={<DeleteIcon />}
+              onClick={() => setDeleteDialogOpen(true)}
+            >
+              Xóa
+            </Button>
+          )}
+        </Stack>
       </Box>
 
       <Divider sx={{ mb: 3 }} />
@@ -169,6 +222,15 @@ const MedicalEventDetails: React.FC<MedicalEventDetailsProps> = ({
           </Typography>
         </Box>
 
+        <Box>
+          <Typography variant="body2" color="text.secondary">
+            Kết quả
+          </Typography>
+          <Typography variant="body1" sx={{ mt: 1 }}>
+            {event.outcome || "Chưa có thông tin"}
+          </Typography>
+        </Box>
+
         {event.medicalSupplyUsages && event.medicalSupplyUsages.length > 0 && (
           <Box>
             <Typography variant="body2" color="text.secondary">
@@ -210,27 +272,45 @@ const MedicalEventDetails: React.FC<MedicalEventDetailsProps> = ({
           />
         </Box>
 
-        <Box>
-          <Typography variant="body2" color="text.secondary">
-            Thông báo cho phụ huynh
-          </Typography>
-          <Typography variant="body1" sx={{ mt: 0.5 }}>
-            {event.parentNotified ? (
-              <>
-                <span>Đã thông báo - </span>
-                {event.parentNotificationDate &&
-                  event.parentNotificationDate !== "0001-01-01T00:00:00" && (
-                    <span>
-                      {format(parseISO(event.parentNotificationDate), "dd/MM/yyyy HH:mm")}
-                    </span>
-                  )}
-              </>
-            ) : (
-              "Chưa thông báo"
-            )}
-          </Typography>
-        </Box>
+        
       </Stack>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        aria-labelledby="delete-dialog-title"
+        aria-describedby="delete-dialog-description"
+      >
+        <DialogTitle id="delete-dialog-title">
+          Xác nhận xóa sự kiện y tế
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="delete-dialog-description">
+            Bạn có chắc chắn muốn xóa sự kiện y tế này không? Hành động này không thể hoàn tác.
+            <br />
+            <strong>Học sinh:</strong> {event.student.fullName}
+            <br />
+            <strong>Ngày xảy ra:</strong> {format(parseISO(event.incidentDate), "dd/MM/yyyy HH:mm")}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button 
+            onClick={() => setDeleteDialogOpen(false)} 
+            disabled={isDeleting}
+          >
+            Hủy
+          </Button>
+          <Button 
+            onClick={handleDelete} 
+            color="error" 
+            variant="contained"
+            disabled={isDeleting}
+          >
+            {isDeleting ? "Đang xóa..." : "Xóa"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Paper>
   );
 };

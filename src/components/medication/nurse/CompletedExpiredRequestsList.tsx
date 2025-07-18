@@ -23,7 +23,7 @@ import {
   DialogActions,
   CardMedia,
 } from "@mui/material";
-import { format, addDays, parseISO, isAfter } from "date-fns";
+import { format, addDays, parseISO } from "date-fns";
 import instance from "../../../utils/axiosConfig";
 
 const BASE_API = process.env.REACT_APP_BASE_URL;
@@ -44,27 +44,25 @@ interface MedicationRequestItem {
   medicalStaffName: string | null;
 }
 
-interface CompletedExpiredRequestsListProps {
+interface MedicationRequestsListProps {
   nurseId: string;
   isLoading: boolean;
 }
 
-const getStatusLabel = (status: number, isExpired: boolean) => {
-  if (isExpired) {
-    return <Chip label="Quá hạn" color="error" />;
-  }
-  
+const getStatusLabel = (status: number) => {
   switch (status) {
+    case 1:
+      return <Chip label="Đang cho uống" color="primary" sx={{ fontWeight: 500 }} />;
     case 2:
-      return <Chip label="Hoàn thành" color="success" />;
+      return <Chip label="Đã hoàn thành" color="success" sx={{ fontWeight: 500 }} />;
     case 3:
-      return <Chip label="Đã hủy" color="default" />;
+      return <Chip label="Đã hủy" color="error" sx={{ fontWeight: 500 }} />;
     default:
       return <Chip label="Không xác định" color="default" />;
   }
 };
 
-const CompletedExpiredRequestsList: React.FC<CompletedExpiredRequestsListProps> = ({
+const CompletedExpiredRequestsList: React.FC<MedicationRequestsListProps> = ({
   nurseId,
   isLoading: parentLoading,
 }) => {
@@ -75,10 +73,10 @@ const CompletedExpiredRequestsList: React.FC<CompletedExpiredRequestsListProps> 
   const [currentImage, setCurrentImage] = useState("");
 
   useEffect(() => {
-    fetchCompletedAndExpiredRequests();
+    fetchAllMedicationRequests();
   }, [nurseId]);
 
-  const fetchCompletedAndExpiredRequests = async () => {
+  const fetchAllMedicationRequests = async () => {
     setIsLoading(true);
     try {
       // Fetch all requests assigned to this nurse
@@ -93,7 +91,7 @@ const CompletedExpiredRequestsList: React.FC<CompletedExpiredRequestsListProps> 
       
       setRequests(nurseRequests);
     } catch (error) {
-      console.error("Error fetching completed and expired requests:", error);
+      console.error("Error fetching medication requests:", error);
     } finally {
       setIsLoading(false);
     }
@@ -110,11 +108,6 @@ const CompletedExpiredRequestsList: React.FC<CompletedExpiredRequestsListProps> 
     return end;
   };
 
-  const isRequestExpired = (startDate: string, numberOfDays: number) => {
-    const endDate = calculateEndDate(startDate, numberOfDays);
-    return isAfter(new Date(), endDate);
-  };
-
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
@@ -124,18 +117,16 @@ const CompletedExpiredRequestsList: React.FC<CompletedExpiredRequestsListProps> 
     setImageDialogOpen(true);
   };
 
-  // Separate completed and expired requests
+  // Separate requests by status (simplified)
+  const activeRequests = requests.filter(req => req.status === 1);
   const completedRequests = requests.filter(req => req.status === 2);
-  const expiredRequests = requests.filter(req => 
-    req.status === 1 && isRequestExpired(req.startDate, req.numberOfDayToTake)
-  );
   const cancelledRequests = requests.filter(req => req.status === 3);
 
-  const renderRequestsTable = (requestsList: MedicationRequestItem[], showExpired = false) => {
+  const renderRequestsTable = (requestsList: MedicationRequestItem[]) => {
     if (requestsList.length === 0) {
       return (
         <Typography variant="body1" color="textSecondary" sx={{ p: 2 }}>
-          {showExpired ? "Không có yêu cầu thuốc nào quá hạn." : "Không có yêu cầu thuốc nào trong danh sách này."}
+          Không có yêu cầu thuốc nào trong danh sách này.
         </Typography>
       );
     }
@@ -155,8 +146,6 @@ const CompletedExpiredRequestsList: React.FC<CompletedExpiredRequestsListProps> 
           </TableHead>
           <TableBody>
             {requestsList.map((request) => {
-              const isExpired = showExpired || isRequestExpired(request.startDate, request.numberOfDayToTake);
-              
               return (
                 <TableRow
                   key={request.id}
@@ -219,7 +208,7 @@ const CompletedExpiredRequestsList: React.FC<CompletedExpiredRequestsListProps> 
                     )}
                   </TableCell>
                   <TableCell>
-                    {getStatusLabel(request.status, isExpired)}
+                    {getStatusLabel(request.status)}
                   </TableCell>
                 </TableRow>
               );
@@ -238,14 +227,23 @@ const CompletedExpiredRequestsList: React.FC<CompletedExpiredRequestsListProps> 
     );
   }
 
-  return (
-    <Box>
-      <Typography variant="h6" gutterBottom>
-        Yêu cầu thuốc đã hoàn thành và quá hạn
-      </Typography>
-
-      {/* Summary Cards */}
+    return (
+      <Box>
+        <Typography variant="h6" gutterBottom>
+          Quản lý yêu cầu thuốc
+        </Typography>      {/* Summary Cards */}
       <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+        <Card sx={{ minWidth: 200 }}>
+          <CardContent>
+            <Typography color="textSecondary" gutterBottom>
+              Đang cho uống
+            </Typography>
+            <Typography variant="h4" color="primary.main">
+              {activeRequests.length}
+            </Typography>
+          </CardContent>
+        </Card>
+        
         <Card sx={{ minWidth: 200 }}>
           <CardContent>
             <Typography color="textSecondary" gutterBottom>
@@ -260,20 +258,9 @@ const CompletedExpiredRequestsList: React.FC<CompletedExpiredRequestsListProps> 
         <Card sx={{ minWidth: 200 }}>
           <CardContent>
             <Typography color="textSecondary" gutterBottom>
-              Quá hạn
-            </Typography>
-            <Typography variant="h4" color="error.main">
-              {expiredRequests.length}
-            </Typography>
-          </CardContent>
-        </Card>
-        
-        <Card sx={{ minWidth: 200 }}>
-          <CardContent>
-            <Typography color="textSecondary" gutterBottom>
               Đã hủy
             </Typography>
-            <Typography variant="h4" color="text.secondary">
+            <Typography variant="h4" color="error.main">
               {cancelledRequests.length}
             </Typography>
           </CardContent>
@@ -284,16 +271,16 @@ const CompletedExpiredRequestsList: React.FC<CompletedExpiredRequestsListProps> 
         <Tabs
           value={tabValue}
           onChange={handleTabChange}
-          aria-label="completed expired tabs"
+          aria-label="medication status tabs"
         >
+          <Tab label={`Đang cho uống (${activeRequests.length})`} />
           <Tab label={`Đã hoàn thành (${completedRequests.length})`} />
-          <Tab label={`Quá hạn (${expiredRequests.length})`} />
           <Tab label={`Đã hủy (${cancelledRequests.length})`} />
         </Tabs>
       </Box>
 
-      {tabValue === 0 && renderRequestsTable(completedRequests)}
-      {tabValue === 1 && renderRequestsTable(expiredRequests, true)}
+      {tabValue === 0 && renderRequestsTable(activeRequests)}
+      {tabValue === 1 && renderRequestsTable(completedRequests)}
       {tabValue === 2 && renderRequestsTable(cancelledRequests)}
 
       {/* Image Preview Dialog */}

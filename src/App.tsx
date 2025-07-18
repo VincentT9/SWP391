@@ -20,7 +20,7 @@ import UserProfilePage from "./components/user/UserProfilePage";
 import AdminPage from "./components/admin/AdminPage";
 import LoginPage from "./components/user/LoginPage";
 import RegisterPage from "./components/user/RegisterPage";
-import ForgotPasswordPage from "./components/user/ForgotPasswordPage";
+import ForgotPassword from "./components/user/ForgotPassword";
 import NotificationsPage from "./components/notifications/NotificationsPage";
 import MedicalSupplier from "./components/admin/MedicalSupplier";
 import StudentManagementPage from "./components/admin/StudentManagementPage";
@@ -35,6 +35,10 @@ import VaccinationPromo from "./components/promo/VaccinationPromo";
 import HealthCheckPromo from "./components/promo/HealthCheckPromo";
 import LandingPage from "./components/promo/LandingPage";
 
+// Consent Form Pages
+import ConsentFormPage from "./components/consent-form/ConsentFormPage";
+import ConsentFormTicket from "./components/consent-form/ConsentFormTicket";
+
 function App() {
   return (
     <AuthProvider>
@@ -44,16 +48,22 @@ function App() {
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
-            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/homepage" element={<HomePage />} />
             <Route path="/" element={<LayoutSelector />}>
               <Route index element={<HomePage />} />
               <Route path="landing" element={<LandingPage />} />
-              <Route path="promo/medication-delivery" element={<MedicationDeliveryPromo />} />
+              <Route
+                path="promo/medication-delivery"
+                element={<MedicationDeliveryPromo />}
+              />
               <Route path="promo/vaccination" element={<VaccinationPromo />} />
               <Route path="promo/health-check" element={<HealthCheckPromo />} />
               <Route path="health-records" element={<HealthRecordsPage />} />
-              <Route path="health-declaration" element={<HealthDeclarationFormPage />} />
+              <Route
+                path="health-declaration"
+                element={<HealthDeclarationFormPage />}
+              />
               <Route path="medication" element={<MedicationPage />} />
               <Route path="medication/nurse" element={<MedicationPage />} />
               <Route path="medication/parent" element={<MedicationPage />} />
@@ -77,6 +87,8 @@ function App() {
                 path="/vaccination/schedule/:scheduleId/students"
                 element={<ScheduleStudentsPage />}
               />
+              <Route path="consent-forms" element={<ConsentFormPage />} />
+              <Route path="consent-form/:formId" element={<ConsentFormTicket />} />
             </Route>
           </Routes>
         </Router>
