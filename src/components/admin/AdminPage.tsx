@@ -108,7 +108,6 @@ const AdminPage = () => {
 
       const data = await response.json();
 
-
       // Xử lý data - có thể là array hoặc single object
       const usersData = Array.isArray(data) ? data : [data];
       setUsers(usersData);
@@ -259,7 +258,6 @@ const AdminPage = () => {
   // Modified handleSave function to use different API endpoints for create vs update
   const handleSave = async () => {
     try {
-
       const token = localStorage.getItem("authToken");
 
       // Make sure we don't allow changing to admin role (0)
@@ -315,10 +313,6 @@ const AdminPage = () => {
           image: "", // Adding empty image field as required by the new API
         };
       }
-
-
-
-
 
       const response = await fetch(url, {
         method: method,
@@ -411,7 +405,7 @@ const AdminPage = () => {
   return (
     <Container maxWidth="lg">
       <Box sx={{ my: 4 }}>
-        <PageHeader 
+        <PageHeader
           title="Quản lý người dùng"
           subtitle="Quản lý tài khoản và phân quyền người dùng trong hệ thống"
           showRefresh={true}
@@ -484,9 +478,7 @@ const AdminPage = () => {
                       Số điện thoại
                     </TableCell>
                     <TableCell sx={{ fontWeight: "bold" }}>Vai trò</TableCell>
-                    <TableCell sx={{ fontWeight: "bold" }}>
-                      Trạng thái
-                    </TableCell>
+
                     <TableCell sx={{ fontWeight: "bold" }}>Thao tác</TableCell>
                   </TableRow>
                 </TableHead>
@@ -542,21 +534,7 @@ const AdminPage = () => {
                             size="small"
                           />
                         </TableCell>
-                        <TableCell>
-                          <Chip
-                            label={
-                              userData.isActive !== false
-                                ? "Hoạt động"
-                                : "Vô hiệu"
-                            }
-                            color={
-                              userData.isActive !== false
-                                ? "success"
-                                : "default"
-                            }
-                            size="small"
-                          />
-                        </TableCell>
+
                         <TableCell>
                           <IconButton
                             onClick={() => handleOpenDialog(userData)}
