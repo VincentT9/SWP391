@@ -252,7 +252,7 @@ const ConsentFormPage: React.FC<ConsentFormPageProps> = ({
 
   if (loading) {
     return (
-      <Container maxWidth="xl" sx={{ py: 4 }}>
+      <Container maxWidth={false} sx={{ py: 2, px: 2 }}>
         <Box sx={{ mb: 4 }}>
           <Skeleton variant="text" width={400} height={60} />
           <Skeleton variant="text" width={600} height={30} />
@@ -276,7 +276,7 @@ const ConsentFormPage: React.FC<ConsentFormPageProps> = ({
   }
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
+    <Container maxWidth={false} sx={{ py: 2, px: 2 }}>
       {/* Header Section */}
       <Fade in timeout={800}>
         <Box sx={{ mb: 4 }}>
@@ -556,8 +556,8 @@ const ConsentFormPage: React.FC<ConsentFormPageProps> = ({
               sx={{
                 borderRadius: 3,
                 overflow: "hidden",
-                height: { xs: "auto", lg: "calc(100vh - 400px)" },
-                minHeight: { xs: 400, lg: 600 },
+                height: { xs: "auto", lg: "calc(100vh - 320px)" },
+                minHeight: { xs: 400, lg: 500 },
                 display: "flex",
                 flexDirection: "column",
                 boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
@@ -810,8 +810,8 @@ const ConsentFormPage: React.FC<ConsentFormPageProps> = ({
                   p: 6,
                   textAlign: "center",
                   borderRadius: 3,
-                  height: { xs: "auto", lg: "calc(100vh - 400px)" },
-                  minHeight: { xs: 400, lg: 600 },
+                  height: { xs: "auto", lg: "calc(100vh - 320px)" },
+                  minHeight: { xs: 400, lg: 500 },
                   display: "flex",
                   flexDirection: "column",
                   alignItems: "center",

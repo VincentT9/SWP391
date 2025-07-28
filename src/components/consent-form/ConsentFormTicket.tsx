@@ -129,7 +129,13 @@ const ConsentFormTicket: React.FC<ConsentFormTicketProps> = ({
   };
 
   return (
-    <Box>
+    <Box
+      sx={{
+        height: { xs: "auto", lg: "calc(100vh - 320px)" },
+        overflow: "auto",
+        pb: 2,
+      }}
+    >
       {/* Header Card */}
       <Card elevation={2} sx={{ mb: 3, borderRadius: 2 }}>
         <CardContent sx={{ p: 3 }}>
@@ -181,7 +187,7 @@ const ConsentFormTicket: React.FC<ConsentFormTicketProps> = ({
       </Card>
 
       {/* Schedule Information */}
-      <Card elevation={1} sx={{ mb: 3, borderRadius: 2 }}>
+      <Card elevation={1} sx={{ mb: 2, borderRadius: 2 }}>
         <CardContent sx={{ p: 3 }}>
           <Typography
             variant="h6"

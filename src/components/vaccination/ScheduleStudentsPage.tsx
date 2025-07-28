@@ -1388,12 +1388,15 @@ const ScheduleStudentsPage: React.FC = () => {
         open={isConsentFormDialogOpen}
         onClose={() => setIsConsentFormDialogOpen(false)}
         aria-labelledby="consent-form-dialog-title"
-        maxWidth="lg"
+        maxWidth="xl"
         fullWidth
         PaperProps={{
           sx: {
-            height: "90vh",
-            maxHeight: "90vh",
+            height: "95vh",
+            maxHeight: "95vh",
+            width: "95%",
+            maxWidth: "1800px",
+            margin: "auto",
           },
         }}
       >
@@ -1421,7 +1424,7 @@ const ScheduleStudentsPage: React.FC = () => {
             Đóng
           </Button>
         </DialogTitle>
-        <DialogContent sx={{ p: 0, overflow: "hidden" }}>
+        <DialogContent sx={{ p: 0, overflow: "auto" }}>
           {schedule?.campaignId && (
             <ConsentFormPage
               mode="admin"
