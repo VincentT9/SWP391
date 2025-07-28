@@ -547,7 +547,7 @@ const NotificationsPage: React.FC = () => {
                                     }
                                   }}
                                 >
-                                  {`localhost:3000${notification.returnUrl}`}
+                                  {`${notification.returnUrl}`}
                                 </Button>
                               </Box>
                             ) : (

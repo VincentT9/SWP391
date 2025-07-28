@@ -76,10 +76,6 @@ const NurseMedicalEventsDashboard: React.FC<
             campaignId: null,
             incidientId: response.data.id,
           }
-      await instance.post(
-            "api/Notification/create-notification", 
-            notification
-          );
       // Refresh incidents list after creating a new one
       await fetchIncidents();
       
