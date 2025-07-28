@@ -604,6 +604,12 @@ const ScheduleStudentsPage = () => {
 
   // Record result functions
   const handleRecordResult = (student: Student) => {
+    // Check if results already recorded
+    if (student.hasResult) {
+      toast.info("Học sinh này đã được ghi nhận kết quả trước đó!");
+      return;
+    }
+
     // Check if consent form is rejected
     if (student.consentStatus === "rejected") {
       toast.error("Không thể ghi nhận kết quả vì phiếu đồng ý đã bị từ chối!");
@@ -1177,7 +1183,9 @@ const ScheduleStudentsPage = () => {
                             {/* Record result button - Available to both Admin and MedicalStaff */}
                             <Tooltip
                               title={
-                                student.consentStatus === "rejected"
+                                student.hasResult
+                                  ? "Đã ghi nhận kết quả trước đó"
+                                  : student.consentStatus === "rejected"
                                   ? "Không thể ghi nhận kết quả vì phiếu đồng ý đã bị từ chối"
                                   : schedule?.campaignType === 0
                                   ? "Ghi nhận kết quả tiêm"
@@ -1190,11 +1198,13 @@ const ScheduleStudentsPage = () => {
                                   color="primary"
                                   onClick={() => handleRecordResult(student)}
                                   disabled={
-                                    student.consentStatus === "rejected"
+                                    student.consentStatus === "rejected" ||
+                                    student.hasResult
                                   }
                                   sx={{
                                     opacity:
-                                      student.consentStatus === "rejected"
+                                      student.consentStatus === "rejected" ||
+                                      student.hasResult
                                         ? 0.5
                                         : 1,
                                   }}
