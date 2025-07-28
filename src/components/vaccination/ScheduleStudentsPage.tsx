@@ -130,6 +130,28 @@ const ScheduleStudentsPage: React.FC = () => {
     fetchStudents();
   }, [scheduleId]);
 
+  // Add a useEffect to check for existing consent forms
+  useEffect(() => {
+    if (schedule?.campaignId) {
+      // Check if consent forms already exist for this campaign
+      const checkExistingConsentForms = async () => {
+        try {
+          const response = await instance.get(
+            `/api/ConsentForm/get-consent-forms-by-campaign-id/${schedule.campaignId}`
+          );
+          // If there are any consent forms for this campaign, set the flag
+          if (response.data && response.data.length > 0) {
+            setConsentFormExists(true);
+          }
+        } catch (error) {
+          console.error("Error checking for existing consent forms:", error);
+        }
+      };
+
+      checkExistingConsentForms();
+    }
+  }, [schedule?.campaignId]);
+
   useEffect(() => {
     // Update stats whenever students change
     const completed = students.filter((s) => s.hasResult).length;
@@ -517,19 +539,65 @@ const ScheduleStudentsPage: React.FC = () => {
   };
 
   // Consent form functions
-  const handleCreateConsentForms = () => {
+  const handleCreateConsentForms = async () => {
     if (students.length === 0) {
       toast.warning("Không có học sinh nào để tạo phiếu đồng ý");
       return;
     }
 
-    if (consentFormExists) {
-      toast.warning("Phiếu đồng ý đã được tạo cho chiến dịch này.");
+    // Kiểm tra chiến dịch
+    if (!schedule || !schedule.campaignId) {
+      toast.error("Không tìm thấy ID chiến dịch. Vui lòng kiểm tra lại.");
       return;
     }
 
-    // Mở dialog xác nhận thay vì sử dụng window.confirm
-    setConfirmConsentDialogOpen(true);
+    try {
+      // Kiểm tra xem chiến dịch này đã có phiếu đồng ý nào chưa
+      const existingConsentResponse = await instance.get(
+        `/api/ConsentForm/get-consent-forms-by-campaign-id/${schedule.campaignId}`
+      );
+
+      // Nếu có phiếu đồng ý, kiểm tra chi tiết
+      if (
+        existingConsentResponse.data &&
+        existingConsentResponse.data.length > 0
+      ) {
+        // Tạo map học sinh đã có phiếu đồng ý
+        const existingConsents = new Map();
+        existingConsentResponse.data.forEach((consent: any) => {
+          existingConsents.set(consent.studentId, consent);
+        });
+
+        // Đếm số học sinh trong danh sách hiện tại đã có phiếu đồng ý
+        let studentsWithExistingConsent = 0;
+        for (const student of students) {
+          if (student.studentId && existingConsents.has(student.studentId)) {
+            studentsWithExistingConsent++;
+          }
+        }
+
+        // Nếu tất cả học sinh đã có phiếu đồng ý, hiển thị thông báo và không tạo phiếu mới
+        if (studentsWithExistingConsent === students.length) {
+          toast.warning(
+            "Tất cả học sinh đã có phiếu đồng ý cho chiến dịch này"
+          );
+          return;
+        }
+
+        // Nếu chỉ một phần đã có phiếu, hiển thị thông báo nhưng vẫn cho phép tiếp tục
+        if (studentsWithExistingConsent > 0) {
+          toast.info(
+            `${studentsWithExistingConsent} học sinh đã có phiếu đồng ý và sẽ được bỏ qua`
+          );
+        }
+      }
+
+      // Mở dialog xác nhận
+      setConfirmConsentDialogOpen(true);
+    } catch (error) {
+      console.error("Lỗi khi kiểm tra phiếu đồng ý hiện có:", error);
+      toast.error("Không thể kiểm tra phiếu đồng ý hiện có. Vui lòng thử lại.");
+    }
   };
 
   // Hàm xử lý khi người dùng xác nhận tạo phiếu
@@ -548,9 +616,23 @@ const ScheduleStudentsPage: React.FC = () => {
         return;
       }
 
+      // Trước khi tạo phiếu đồng ý mới, kiểm tra những học sinh nào đã có phiếu
+      const existingConsentResponse = await instance.get(
+        `/api/ConsentForm/get-consent-forms-by-campaign-id/${schedule.campaignId}`
+      );
+
+      // Tạo map học sinh đã có phiếu đồng ý
+      const existingConsents = new Map();
+      if (existingConsentResponse.data) {
+        existingConsentResponse.data.forEach((consent: any) => {
+          existingConsents.set(consent.studentId, consent);
+        });
+      }
+
       // Sử dụng giá trị mặc định: mặc định là đồng ý
       const currentDate = new Date().toISOString();
       let successCount = 0;
+      let skipCount = 0;
 
       for (const student of students) {
         // Kiểm tra studentId trước khi tạo request
@@ -560,6 +642,15 @@ const ScheduleStudentsPage: React.FC = () => {
               student.studentName || "không xác định"
             }`
           );
+          continue; // Bỏ qua học sinh này
+        }
+
+        // Kiểm tra xem học sinh đã có phiếu đồng ý chưa
+        if (existingConsents.has(student.studentId)) {
+          console.log(
+            `Học sinh ${student.studentName} đã có phiếu đồng ý cho chiến dịch này`
+          );
+          skipCount++;
           continue; // Bỏ qua học sinh này
         }
 
@@ -595,11 +686,21 @@ const ScheduleStudentsPage: React.FC = () => {
         }
       }
 
+      if (skipCount > 0) {
+        toast.info(
+          `Đã bỏ qua ${skipCount} học sinh đã có phiếu đồng ý trước đó`
+        );
+      }
+
       if (successCount > 0) {
         toast.success(
-          `Đã tạo ${successCount}/${students.length} phiếu đồng ý cho học sinh`
+          `Đã tạo ${successCount}/${
+            students.length - skipCount
+          } phiếu đồng ý cho học sinh`
         );
         setConsentFormExists(true);
+      } else if (skipCount === students.length) {
+        toast.warning("Tất cả học sinh đã có phiếu đồng ý cho chiến dịch này");
       } else {
         toast.error("Không thể tạo phiếu đồng ý. Vui lòng thử lại sau.");
       }
@@ -1248,6 +1349,11 @@ const ScheduleStudentsPage: React.FC = () => {
               {schedule?.campaignType === 0
                 ? " Phụ huynh sẽ nhận được thông báo và cần xem xét phiếu đồng ý cho con em tham gia tiêm chủng."
                 : " Phụ huynh sẽ nhận được thông báo và cần xem xét phiếu đồng ý cho con em tham gia khám sức khỏe."}
+            </Typography>
+            <Typography variant="body2" color="info.main" sx={{ mt: 1 }}>
+              <strong>Lưu ý:</strong> Học sinh đã có phiếu đồng ý trong chiến
+              dịch này sẽ được bỏ qua để đảm bảo mỗi học sinh chỉ có một phiếu
+              đồng ý cho mỗi chiến dịch.
             </Typography>
           </Box>
         </DialogContent>

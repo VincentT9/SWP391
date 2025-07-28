@@ -55,6 +55,7 @@
   },
   "devDependencies": {
     "@types/date-fns": "^2.6.3",
-    "@types/jest": "^29.5.14"
+    "@types/jest": "^29.5.14",
+    "axios-mock-adapter": "^2.1.0"
   }
 }
