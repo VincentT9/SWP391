@@ -518,8 +518,6 @@ const MedicalEventForm: React.FC<MedicalEventFormProps> = ({
               label="Thời gian xảy ra"
               value={incidentDate}
               onChange={(newValue) => newValue && setIncidentDate(newValue)}
-              minDate={new Date(new Date().setHours(0, 0, 0, 0))}
-              maxDate={new Date(new Date().setHours(23, 59, 59, 999))}
               slotProps={{
                 textField: { fullWidth: true }
               }}
@@ -528,11 +526,6 @@ const MedicalEventForm: React.FC<MedicalEventFormProps> = ({
             {isEditMode && (
               <FormHelperText>
                 Không thể thay đổi thời gian xảy ra trong chế độ sửa
-              </FormHelperText>
-            )}
-            {!isEditMode && (
-              <FormHelperText>
-                Chỉ có thể chọn thời gian trong ngày hôm nay
               </FormHelperText>
             )}
           </LocalizationProvider>
@@ -709,7 +702,35 @@ const MedicalEventForm: React.FC<MedicalEventFormProps> = ({
             )}
           </Paper>
 
-          
+          {/* Notify Parent */}
+          <FormControlLabel
+            control={
+              <Switch
+                checked={notifyParent}
+                onChange={(e) => setNotifyParent(e.target.checked)}
+              />
+            }
+            label="Thông báo cho phụ huynh"
+          />
+
+          {/* Form Actions */}
+          <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2, pt: 2 }}>
+            <Button 
+              variant="outlined" 
+              onClick={onCancel}
+              disabled={loading}
+            >
+              Quay lại
+            </Button>
+            <Button 
+              variant="contained" 
+              type="submit"
+              disabled={loading}
+              startIcon={loading ? <CircularProgress size={20} color="inherit" /> : null}
+            >
+              {loading ? "Đang xử lý..." : initialEvent ? "Cập nhật" : "Lưu"}
+            </Button>
+          </Box>
         </Stack>
       </form>
     </Paper>

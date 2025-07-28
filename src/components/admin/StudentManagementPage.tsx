@@ -217,7 +217,7 @@ const StudentManagementPage: React.FC = () => {
             <Button variant="outlined" onClick={() => navigate("/")}>
               Về trang chủ
             </Button>
-            <Button variant="contained" onClick={() => navigate(-1)}>
+            <Button variant="contained" onClick={() => window.history.back()}>
               Quay lại
             </Button>
           </Box>

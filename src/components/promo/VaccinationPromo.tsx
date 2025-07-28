@@ -139,7 +139,21 @@ const VaccinationPromo: React.FC = () => {
                   >
                     Đăng ký tham gia
                   </Button>
-                  
+                  <Button
+                    variant="outlined"
+                    size="large"
+                    color="success"
+                    onClick={() => navigate('/login')}
+                    sx={{ 
+                      px: 4, 
+                      py: 1.5,
+                      borderRadius: 3,
+                      textTransform: 'none',
+                      fontSize: '1.1rem'
+                    }}
+                  >
+                    Xem lịch tiêm
+                  </Button>
                 </Stack>
               </Box>
               <Box sx={{ flex: 1, maxWidth: 500 }}>
@@ -358,7 +372,50 @@ const VaccinationPromo: React.FC = () => {
         </Box>
       </Container>
 
-      
+      {/* CTA Section */}
+      <Box sx={{ bgcolor: alpha('#2980b9', 0.1), py: 8 }}>
+        <Container maxWidth="lg">
+          <Box
+            sx={{
+              textAlign: 'center',
+              bgcolor: 'white',
+              p: 6,
+              borderRadius: 4,
+              boxShadow: theme.shadows[8]
+            }}
+          >
+            <Typography
+              variant="h4"
+              component="h2"
+              gutterBottom
+              sx={{ fontWeight: 'bold', mb: 3 }}
+            >
+              Bảo vệ sức khỏe con em ngay hôm nay
+            </Typography>
+            <Typography
+              variant="h6"
+              sx={{ mb: 4, color: 'text.secondary' }}
+            >
+              Tham gia chương trình tiêm phòng để con có sức khỏe tốt nhất
+            </Typography>
+            <Button
+              variant="contained"
+              size="large"
+              color="success"
+              onClick={() => navigate('/register')}
+              sx={{ 
+                px: 6, 
+                py: 2,
+                borderRadius: 3,
+                textTransform: 'none',
+                fontSize: '1.2rem'
+              }}
+            >
+              Đăng ký ngay
+            </Button>
+          </Box>
+        </Container>
+      </Box>
     </Box>
   );
 };

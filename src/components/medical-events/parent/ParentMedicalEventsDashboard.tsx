@@ -156,10 +156,7 @@ const ParentMedicalEventsDashboard: React.FC<
       )}
 
       {isViewingDetails && selectedEvent ? (
-        <MedicalEventDetails 
-          event={selectedEvent} 
-          onBack={handleBackToList} 
-        />
+        <MedicalEventDetails event={selectedEvent} onBack={handleBackToList} />
       ) : (
         <>
           {!loading && events.length === 0 && students.length === 0 ? (

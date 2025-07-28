@@ -556,6 +556,14 @@ const ScheduleStudentsPage: React.FC = () => {
             "/api/ConsentForm/create-consent-form",
             requestBody
           );
+          const notification = {
+            campaignId: schedule.campaignId,
+            incidientId: null,
+          }
+      await instance.post(
+            "api/Notification/create-notification", 
+            notification
+          );
           successCount++;
         } catch (err) {
           console.error(
@@ -677,8 +685,13 @@ const ScheduleStudentsPage: React.FC = () => {
           variant="outlined"
           startIcon={<ArrowBackIcon />}
           onClick={() => {
-            // Quay lại trang trước đó
-            navigate(-1);
+            // Điều hướng về trang chi tiết chương trình nếu có campaignId
+            if (schedule?.campaignId) {
+              navigate(`/vaccination/${schedule.campaignId}`);
+            } else {
+              // Nếu không có campaignId, quay lại trang trước đó
+              navigate(-1);
+            }
           }}
         >
           Quay lại
@@ -864,7 +877,8 @@ const ScheduleStudentsPage: React.FC = () => {
                   <TableCell>Giới tính</TableCell>
                   <TableCell>Ngày sinh</TableCell>
                   <TableCell>Trạng thái</TableCell>
-                  <TableCell align="center">Thao tác</TableCell>
+                  {( isAdmin() || isMedicalStaff()) && (
+                  <TableCell align="center">Thao tác</TableCell>)}
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -889,6 +903,7 @@ const ScheduleStudentsPage: React.FC = () => {
                           color={student.hasResult ? "success" : "warning"}
                         />
                       </TableCell>
+                      {((isAdmin() || isMedicalStaff()) && ( 
                       <TableCell align="center">
                         <Box
                           sx={{
@@ -932,7 +947,7 @@ const ScheduleStudentsPage: React.FC = () => {
                             </Tooltip>
                           )}
                         </Box>
-                      </TableCell>
+                      </TableCell>))}
                     </TableRow>
                   ))
                 ) : (

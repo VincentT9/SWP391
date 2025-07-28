@@ -147,9 +147,9 @@ const LoginPage = () => {
       >
         <Box sx={{ mb: 4 }}>
           <img
-            src="https://musical-indigo-mongoose.myfilebase.com/ipfs/Qmf9vib7J7Rm85u4CTK5WCXXTQ6dxzoKWjwCrkVjiXhT35"
-            alt="Y tế học đường"
-            width="250"
+            src="https://musical-indigo-mongoose.myfilebase.com/ipfs/QmPfdMNtJhcNfztJtxK88SXCrqWm54KuSWHKBW4TNhPr3x"
+            alt="FPTMED"
+            width="200"
           />
         </Box>
 

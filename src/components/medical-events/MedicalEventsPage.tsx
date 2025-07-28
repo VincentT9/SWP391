@@ -2,7 +2,6 @@ import React from "react";
 import { Container, Typography, Box, Alert } from "@mui/material";
 import { NurseMedicalEventsDashboard } from "./nurse";
 import { ParentMedicalEventsDashboard } from "./parent";
-import { AdminMedicalEventsDashboard } from "./admin";
 import { useAuth } from '../auth/AuthContext';
 
 const MedicalEventsPage: React.FC = () => {
@@ -29,9 +28,9 @@ const MedicalEventsPage: React.FC = () => {
         return <ParentMedicalEventsDashboard parentId={user.id} />;
       case "Admin":
         return (
-          <AdminMedicalEventsDashboard
-            adminId={user.id}
-            adminName={user.name}
+          <NurseMedicalEventsDashboard
+            nurseId={user.id}
+            nurseName={user.name}
           />
         );
       default:

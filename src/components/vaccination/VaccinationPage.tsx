@@ -132,7 +132,6 @@ const VaccinationPage = () => {
     setIsViewingDetails(true);
     setIsCreating(false);
   };
-
   const handleSaveCampaign = async (campaignData: any) => {
     try {
       const newCampaignData = {
@@ -151,9 +150,11 @@ const VaccinationPage = () => {
       );
       setIsCreating(false);
       setRefresh((prev) => prev + 1);
+      return true; // Return success indicator
     } catch (error) {
       console.error("Error saving campaign:", error);
       toast.error("Không thể tạo chương trình. Vui lòng thử lại.");
+      throw error; // Re-throw the error so the form component can catch it
     }
   };
 
@@ -202,13 +203,16 @@ const VaccinationPage = () => {
   return (
     <Container maxWidth="lg">
       <Box sx={{ my: 4 }}>
-        <PageHeader 
+        {" "}
+        <PageHeader
           title="Quản lý chương trình tiêm chủng"
           subtitle="Theo dõi và quản lý các chương trình tiêm chủng và kiểm tra sức khỏe"
           showRefresh={true}
           onRefresh={handleRefresh}
           actions={
-            isAdmin() && (
+            isAdmin() &&
+            !isCreating &&
+            !isViewingDetails && (
               <Button
                 variant="contained"
                 color="primary"
@@ -220,7 +224,6 @@ const VaccinationPage = () => {
             )
           }
         />
-
         {!isCreating && !isViewingDetails && (
           <>
             <Paper sx={{ p: 2, mb: 3 }}>
@@ -340,14 +343,12 @@ const VaccinationPage = () => {
             )}
           </>
         )}
-
         {isCreating && (
           <VaccinationProgramForm
             onSave={handleSaveCampaign}
             onCancel={handleCancel}
           />
         )}
-
         {isViewingDetails && selectedCampaign && (
           <VaccinationProgramDetails
             campaign={selectedCampaign}

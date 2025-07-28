@@ -394,7 +394,66 @@ const HealthCheckPromo: React.FC = () => {
       </Container>
 
       {/* CTA Section */}
-      
+      <Box sx={{ bgcolor: alpha('#2980b9', 0.1), py: 8 }}>
+        <Container maxWidth="lg">
+          <Box
+            sx={{
+              textAlign: 'center',
+              bgcolor: 'white',
+              p: 6,
+              borderRadius: 4,
+              boxShadow: theme.shadows[8]
+            }}
+          >
+            <Typography
+              variant="h4"
+              component="h2"
+              gutterBottom
+              sx={{ fontWeight: 'bold', mb: 3 }}
+            >
+              Đặt lịch khám sức khỏe ngay hôm nay
+            </Typography>
+            <Typography
+              variant="h6"
+              sx={{ mb: 4, color: 'text.secondary' }}
+            >
+              Chăm sóc sức khỏe con từ hôm nay để có tương lai tươi sáng
+            </Typography>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="center">
+              <Button
+                variant="contained"
+                size="large"
+                color="info"
+                onClick={() => navigate('/register')}
+                sx={{ 
+                  px: 6, 
+                  py: 2,
+                  borderRadius: 3,
+                  textTransform: 'none',
+                  fontSize: '1.2rem'
+                }}
+              >
+                Đăng ký khám
+              </Button>
+              <Button
+                variant="outlined"
+                size="large"
+                color="info"
+                onClick={() => navigate('/health-check')}
+                sx={{ 
+                  px: 6, 
+                  py: 2,
+                  borderRadius: 3,
+                  textTransform: 'none',
+                  fontSize: '1.2rem'
+                }}
+              >
+                Tìm hiểu thêm
+              </Button>
+            </Stack>
+          </Box>
+        </Container>
+      </Box>
     </Box>
   );
 };

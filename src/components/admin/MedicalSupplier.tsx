@@ -77,9 +77,6 @@ const MedicalSupplierPage = () => {
   const [openDetailDialog, setOpenDetailDialog] = useState(false);
   const [selectedDetailItem, setSelectedDetailItem] = useState<any>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  
-  // Thêm state cho validation
-  const [showValidationErrors, setShowValidationErrors] = useState(false);
 
   // Fetch suppliers from API
   const fetchSuppliers = async () => {
@@ -295,7 +292,7 @@ const MedicalSupplierPage = () => {
             <Button variant="outlined" onClick={() => navigate("/")}>
               Về trang chủ
             </Button>
-            <Button variant="contained" onClick={() => navigate(-1)}>
+            <Button variant="contained" onClick={() => window.history.back()}>
               Quay lại
             </Button>
           </Box>
@@ -410,7 +407,6 @@ const MedicalSupplierPage = () => {
   };
 
   const handleOpenDialog = async (item?: any) => {
-    setShowValidationErrors(false); // Reset validation errors khi mở dialog
     if (item) {
       try {
         const supplierData = await fetchSupplierById(item.id);
@@ -437,17 +433,9 @@ const MedicalSupplierPage = () => {
     setOpenDialog(false);
     setSelectedItem(null);
     setFormData({});
-    setShowValidationErrors(false); // Reset validation errors khi đóng dialog
   };
 
   const handleSave = async () => {
-    // Kiểm tra validation trước khi save
-    if (!formData.supplyName || !formData.unit || formData.quantity < 0) {
-      setShowValidationErrors(true);
-      toast.error("Vui lòng điền đầy đủ thông tin bắt buộc!");
-      return;
-    }
-
     try {
       setIsSaving(true);
       if (selectedItem) {
@@ -1043,9 +1031,9 @@ const MedicalSupplierPage = () => {
                       }
                       fullWidth
                       required
-                      error={showValidationErrors && !formData.supplyName}
+                      error={!formData.supplyName}
                       helperText={
-                        showValidationErrors && !formData.supplyName ? "Tên vật tư là bắt buộc" : ""
+                        !formData.supplyName ? "Tên vật tư là bắt buộc" : ""
                       }
                       variant="outlined"
                     />
@@ -1091,11 +1079,11 @@ const MedicalSupplierPage = () => {
                         sx={{ flex: 1 }}
                         required
                         inputProps={{ min: 0 }}
-                        error={showValidationErrors && formData.quantity < 0}
-                        helperText={showValidationErrors && formData.quantity < 0 ? "Số lượng phải >= 0" : ""}
+                        error={formData.quantity < 0}
+                        helperText={formData.quantity < 0 ? "Số lượng phải >= 0" : ""}
                         variant="outlined"
                       />
-                      <FormControl sx={{ flex: 1 }} required error={showValidationErrors && !formData.unit}>
+                      <FormControl sx={{ flex: 1 }} required>
                         <InputLabel>Đơn vị</InputLabel>
                         <Select
                           value={formData.unit || ""}
@@ -1103,6 +1091,7 @@ const MedicalSupplierPage = () => {
                             setFormData({ ...formData, unit: e.target.value })
                           }
                           label="Đơn vị"
+                          error={!formData.unit}
                         >
                           {UNIT_OPTIONS.map((unit) => (
                             <MenuItem key={unit} value={unit}>
@@ -1110,11 +1099,6 @@ const MedicalSupplierPage = () => {
                             </MenuItem>
                           ))}
                         </Select>
-                        {showValidationErrors && !formData.unit && (
-                          <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.75 }}>
-                            Đơn vị là bắt buộc
-                          </Typography>
-                        )}
                       </FormControl>
                     </Box>
 
@@ -1152,6 +1136,16 @@ const MedicalSupplierPage = () => {
                         </Typography>
                       </Box>
                     </Box>
+
+                    {/* Validation summary */}
+                    {(!formData.supplyName || !formData.unit || formData.quantity < 0) && (
+                      <Alert severity="error" sx={{ mt: 2 }}>
+                        <Typography variant="body2">
+                          Vui lòng kiểm tra lại thông tin vật tư. Các trường có dấu
+                          sao đỏ là bắt buộc.
+                        </Typography>
+                      </Alert>
+                    )}
                   </Box>
                 </Card>
               </Box>
@@ -1164,7 +1158,13 @@ const MedicalSupplierPage = () => {
             <Button
               onClick={handleSave}
               variant="contained"
-              disabled={isSaving || isUploadingImage}
+              disabled={
+                !formData.supplyName || 
+                !formData.unit || 
+                formData.quantity < 0 || 
+                isSaving || 
+                isUploadingImage
+              }
               startIcon={isSaving ? <CircularProgress size={20} /> : null}
             >
               {isSaving 

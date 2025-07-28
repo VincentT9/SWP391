@@ -67,11 +67,11 @@ interface MedicationRequestListProps {
 const getStatusLabel = (status: number) => {
   switch (status) {
     case 0:
-      return <Chip label="Chờ xử lý" color="primary" sx={{ fontWeight: 500 }} />;
+      return <Chip label="Chờ xử lý" color="warning" />;
     case 1:
-      return <Chip label="Đã nhận" color="info" sx={{ fontWeight: 500 }} />;
+      return <Chip label="Đã chấp nhận" color="success" />;
     case 2:
-      return <Chip label="Đã hủy" color="error" sx={{ fontWeight: 500 }} />;
+      return <Chip label="Đã từ chối" color="error" />;
     default:
       return <Chip label="Không xác định" color="default" />;
   }

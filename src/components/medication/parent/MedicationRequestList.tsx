@@ -50,13 +50,13 @@ const MedicationRequestList: React.FC<MedicationRequestListProps> = ({
   const getStatusChip = (status: string) => {
     switch (status) {
       case "requested":
-        return <Chip label="Đã gửi" color="warning" size="small" sx={{ fontWeight: 500 }} />;
+        return <Chip label="Đã yêu cầu" color="primary" size="small" />;
       case "received":
-        return <Chip label="Đã nhận" color="info" size="small" sx={{ fontWeight: 500 }} />;
+        return <Chip label="Đã nhận" color="info" size="small" />;
       case "completed":
-        return <Chip label="Hoàn thành" color="success" size="small" sx={{ fontWeight: 500 }} />;
+        return <Chip label="Hoàn thành" color="success" size="small" />;
       case "cancelled":
-        return <Chip label="Đã hủy" color="error" size="small" sx={{ fontWeight: 500 }} />;
+        return <Chip label="Đã hủy" color="error" size="small" />;
       default:
         return <Chip label={status} size="small" />;
     }

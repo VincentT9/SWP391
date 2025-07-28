@@ -35,10 +35,6 @@ import VaccinationPromo from "./components/promo/VaccinationPromo";
 import HealthCheckPromo from "./components/promo/HealthCheckPromo";
 import LandingPage from "./components/promo/LandingPage";
 
-// Consent Form Pages
-import ConsentFormPage from "./components/consent-form/ConsentFormPage";
-import ConsentFormTicket from "./components/consent-form/ConsentFormTicket";
-
 function App() {
   return (
     <AuthProvider>
@@ -87,8 +83,6 @@ function App() {
                 path="/vaccination/schedule/:scheduleId/students"
                 element={<ScheduleStudentsPage />}
               />
-              <Route path="consent-forms" element={<ConsentFormPage />} />
-              <Route path="consent-form/:formId" element={<ConsentFormTicket />} />
             </Route>
           </Routes>
         </Router>

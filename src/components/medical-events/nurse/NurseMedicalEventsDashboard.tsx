@@ -70,7 +70,16 @@ const NurseMedicalEventsDashboard: React.FC<
     setError(null);
     
     try {
-      await instance.post('/api/medical-incident/create', incidentData);
+      const response = await instance.post('/api/medical-incident/create', incidentData);
+      console.log(response);
+      const notification = {
+            campaignId: null,
+            incidientId: response.data.id,
+          }
+      await instance.post(
+            "api/Notification/create-notification", 
+            notification
+          );
       // Refresh incidents list after creating a new one
       await fetchIncidents();
       
@@ -167,18 +176,6 @@ const NurseMedicalEventsDashboard: React.FC<
     setSelectedEvent(null);
   };
 
-  const handleDeleteEvent = async (eventId: string) => {
-    try {
-      await instance.delete(`/api/medical-incident/delete/${eventId}`);
-      // Refresh the events list
-      await fetchIncidents();
-      toast.success("Xóa sự kiện y tế thành công");
-    } catch (error) {
-      console.error("Error deleting medical incident:", error);
-      toast.error("Có lỗi khi xóa sự kiện y tế");
-    }
-  };
-
   return (
     <Box>
       <PageHeader 
@@ -258,8 +255,7 @@ const NurseMedicalEventsDashboard: React.FC<
           event={selectedEvent} 
           onBack={handleBackToList} 
           onEdit={handleEditEvent}
-          onDelete={handleDeleteEvent}
-          onRefresh={fetchIncidents}
+          isNurse={true}
         />
       )}
     </Box>

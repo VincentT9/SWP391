@@ -24,28 +24,12 @@ import {
   Divider,
   Collapse,
 } from "@mui/material";
-import { format, parseISO } from "date-fns";
+import { format, isBefore, parseISO } from "date-fns";
 import HistoryIcon from "@mui/icons-material/History";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
+import { MedicationRequest } from "../../../models/types";
 import axiosInstance from "../../../utils/axiosConfig";
-
-// Interface for API medication request
-interface ApiMedicationRequest {
-  id: string;
-  medicationName: string;
-  dosage: number;
-  numberOfDayToTake: number;
-  instructions: string;
-  imagesMedicalInvoice: string[];
-  startDate: string;
-  endDate: string | null;
-  status: number;
-  studentCode: string;
-  studentName: string;
-  medicalStaffId: string;
-  medicalStaffName: string | null;
-}
 
 // Interface for diary entries updated to match API response format
 interface MedicationDiaryEntry {
@@ -59,7 +43,7 @@ interface MedicationDiaryEntry {
 }
 
 interface NurseMedicationListProps {
-  requests: ApiMedicationRequest[];
+  requests: MedicationRequest[];
   onReceiveMedication: (requestId: string) => void;
   isLoading: boolean;
   nurseId: string;
@@ -71,7 +55,7 @@ const NurseMedicationList: React.FC<NurseMedicationListProps> = ({
   isLoading,
   nurseId,
 }) => {
-  const [selectedRequest, setSelectedRequest] = useState<ApiMedicationRequest | null>(null);
+  const [selectedRequest, setSelectedRequest] = useState<MedicationRequest | null>(null);
   const [selectedStudent, setSelectedStudent] = useState<{id: string, name: string} | null>(null);
   const [diaryEntries, setDiaryEntries] = useState<MedicationDiaryEntry[]>([]);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
@@ -80,12 +64,12 @@ const NurseMedicationList: React.FC<NurseMedicationListProps> = ({
   
   // Filter requests that are assigned to this nurse with status "received"
   const medicatedStudents = requests.filter(
-    (req) => req.medicalStaffId === nurseId && req.status === 1
+    (req) => req.receivedBy === nurseId && req.status === "received"
   );
 
   // Group medications by student
   const groupedByStudent = medicatedStudents.reduce((acc, request) => {
-    const studentId = request.studentCode;
+    const studentId = request.studentId;
     if (!acc[studentId]) {
       acc[studentId] = {
         studentId: studentId,
@@ -95,7 +79,7 @@ const NurseMedicationList: React.FC<NurseMedicationListProps> = ({
     }
     acc[studentId].medications.push(request);
     return acc;
-  }, {} as { [key: string]: { studentId: string, studentName: string, medications: ApiMedicationRequest[] } });
+  }, {} as { [key: string]: { studentId: string, studentName: string, medications: MedicationRequest[] } });
 
   const handleToggleRow = (studentId: string) => {
     setOpenRows((prev) => ({
@@ -104,19 +88,25 @@ const NurseMedicationList: React.FC<NurseMedicationListProps> = ({
     }));
   };
 
-  const getMedicationStatus = (request: ApiMedicationRequest) => {
-    // Simplified - just return in-progress since we're not showing expired anymore
-    return "in-progress";
+  const getMedicationStatus = (request: MedicationRequest) => {
+    const today = new Date();
+    const endDate = new Date(request.endDate);
+    
+    if (isBefore(endDate, today)) {
+      return "expired";
+    } else {
+      return "in-progress";
+    }
   };
 
   const getStatusChip = (status: string) => {
     switch (status) {
       case "in-progress":
-        return <Chip label="Đang cho uống" color="primary" size="small" sx={{ fontWeight: 500 }} />;
-      case "completed":
-        return <Chip label="Hoàn thành" color="success" size="small" sx={{ fontWeight: 500 }} />;
+        return <Chip label="Trong quá trình" color="info" size="small" />;
+      case "expired":
+        return <Chip label="Hết hạn" color="default" size="small" />;
       default:
-        return <Chip label="Đang cho uống" color="primary" size="small" sx={{ fontWeight: 500 }} />;
+        return <Chip label={status} size="small" />;
     }
   };
 
@@ -136,14 +126,14 @@ const NurseMedicationList: React.FC<NurseMedicationListProps> = ({
   };
 
   // Xem nhật ký thuốc cụ thể
-  const handleDiaryClick = async (request: ApiMedicationRequest) => {
+  const handleDiaryClick = async (request: MedicationRequest) => {
     setSelectedRequest(request);
     setSelectedStudent(null);
     setLoadingDiary(true);
     setConfirmDialogOpen(true);
 
     try {
-      const student = await axiosInstance.get(`/api/Student/get-student-by-student-code/${request.studentCode}`);
+      const student = await axiosInstance.get(`/api/Student/get-student-by-student-code/${request.studentId}`);
       // Fetch diary entries for this medication request
       const response = await axiosInstance.get(`/api/MedicaDiary/student/${student.data.id}`);
       setDiaryEntries(response.data);
@@ -277,12 +267,7 @@ const NurseMedicationList: React.FC<NurseMedicationListProps> = ({
                                       {format(new Date(medication.startDate), "dd/MM/yyyy")}
                                     </TableCell>
                                     <TableCell align="center">
-                                      {(() => {
-                                        const startDate = parseISO(medication.startDate);
-                                        const calculatedEndDate = new Date(startDate);
-                                        calculatedEndDate.setDate(calculatedEndDate.getDate() + medication.numberOfDayToTake - 1);
-                                        return format(calculatedEndDate, "dd/MM/yyyy");
-                                      })()}
+                                      {format(new Date(medication.endDate), "dd/MM/yyyy")}
                                     </TableCell>
                                     <TableCell align="center">
                                       {getStatusChip(medicationStatus)}
@@ -319,12 +304,7 @@ const NurseMedicationList: React.FC<NurseMedicationListProps> = ({
               
               <Box sx={{ my: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Typography variant="body1">
-                  <strong>Thời gian:</strong> {format(new Date(selectedRequest.startDate), "dd/MM/yyyy")} - {(() => {
-                    const startDate = parseISO(selectedRequest.startDate);
-                    const calculatedEndDate = new Date(startDate);
-                    calculatedEndDate.setDate(calculatedEndDate.getDate() + selectedRequest.numberOfDayToTake - 1);
-                    return format(calculatedEndDate, "dd/MM/yyyy");
-                  })()}
+                  <strong>Thời gian:</strong> {format(new Date(selectedRequest.startDate), "dd/MM/yyyy")} -  {format(new Date(selectedRequest.endDate), "dd/MM/yyyy")}
                 </Typography>
                 {getStatusChip(getMedicationStatus(selectedRequest))}
               </Box>

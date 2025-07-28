@@ -95,12 +95,7 @@ const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
     e.preventDefault();
 
     // Validate các trường bắt buộc
-    if (
-      !studentId ||
-      !startDate ||
-      !daysRequired ||
-      !components
-    ) {
+    if (!studentId || !startDate || !daysRequired || !components) {
       alert("Vui lòng điền đầy đủ các thông tin bắt buộc");
       return;
     }
@@ -166,7 +161,7 @@ const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
   return (
     <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
       <Typography variant="h6" gutterBottom>
-        Gửi thuốc đến trường
+        Gửi thuốc cho con
       </Typography>
 
       {/* Hiển thị cảnh báo khi không có hồ sơ sức khỏe học sinh */}
@@ -268,8 +263,6 @@ const MedicationRequestForm: React.FC<MedicationRequestFormProps> = ({
                   helperText={`Liệt kê tất cả các loại thuốc và thành phần chính. Mỗi thuốc ghi rõ tên và thành phần trên một dòng riêng.`}
                 />
               </Box>
-
-
             </Box>
 
             {/* Phần chụp hóa đơn thuốc (Optional) */}

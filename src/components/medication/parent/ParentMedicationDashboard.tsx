@@ -162,7 +162,6 @@ const ParentMedicationDashboard: React.FC<ParentMedicationDashboardProps> = ({
   const [selectedLogs, setSelectedLogs] = useState<MedicationLogType[]>([]);
   const [studentOptions, setStudentOptions] = useState<StudentOption[]>([]);
   const [loading, setLoading] = useState(true);
-  const [loadingDiary, setLoadingDiary] = useState(false); // State riêng cho loading diary
   const [error, setError] = useState<string | null>(null);
   const [refreshData, setRefreshData] = useState(0);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
@@ -175,74 +174,11 @@ const ParentMedicationDashboard: React.FC<ParentMedicationDashboardProps> = ({
     MedicationDiaryEntry[]
   >([]);
 
-  // Hàm kiểm tra và cập nhật trạng thái các yêu cầu đã hết hạn
-  const checkAndUpdateExpiredRequests = async (requests: MedicationRequestFromAPI[], baseUrl: string) => {
-    // Kiểm tra requests có phải là array không
-    if (!Array.isArray(requests)) {
-      console.error('Requests is not an array:', requests);
-      return;
-    }
-
-    const today = new Date();
-    const todayStr = today.toISOString().split('T')[0]; // Format: YYYY-MM-DD
-    
-    console.log(`Checking expired requests on ${todayStr}`);
-
-    for (const request of requests) {
-      // Kiểm tra request và student có tồn tại không
-      if (!request || !request.student || !request.student.id) {
-        console.log('Skipping invalid request:', request);
-        continue;
-      }
-
-      // Chỉ kiểm tra các yêu cầu có trạng thái "received" (status = 1)
-      if (request.status === 1) {
-        // Tính ngày kết thúc: startDate + numberOfDayToTake
-        const startDate = new Date(request.startDate);
-        const endDate = new Date(startDate);
-        endDate.setDate(startDate.getDate() + request.numberOfDayToTake);
-        const endDateStr = endDate.toISOString().split('T')[0];
-        
-        console.log(`Request ${request.id}: Start ${request.startDate}, Days: ${request.numberOfDayToTake}, End: ${endDateStr}, Today: ${todayStr}`);
-
-        // Nếu ngày hiện tại >= ngày kết thúc, cập nhật thành "completed" (status = 2)
-        if (todayStr >= endDateStr) {
-          try {
-            console.log(`Updating request ${request.id} to completed status`);
-            
-            // Payload đầy đủ theo API documentation
-            const updatePayload = {
-              studentId: request.student.id,
-              medicationName: request.medicationName,
-              dosage: request.dosage,
-              numberOfDayToTake: request.numberOfDayToTake,
-              instructions: request.instructions,
-              imagesMedicalInvoice: request.imagesMedicalInvoice || [],
-              startDate: request.startDate,
-              status: 2, // 2 = completed
-              medicalStaffId: request.medicalStaff?.id || null
-            };
-            
-            await instance.put(`${baseUrl}/api/MedicationRequest/update-medication-request/${request.id}`, updatePayload);
-            
-            console.log(`Successfully updated medication request ${request.id} to completed status`);
-            
-            // Cập nhật trạng thái trong array local để hiển thị ngay lập tức
-            request.status = 2;
-          } catch (error) {
-            console.error(`Error updating medication request ${request.id}:`, error);
-          }
-        } else {
-          console.log(`Request ${request.id} is still active (ends on ${endDateStr})`);
-        }
-      }
-    }
-  };
-
   // Fetch medication requests for all students using the specified API
   const fetchMedicationRequests = useCallback(
     async (students: Student[]) => {
       const baseUrl = process.env.REACT_APP_BASE_URL;
+      const allRequests: MedicationRequestType[] = [];
       let allApiData: MedicationRequestFromAPI[] = [];
 
       try {
@@ -260,11 +196,13 @@ const ParentMedicationDashboard: React.FC<ParentMedicationDashboardProps> = ({
 
             // Store original API data
             allApiData = [...allApiData, ...response.data];
-            
-            console.log(`Added ${response.data.length} requests from student ${student.fullName}, total now: ${allApiData.length}`);
-            console.log('Sample request structure:', response.data[0]);
 
-            // Note: We'll map to internal format after checking expired requests
+            // Map API response to our component's format with proper status handling
+            const studentRequests = response.data.map((req) =>
+              adaptApiToInternalMedicationRequest(req, student, parentId)
+            );
+
+            allRequests.push(...studentRequests);
           } catch (studentError: any) {
             // Xử lý trường hợp không có yêu cầu thuốc cho học sinh này (HTTP 500 hoặc lỗi khác)
             // console.log(
@@ -275,96 +213,6 @@ const ParentMedicationDashboard: React.FC<ParentMedicationDashboardProps> = ({
           }
         }
 
-        console.log('Final allApiData before processing:', allApiData, 'Type:', typeof allApiData, 'IsArray:', Array.isArray(allApiData));
-        console.log('Sample allApiData structure:', allApiData[0]);
-
-        // Map requests trước, sau đó mới check expired
-        const allRequests: MedicationRequestType[] = [];
-        console.log('Starting to map requests, students:', students.length);
-        
-        for (const student of students) {
-          if (!Array.isArray(allApiData)) {
-            console.error('allApiData is not an array:', allApiData);
-            continue;
-          }
-          
-          console.log(`Processing student: ${student.fullName} (ID: ${student.id})`);
-          console.log('All available request student names:', allApiData.map(req => (req as any).studentName || 'no studentName'));
-          
-          // Sử dụng studentName từ API response thực tế
-          const studentApiRequests = allApiData.filter(req => 
-            req && (req as any).studentName === student.fullName
-          );
-          
-          console.log(`Found ${studentApiRequests.length} API requests for student ${student.fullName}:`, studentApiRequests);
-          
-          const studentRequests = studentApiRequests.map((req) => {
-            const mapped = adaptApiToInternalMedicationRequest(req, student, parentId);
-            console.log(`Mapped request ${req.id} for ${student.fullName}:`, mapped);
-            return mapped;
-          });
-          
-          allRequests.push(...studentRequests);
-        }
-
-        console.log(`Total mapped requests before checking expired: ${allRequests.length}`, allRequests);
-        
-        // Check và update expired requests sau khi đã map
-        if (allRequests.length > 0) {
-          console.log('Checking expired requests on 2025-07-18');
-          const today = new Date();
-          const baseUrl = process.env.REACT_APP_BASE_URL;
-          const updatedRequests = [...allRequests];
-          
-          for (let i = 0; i < updatedRequests.length; i++) {
-            const request = updatedRequests[i];
-            // Tính ngày kết thúc từ startDate + daysRequired
-            const startDate = new Date(request.startDate);
-            const endDate = new Date(startDate);
-            endDate.setDate(startDate.getDate() + request.daysRequired);
-            
-            console.log(`Request ${request.id}: Status=${request.status}, Start=${request.startDate}, Days=${request.daysRequired}, Calculated End=${endDate.toISOString().split('T')[0]}, Today=${today.toISOString().split('T')[0]}`);
-            
-            // Nếu là status 'received' và đã qua ngày kết thúc thì update thành 'completed'
-            if (request.status === 'received' && today >= endDate) {
-              console.log(`Updating expired request ${request.id} from ${request.status} to completed via API`);
-              
-              try {
-                // Lấy thông tin từ API response gốc
-                const originalApiRequest = allApiData.find(apiReq => apiReq.id === request.id);
-                console.log('Original API request:', originalApiRequest);
-                
-                // Gọi API update status theo format đúng
-                const updatePayload = {
-                  studentId: request.studentId,
-                  medicationName: request.medicationName,
-                  dosage: parseInt(request.dosage),
-                  numberOfDayToTake: request.daysRequired,
-                  instructions: request.instructions,
-                  imagesMedicalInvoice: originalApiRequest?.imagesMedicalInvoice || [],
-                  startDate: originalApiRequest?.startDate || request.startDate.toISOString(),
-                  status: 2, // 2 = completed
-                  medicalStaffId: originalApiRequest?.medicalStaff?.id || null
-                };
-                
-                console.log('Update payload:', updatePayload);
-                
-                await instance.put(`${baseUrl}/api/MedicationRequest/update-medication-request/${request.id}`, updatePayload);
-                
-                // Update local state
-                updatedRequests[i] = { ...request, status: 'completed' as const };
-                console.log(`Successfully updated request ${request.id} to completed status`);
-              } catch (error) {
-                console.error(`Error updating request ${request.id}:`, error);
-              }
-            }
-          }
-          
-          console.log(`Final requests after checking expired: ${updatedRequests.length}`, updatedRequests);
-          setRequests(updatedRequests);
-        } else {
-          setRequests(allRequests);
-        }
 
         // console.log("Requests by status:", {
         //   requested: allRequests.filter(r => r.status === 'requested').length,
@@ -374,6 +222,7 @@ const ParentMedicationDashboard: React.FC<ParentMedicationDashboardProps> = ({
         // });
 
         setAllApiRequests(allApiData);
+        setRequests(allRequests);
       } catch (error: any) {
         // Chỉ báo lỗi nếu có lỗi nghiêm trọng khác (không phải lỗi không tìm thấy dữ liệu)
         console.error("Error fetching medication requests:", error);
@@ -433,67 +282,19 @@ const ParentMedicationDashboard: React.FC<ParentMedicationDashboardProps> = ({
   };
 
   const handleViewLogs = async (requestId: string, studentId: string) => {
-    setLoadingDiary(true); // Sử dụng loadingDiary thay vì loading
+    setLoading(true);
     try {
       const baseUrl = process.env.REACT_APP_BASE_URL;
 
-      // Step 1: Get medication request details to get medical diary IDs
-      const medicationResponse = await instance.get(
-        `${baseUrl}/api/MedicationRequest/get-medication-request-by-id/${requestId}`
+      // Gọi API lấy danh sách nhật ký uống thuốc dựa vào studentId
+      const response = await instance.get<MedicationDiaryEntry[]>(
+        `${baseUrl}/api/MedicaDiary/student/${studentId}`
       );
-      
-      const medicationData = medicationResponse.data;
-      console.log("Medication request data:", medicationData);
-      
-      // Step 2: Get medical diary IDs from the response
-      const medicalDiaryData = medicationData.medicalDiaries || [];
-      console.log("Medical diary data:", medicalDiaryData);
-      
-      // Extract IDs from the medical diary objects
-      let medicalDiaryIds: string[] = [];
-      
-      if (Array.isArray(medicalDiaryData)) {
-        medicalDiaryIds = medicalDiaryData.map((diary: any) => {
-          // If diary is an object with an id property
-          if (typeof diary === 'object' && diary.id) {
-            return diary.id;
-          }
-          // If diary is already a string (ID)
-          if (typeof diary === 'string') {
-            return diary;
-          }
-          return null;
-        }).filter(Boolean); // Remove null values
-      }
-      
-      console.log("Extracted medical diary IDs:", medicalDiaryIds);
-      
-      if (medicalDiaryIds.length === 0) {
-        // If no IDs found, try to use the medical diary data directly
-        if (medicalDiaryData.length > 0) {
-          console.log("Using medical diary data directly:", medicalDiaryData);
-          setMedicationDiaries(medicalDiaryData);
-          setLogModalOpen(true);
-          return;
-        } else {
-          setMedicationDiaries([]);
-          setLogModalOpen(true);
-          return;
-        }
-      }
-      
-      // Step 3: Fetch each diary entry using /api/MedicaDiary/{medicadiaryID}
-      const diaryPromises = medicalDiaryIds.map((diaryId: string) =>
-        instance.get(`${baseUrl}/api/MedicaDiary/${diaryId}`)
-      );
-      
-      const diaryResponses = await Promise.all(diaryPromises);
-      const diaryEntries = diaryResponses.map(response => response.data);
-      
-      console.log("Fetched diary entries:", diaryEntries);
+
+
 
       // Lưu dữ liệu nhật ký vào state
-      setMedicationDiaries(diaryEntries);
+      setMedicationDiaries(response.data);
 
       // Mở modal để hiển thị nhật ký
       setLogModalOpen(true);
@@ -507,7 +308,7 @@ const ParentMedicationDashboard: React.FC<ParentMedicationDashboardProps> = ({
         // setError("Không thể lấy dữ liệu nhật ký uống thuốc. Vui lòng thử lại sau.");
       }
     } finally {
-      setLoadingDiary(false); // Sử dụng loadingDiary thay vì loading
+      setLoading(false);
     }
   };
 
@@ -534,8 +335,8 @@ const ParentMedicationDashboard: React.FC<ParentMedicationDashboardProps> = ({
     <Container maxWidth="lg">
       <Box sx={{ my: 4 }}>
         <PageHeader 
-          title="Gửi thuốc và theo dõi yêu cầu"
-          subtitle="Gửi thuốc và theo dõi lịch uống thuốc của con"
+          title="Quản lý thuốc"
+          subtitle="Theo dõi việc sử dụng thuốc và lịch uống thuốc của con em"
           showRefresh={true}
           onRefresh={() => window.location.reload()}
         />
@@ -570,69 +371,29 @@ const ParentMedicationDashboard: React.FC<ParentMedicationDashboardProps> = ({
           <Box>
             {/* Hiển thị thống kê trạng thái yêu cầu thuốc */}
             {!loading && requests.length > 0 && (
-              <Box sx={{ mb: 3, p: 3, bgcolor: 'background.paper', borderRadius: 2, border: 1, borderColor: 'divider' }}>
-                <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, color: 'primary.main', mb: 2 }}>
+              <Box sx={{ mb: 3, p: 2, bgcolor: 'background.paper', borderRadius: 1 }}>
+                <Typography variant="h6" gutterBottom>
                   Tổng quan yêu cầu thuốc
                 </Typography>
-                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 2 }}>
-                  <Box sx={{ 
-                    p: 2, 
-                    bgcolor: 'warning.50', 
-                    borderRadius: 1, 
-                    border: 1, 
-                    borderColor: 'warning.200',
-                    textAlign: 'center'
-                  }}>
-                    <Typography variant="h4" sx={{ fontWeight: 700, color: 'warning.main' }}>
-                      {requests.filter(r => r.status === 'requested').length}
-                    </Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 500, color: 'warning.main' }}>
-                      Đã gửi
+                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                  <Box sx={{ minWidth: 120 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      Đã gửi: {requests.filter(r => r.status === 'requested').length}
                     </Typography>
                   </Box>
-                  <Box sx={{ 
-                    p: 2, 
-                    bgcolor: 'info.50', 
-                    borderRadius: 1, 
-                    border: 1, 
-                    borderColor: 'info.200',
-                    textAlign: 'center'
-                  }}>
-                    <Typography variant="h4" sx={{ fontWeight: 700, color: 'info.main' }}>
-                      {requests.filter(r => r.status === 'received').length}
-                    </Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 500, color: 'info.main' }}>
-                      Đã nhận
+                  <Box sx={{ minWidth: 120 }}>
+                    <Typography variant="body2" color="success.main">
+                      Đã nhận: {requests.filter(r => r.status === 'received').length}
                     </Typography>
                   </Box>
-                  <Box sx={{ 
-                    p: 2, 
-                    bgcolor: 'success.50', 
-                    borderRadius: 1, 
-                    border: 1, 
-                    borderColor: 'success.200',
-                    textAlign: 'center'
-                  }}>
-                    <Typography variant="h4" sx={{ fontWeight: 700, color: 'success.main' }}>
-                      {requests.filter(r => r.status === 'completed').length}
-                    </Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 500, color: 'success.main' }}>
-                      Hoàn thành
+                  <Box sx={{ minWidth: 120 }}>
+                    <Typography variant="body2" color="info.main">
+                      Hoàn thành: {requests.filter(r => r.status === 'completed').length}
                     </Typography>
                   </Box>
-                  <Box sx={{ 
-                    p: 2, 
-                    bgcolor: 'error.50', 
-                    borderRadius: 1, 
-                    border: 1, 
-                    borderColor: 'error.200',
-                    textAlign: 'center'
-                  }}>
-                    <Typography variant="h4" sx={{ fontWeight: 700, color: 'error.main' }}>
-                      {requests.filter(r => r.status === 'cancelled').length}
-                    </Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 500, color: 'error.main' }}>
-                      Đã hủy
+                  <Box sx={{ minWidth: 120 }}>
+                    <Typography variant="body2" color="error.main">
+                      Đã hủy: {requests.filter(r => r.status === 'cancelled').length}
                     </Typography>
                   </Box>
                 </Box>
@@ -718,7 +479,7 @@ const ParentMedicationDashboard: React.FC<ParentMedicationDashboardProps> = ({
               Nhật ký uống thuốc
             </Typography>
 
-            {loadingDiary ? (
+            {loading ? (
               <Box sx={{ display: "flex", justifyContent: "center", my: 2 }}>
                 <CircularProgress />
               </Box>

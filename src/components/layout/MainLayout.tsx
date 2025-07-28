@@ -102,7 +102,7 @@ const menuCategories: MenuCategory[] = [
     path: "/promo/vaccination",
   },
   {
-    name: "Khám sức khỏe định kỳ",
+    name: "Dịch vụ y tế học đường",
     path: "/promo/health-check",
   },
   // Main features - chỉ hiển thị khi đã đăng nhập
@@ -125,11 +125,6 @@ const menuCategories: MenuCategory[] = [
     name: "Theo dõi tiêm phòng con",
     role: ["Parent"],
     path: "/vaccination/parent",
-  },
-  {
-    name: "Phiếu đồng ý",
-    role: ["Parent", "MedicalStaff", "Admin"],
-    path: "/consent-forms",
   },
   {
     name: "Xử lý sự cố y tế",
@@ -297,10 +292,10 @@ const MainLayout = () => {
             >
               <Box
                 component="img"
-                src="https://musical-indigo-mongoose.myfilebase.com/ipfs/Qmf9vib7J7Rm85u4CTK5WCXXTQ6dxzoKWjwCrkVjiXhT35"
-                alt="Y tế học đường"
+                src="https://musical-indigo-mongoose.myfilebase.com/ipfs/QmPfdMNtJhcNfztJtxK88SXCrqWm54KuSWHKBW4TNhPr3x"
+                alt="FPTMED"
                 sx={{
-                  height: { xs: 45, md: 55 },
+                  height: { xs: 34, md: 40 },
                   transition: "all 0.2s ease",
                 }}
               />

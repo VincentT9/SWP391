@@ -81,6 +81,8 @@ const HealthDeclarationForm = () => {
   const [searchingStudent, setSearchingStudent] = useState(false);
   const [searchError, setSearchError] = useState("");
   // const navigate = useNavigate();
+  // State để kiểm tra mã học sinh
+  const [studentCodeError, setStudentCodeError] = useState<string | null>(null);
 
   const {
     control,
@@ -88,9 +90,12 @@ const HealthDeclarationForm = () => {
     setValue,
     formState: { errors },
     reset,
-  } = useForm<FormData>({
+    trigger,
+    register,
+  } = useForm<FormData & { studentCode: string }>({
     defaultValues: {
       studentId: "",
+      studentCode: studentFromState?.studentCode || "",
       height: 0,
       weight: 0,
       bloodType: "",
@@ -103,6 +108,8 @@ const HealthDeclarationForm = () => {
       vaccinationHistory: "",
       otherNotes: "",
     },
+    mode: "onChange", // Validate khi field thay đổi
+    reValidateMode: "onChange", // Validate lại khi field thay đổi
   });
 
   // Cập nhật defaultValues và setValue trong useForm
@@ -218,7 +225,7 @@ const HealthDeclarationForm = () => {
       if (axios.isAxiosError(error) && error.response) {
         const statusCode = error.response.status;
         const errorMessage =
-          error.response.data?.message || "Học sinh đã được khai báo!";
+          error.response.data?.message || "Học sinh đã khai báo sức khỏe!";
 
         if (statusCode === 400) {
           toast.error(`Lỗi dữ liệu: ${errorMessage}`);
@@ -247,13 +254,13 @@ const HealthDeclarationForm = () => {
 
   const handleConfirmCancel = () => {
     setOpenConfirmDialog(false);
-    navigate(-1);
+    navigate("/health-records");
   };
 
   return (
     <Container maxWidth="lg">
-      <PageHeader 
-        title="Khai báo sức khỏe học sinh" 
+      <PageHeader
+        title="Khai báo sức khỏe học sinh"
         subtitle="Vui lòng điền đầy đủ thông tin sức khỏe của học sinh"
       />
 
@@ -306,11 +313,11 @@ const HealthDeclarationForm = () => {
                       onClick={searchStudent}
                       disabled={searchingStudent || !studentCode.trim()}
                       startIcon={<SearchIcon />}
-                      sx={{ 
-                        height: { sm: 56 }, 
+                      sx={{
+                        height: { sm: 56 },
                         minWidth: 120,
                         bgcolor: "#4caf50",
-                        "&:hover": { bgcolor: "#45a049" }
+                        "&:hover": { bgcolor: "#45a049" },
                       }}
                     >
                       Tìm kiếm
@@ -405,11 +412,11 @@ const HealthDeclarationForm = () => {
                         required: "Chiều cao là bắt buộc",
                         min: {
                           value: 50,
-                          message: "Chiều cao không chuẩn so với học sinh",
+                          message: "Chiều cao từ 50 - 250 cm là hợp lệ",
                         },
                         max: {
                           value: 250,
-                          message: "Chiều cao không chuẩn so với học sinh",
+                          message: "Chiều cao từ 50 - 250 cm là hợp lệ",
                         },
                         validate: {
                           notZero: (value) =>
@@ -443,11 +450,11 @@ const HealthDeclarationForm = () => {
                         required: "Cân nặng là bắt buộc",
                         min: {
                           value: 10,
-                          message: "Cân nặng không chuẩn so với học sinh",
+                          message: "Cân nặng từ 10 - 150 kg là hợp lệ",
                         },
                         max: {
                           value: 150,
-                          message: "Cân nặng không chuẩn so với học sinh",
+                          message: "Cân nặng từ 10 - 150 kg là hợp lệ",
                         },
                         validate: {
                           notZero: (value) =>

@@ -78,12 +78,12 @@ const colors = {
 
 // School data
 const schoolInfo = {
-  name: "Y tế học đường",
+  name: "FPTMED",
   address: "Lô E2a-7, Đường D1 Khu Công nghệ cao, TP. Thủ Đức, TP. Hồ Chí Minh",
   phone: "(+84) 28 7300 2222",
   email: "info@fpt.edu.vn",
   description:
-    "Y tế học đường là hệ thống quản lý y tế học đường hiện đại, cho phép giám sát sức khỏe học sinh toàn diện. Hệ thống giúp nhà trường, y tá và phụ huynh theo dõi tình hình sức khỏe, đảm bảo môi trường học tập an toàn và phát triển toàn diện cho học sinh.",
+    "FPTMED là hệ thống quản lý y tế học đường hiện đại, cho phép giám sát sức khỏe học sinh toàn diện. Hệ thống giúp nhà trường, y tá và phụ huynh theo dõi tình hình sức khỏe, đảm bảo môi trường học tập an toàn và phát triển toàn diện cho học sinh.",
   features: [
     {
       title: "Phòng y tế tiên tiến",
@@ -552,7 +552,22 @@ const HomePage = () => {
                   ))}
                 </Box>
 
-                
+                <Button
+                  component={Link}
+                  to="/about"
+                  variant="outlined"
+                  color="primary"
+                  size="large"
+                  endIcon={<ArrowForward />}
+                  sx={{
+                    mt: 2,
+                    borderRadius: 2,
+                    textTransform: "none",
+                    px: 3,
+                  }}
+                >
+                  Tìm hiểu thêm
+                </Button>
               </motion.div>
             </Box>
 
@@ -599,7 +614,163 @@ const HomePage = () => {
         </Container>
       </Box>
 
-      
+      {/* Upcoming Events */}
+      <Box sx={{ py: { xs: 8, md: 12 }, bgcolor: "#fff" }}>
+        <Container maxWidth="lg">
+          <Box sx={{ textAlign: "center", mb: { xs: 6, md: 8 } }}>
+            <Typography
+              variant="subtitle1"
+              component="p"
+              sx={{
+                textTransform: "uppercase",
+                fontWeight: 600,
+                color: colors.primary,
+                letterSpacing: 1,
+                mb: 1,
+              }}
+            >
+              Sắp diễn ra
+            </Typography>
+            <Typography
+              variant="h3"
+              component="h2"
+              sx={{ fontWeight: 700, mb: 2, color: colors.text }}
+            >
+              Sự kiện y tế
+            </Typography>
+            <Typography
+              variant="body1"
+              sx={{
+                maxWidth: 700,
+                mx: "auto",
+                color: colors.textSecondary,
+              }}
+            >
+              Các sự kiện y tế sắp diễn ra tại trường giúp chăm sóc và nâng cao sức khỏe
+              cho học sinh.
+            </Typography>
+          </Box>
+
+          <Box 
+            sx={{ 
+              display: 'flex', 
+              flexDirection: { xs: 'column', md: 'row' },
+              flexWrap: 'wrap',
+              mx: -2
+            }}
+          >
+            {schoolInfo.events.map((event, index) => (
+              <Box 
+                key={index} 
+                sx={{ 
+                  width: { xs: '100%', sm: '50%', md: '33.33%' },
+                  px: 2,
+                  mb: 4
+                }}
+              >
+                <motion.div
+                  variants={fadeInUp}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1 }}
+                  style={{ height: '100%' }}
+                >
+                  <Card
+                    sx={{
+                      borderRadius: 3,
+                      overflow: "hidden",
+                      boxShadow: "0 10px 30px rgba(0,0,0,0.07)",
+                      height: "100%",
+                      display: "flex",
+                      flexDirection: "column",
+                      transition: "transform 0.3s, box-shadow 0.3s",
+                      "&:hover": {
+                        transform: "translateY(-6px)",
+                        boxShadow: "0 15px 40px rgba(0,0,0,0.1)",
+                      },
+                    }}
+                  >
+                    <CardMedia
+                      component="img"
+                      height="200"
+                      image={event.image}
+                      alt={event.title}
+                    />
+                    <CardContent sx={{ flexGrow: 1 }}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          gap: 1.5,
+                          mb: 2,
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <Chip
+                          icon={<CalendarMonth />}
+                          label={event.date}
+                          size="small"
+                          sx={{ bgcolor: alpha(colors.primary, 0.1), color: colors.primary }}
+                        />
+                        <Chip
+                          icon={<LocationOn />}
+                          label={event.location}
+                          size="small"
+                          sx={{ bgcolor: alpha(colors.secondary, 0.1), color: colors.secondary }}
+                        />
+                      </Box>
+
+                      <Typography
+                        variant="h6"
+                        component="h3"
+                        sx={{ fontWeight: 600, mb: 1 }}
+                      >
+                        {event.title}
+                      </Typography>
+
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ mb: 2 }}
+                      >
+                        {event.description}
+                      </Typography>
+
+                      <Button
+                        variant="text"
+                        color="primary"
+                        size="small"
+                        endIcon={<KeyboardArrowRight />}
+                        sx={{ textTransform: "none", fontWeight: 500 }}
+                      >
+                        Xem chi tiết
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              </Box>
+            ))}
+          </Box>
+
+          <Box sx={{ textAlign: "center", mt: 6 }}>
+            <Button
+              component={Link}
+              to="/medical-events"
+              variant="outlined"
+              color="primary"
+              size="large"
+              sx={{
+                borderRadius: 2,
+                textTransform: "none",
+                fontWeight: 500,
+                px: 4,
+              }}
+            >
+              Xem tất cả sự kiện
+            </Button>
+          </Box>
+        </Container>
+      </Box>
 
       {/* CTA Section */}
       <Box
@@ -676,7 +847,27 @@ const HomePage = () => {
                 >
                   Đăng ký ngay
                 </Button>
-                
+                <Button
+                  variant="outlined"
+                  size="large"
+                  component={Link}
+                  to="/contact"
+                  sx={{
+                    color: "white",
+                    borderColor: "white",
+                    px: 4,
+                    py: 1.5,
+                    "&:hover": {
+                      borderColor: "rgba(255,255,255,0.8)",
+                      bgcolor: "rgba(255,255,255,0.1)",
+                    },
+                    textTransform: "none",
+                    fontSize: "1rem",
+                    borderRadius: 2,
+                  }}
+                >
+                  Liên hệ tư vấn
+                </Button>
               </Box>
             </Box>
             
@@ -690,12 +881,12 @@ const HomePage = () => {
               >
                 <Box
                   component="img"
-                  src="https://musical-indigo-mongoose.myfilebase.com/ipfs/Qmf9vib7J7Rm85u4CTK5WCXXTQ6dxzoKWjwCrkVjiXhT35"
-                  alt="Y tế học đường"
+                  src="https://musical-indigo-mongoose.myfilebase.com/ipfs/QmPfdMNtJhcNfztJtxK88SXCrqWm54KuSWHKBW4TNhPr3x"
+                  alt="FPTMED"
                   sx={{
                    
                     width: "100%",
-                    maxWidth: 280,
+                    maxWidth: 250,
                     mx: "auto",
                     display: "block",
                   }}
@@ -800,7 +991,59 @@ const HomePage = () => {
               </Box>
             </Box>
 
-            
+            {/* Newsletter */}
+            <Box sx={{ width: { xs: '100%', sm: '50%', md: '35%' }, px: 2 }}>
+              <Typography
+                variant="subtitle2"
+                color={colors.text}
+                fontWeight={600}
+                gutterBottom
+              >
+                Đăng ký nhận tin
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Nhận thông báo về các sự kiện y tế sắp tới và tin tức sức khỏe học đường.
+              </Typography>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: { xs: "column", sm: "row" },
+                  gap: 1,
+                }}
+              >
+                <TextField
+                  variant="outlined"
+                  size="small"
+                  placeholder="Email của bạn"
+                  fullWidth
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      bgcolor: alpha(colors.primary, 0.05),
+                      borderRadius: 2,
+                      "& fieldset": {
+                        borderColor: "transparent",
+                      },
+                      "&:hover fieldset": {
+                        borderColor: colors.primary,
+                      },
+                    },
+                  }}
+                />
+                <Button
+                  variant="contained"
+                  sx={{
+                    bgcolor: colors.primary,
+                    color: "white",
+                    borderRadius: 2,
+                    whiteSpace: "nowrap",
+                    textTransform: "none",
+                    px: 3,
+                  }}
+                >
+                  Đăng ký
+                </Button>
+              </Box>
+            </Box>
           </Box>
 
           <Divider sx={{ my: 4 }} />
@@ -816,7 +1059,7 @@ const HomePage = () => {
             }}
           >
             <Typography variant="caption" color="text.secondary">
-              © {new Date().getFullYear()} Y tế học đường. Bản quyền thuộc về FPT Software.
+              © {new Date().getFullYear()} FPTMED. Bản quyền thuộc về FPT Software.
             </Typography>
             <Box sx={{ display: "flex", gap: 3 }}>
               <Typography

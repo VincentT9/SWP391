@@ -43,6 +43,8 @@ import {
   CheckCircle as CheckIcon,
   Delete as DeleteIcon,
   MoreVert as MoreVertIcon,
+  MarkEmailRead as ReadIcon,
+  MarkEmailUnread as UnreadIcon,
   Add as AddIcon,
   Edit as EditIcon,
   Refresh as RefreshIcon,
@@ -107,10 +109,6 @@ const NotificationsPage: React.FC = () => {
   const isAdmin = user?.role === 'Admin';
   const isParent = user?.role === 'Parent';
   const isMedicalStaff = user?.role === 'MedicalStaff';
-  
-  // Phân quyền: 
-  // - Admin: có thể quản lý (tạo, sửa, xóa) và xem tất cả thông báo
-  // - Parent & MedicalStaff: chỉ có thể xem thông báo của chính họ
   const canManageNotifications = isAdmin;
   const canViewNotifications = isAdmin || isParent || isMedicalStaff;
 
@@ -131,18 +129,11 @@ const NotificationsPage: React.FC = () => {
   const fetchNotifications = async () => {
     setLoading(true);
     try {
-      let apiUrl = '';
+      let apiUrl = '/api/Notification/get-all-notifications';
       
-      // Chỉ Admin mới có thể xem tất cả thông báo
-      if (isAdmin) {
-        apiUrl = '/api/Notification/get-all-notifications';
-      } else if ((isParent || isMedicalStaff) && user?.id) {
-        // Parent và MedicalStaff (Nurse) chỉ xem thông báo của chính họ
+      // If user is Parent, use the endpoint to get notifications by userId
+      if (isParent && user?.id) {
         apiUrl = `/api/Notification/get-notifications-by-user-id/${user.id}`;
-      } else {
-        // Trường hợp không có userId hoặc role không hợp lệ
-        setError('Không thể xác định thông tin người dùng để tải thông báo.');
-        return;
       }
       
       const response = await instance.get(apiUrl);
@@ -163,11 +154,7 @@ const NotificationsPage: React.FC = () => {
       setNotifications(transformedNotifications);
     } catch (error) {
       console.error('Error fetching notifications:', error);
-      if (isAdmin) {
-        setError('Không thể tải tất cả thông báo. Vui lòng thử lại.');
-      } else {
-        setError('Không thể tải thông báo của bạn. Vui lòng thử lại.');
-      }
+      setError('Không thể tải thông báo. Vui lòng thử lại.');
       setNotifications([]);
     } finally {
       setLoading(false);
@@ -258,7 +245,9 @@ const NotificationsPage: React.FC = () => {
     switch (tabValue) {
       case 0: // All
         return notifications;
-      case 1: // Campaign related (important)
+      case 1: // Unread
+        return notifications.filter(n => !n.isRead);
+      case 2: // Campaign related (important)
         return notifications.filter(n => n.campaign && n.campaign.name);
       default:
         return notifications;
@@ -275,7 +264,73 @@ const NotificationsPage: React.FC = () => {
     setSelectedNotification(null);
   };
 
+  const markAsRead = async (notificationId: string) => {
+    try {
+      // Update locally first for better UX
+      setNotifications(prev =>
+        prev.map(notification =>
+          notification.id === notificationId
+            ? { ...notification, isRead: true }
+            : notification
+        )
+      );
+      
+      // Call API if needed - you might want to implement this endpoint
+      // await axios.put(`/api/Notification/mark-read/${notificationId}`);
+      
+    } catch (error) {
+      console.error('Error marking as read:', error);
+      // Revert on error
+      setNotifications(prev =>
+        prev.map(notification =>
+          notification.id === notificationId
+            ? { ...notification, isRead: false }
+            : notification
+        )
+      );
+    }
+    handleMenuClose();
+  };
 
+  const markAsUnread = async (notificationId: string) => {
+    try {
+      setNotifications(prev =>
+        prev.map(notification =>
+          notification.id === notificationId
+            ? { ...notification, isRead: false }
+            : notification
+        )
+      );
+      
+      // Call API if needed
+      // await axios.put(`/api/Notification/mark-unread/${notificationId}`);
+      
+    } catch (error) {
+      console.error('Error marking as unread:', error);
+      setNotifications(prev =>
+        prev.map(notification =>
+          notification.id === notificationId
+            ? { ...notification, isRead: true }
+            : notification
+        )
+      );
+    }
+    handleMenuClose();
+  };
+
+  const markAllAsRead = async () => {
+    try {
+      setNotifications(prev =>
+        prev.map(notification => ({ ...notification, isRead: true }))
+      );
+      
+      // Call API if needed
+      // await axios.put('/api/Notification/mark-all-read');
+      
+    } catch (error) {
+      console.error('Error marking all as read:', error);
+    }
+  };
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
@@ -339,6 +394,7 @@ const NotificationsPage: React.FC = () => {
     }
   };
 
+  const unreadCount = notifications.filter(n => !n.isRead).length;
   const campaignCount = notifications.filter(n => n.campaign && n.campaign.name).length;
   const filteredNotifications = getFilteredNotifications();
 
@@ -349,7 +405,7 @@ const NotificationsPage: React.FC = () => {
           <Alert severity="error">
             {!user?.isAuthenticated 
               ? "Bạn cần đăng nhập để xem thông báo."
-              : "Bạn không có quyền truy cập trang này. Chỉ Admin, Parent và MedicalStaff mới có thể xem thông báo."
+              : "Bạn không có quyền truy cập trang này."
             }
           </Alert>
         </Box>
@@ -364,17 +420,23 @@ const NotificationsPage: React.FC = () => {
           title="Thông báo"
           subtitle={
             isAdmin 
-              ? "Quản lý và theo dõi tất cả các thông báo hệ thống" 
+              ? "Quản lý và theo dõi các thông báo hệ thống" 
               : isParent 
                 ? "Theo dõi các thông báo liên quan đến con em bạn"
-                : isMedicalStaff
-                  ? "Theo dõi các thông báo công việc của bạn"
-                  : "Theo dõi các thông báo hệ thống"
+                : "Theo dõi các thông báo hệ thống"
           }
           showRefresh={true}
           onRefresh={fetchNotifications}
           actions={
             <Box sx={{ display: 'flex', gap: 1 }}>
+              <Button
+                variant="outlined"
+                onClick={markAllAsRead}
+                disabled={unreadCount === 0}
+                sx={{ color: '#2980b9', borderColor: '#2980b9' }}
+              >
+                Đánh dấu tất cả đã đọc
+              </Button>
             </Box>
           }
         />
@@ -383,6 +445,7 @@ const NotificationsPage: React.FC = () => {
         <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
           <Tabs value={tabValue} onChange={(e, newValue) => setTabValue(newValue)}>
             <Tab label={`Tất cả (${notifications.length})`} />
+            <Tab label={`Chưa đọc (${unreadCount})`} />
             <Tab label={`Chiến dịch (${campaignCount})`} />
           </Tabs>
         </Box>
@@ -410,6 +473,7 @@ const NotificationsPage: React.FC = () => {
                   <React.Fragment key={notification.id}>
                     <ListItem
                       sx={{
+                        bgcolor: notification.isRead ? 'transparent' : 'rgba(33, 150, 243, 0.05)',
                         borderLeft: `4px solid #2980b9`,
                         '&:hover': {
                           bgcolor: 'rgba(0, 0, 0, 0.04)',
@@ -426,6 +490,10 @@ const NotificationsPage: React.FC = () => {
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
                             <Typography
                               variant="subtitle1"
+                              sx={{
+                                fontWeight: notification.isRead ? 'normal' : 'bold',
+                                color: notification.isRead ? 'text.secondary' : 'text.primary',
+                              }}
                             >
                               {notification.title}
                             </Typography>
@@ -439,6 +507,17 @@ const NotificationsPage: React.FC = () => {
                                   color: 'white',
                                   fontSize: '10px',
                                   height: '20px',
+                                }}
+                              />
+                            )}
+                            
+                            {!notification.isRead && (
+                              <Box
+                                sx={{
+                                  width: 8,
+                                  height: 8,
+                                  borderRadius: '50%',
+                                  bgcolor: '#2980b9',
                                 }}
                               />
                             )}
@@ -456,7 +535,7 @@ const NotificationsPage: React.FC = () => {
                                 <Button
                                   size="small"
                                   startIcon={<LinkIcon />}
-                                  href={`http://localhost:3000${notification.returnUrl}`}
+                                  href={`${notification.returnUrl}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   sx={{ 
@@ -504,6 +583,18 @@ const NotificationsPage: React.FC = () => {
         >
           {selectedNotification && (
             <>
+              {notifications.find(n => n.id === selectedNotification)?.isRead ? (
+                <MenuItem onClick={() => markAsUnread(selectedNotification)}>
+                  <UnreadIcon sx={{ mr: 1 }} />
+                  Đánh dấu chưa đọc
+                </MenuItem>
+              ) : (
+                <MenuItem onClick={() => markAsRead(selectedNotification)}>
+                  <ReadIcon sx={{ mr: 1 }} />
+                  Đánh dấu đã đọc
+                </MenuItem>
+              )}
+              
               {canManageNotifications && (
                 <>
                   <MenuItem 

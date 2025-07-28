@@ -354,6 +354,7 @@ const HealthRecordsPage = () => {
       }
     } catch (error) {
       console.error("Error fetching health history:", error);
+      // toast.error("Không thể tải lịch sử kiểm tra sức khỏe và tiêm phòng");
     } finally {
       setHistoryLoading(false);
     }
@@ -422,10 +423,10 @@ const HealthRecordsPage = () => {
       newErrors.height = "Chiều cao phải lớn hơn 0";
       isValid = false;
     } else if (height < 50) {
-      newErrors.height = "Chiều cao không chuẩn so với học sinh";
+      newErrors.height = "Chiều cao từ 50 - 250 cm là hợp lệ";
       isValid = false;
     } else if (height > 250) {
-      newErrors.height = "Chiều cao không chuẩn so với học sinh";
+      newErrors.height = "Chiều cao từ 50 - 250 cm là hợp lệ";
       isValid = false;
     }
 
@@ -441,10 +442,10 @@ const HealthRecordsPage = () => {
       newErrors.weight = "Cân nặng phải lớn hơn 0";
       isValid = false;
     } else if (weight < 10) {
-      newErrors.weight = "Cân nặng không chuẩn so với học sinh";
+      newErrors.weight = "Cân nặng từ 10 - 150 kg là hợp lệ";
       isValid = false;
     } else if (weight > 150) {
-      newErrors.weight = "Cân nặng không chuẩn so với học sinh";
+      newErrors.weight = "Cân nặng từ 10 - 150 kg là hợp lệ";
       isValid = false;
     }
 
@@ -517,8 +518,7 @@ const HealthRecordsPage = () => {
               studentUpdateData
             );
 
-            // Removed duplicate toast.success to prevent double popups
-            // The main success message will be shown later
+            toast.success("Đã liên kết học sinh với tài khoản của bạn");
           } catch (updateError) {
             console.error("Lỗi khi cập nhật liên kết học sinh:", updateError);
             toast.warning(
@@ -554,7 +554,7 @@ const HealthRecordsPage = () => {
       toast.success(
         healthRecord
           ? "Hồ sơ sức khỏe đã được cập nhật thành công!"
-          : "Hồ sơ sức khỏe đã được tạo thành công và liên kết với tài khoản của bạn!"
+          : "Hồ sơ sức khỏe đã được tạo thành công!"
       );
 
       // Đóng dialog
@@ -570,7 +570,7 @@ const HealthRecordsPage = () => {
         const statusCode = err.response.status;
         const errorMessage =
           err.response.data?.message ||
-          " Không thể cập nhật hồ sơ sức khỏe";
+          "Đã xảy ra lỗi khi cập nhật hồ sơ sức khỏe.";
 
         if (statusCode === 400) {
           toast.error(`Lỗi dữ liệu: ${errorMessage}`);
@@ -653,8 +653,8 @@ const HealthRecordsPage = () => {
                 onClick={() => navigate("/health-declaration")}
                 startIcon={<HospitalIcon />}
                 sx={{
-                  bgcolor: "#2980b9",
-                  "&:hover": { bgcolor: "#1e6ba8" },
+                  bgcolor: "#4caf50",
+                  "&:hover": { bgcolor: "#45a049" },
                 }}
               >
                 Khai báo sức khỏe học sinh
@@ -865,12 +865,12 @@ const HealthRecordsPage = () => {
                     px: 2.5,
                     fontWeight: 500,
                     borderWidth: "1.5px",
-                    borderColor: "#2980b9",
-                    color: "#2980b9",
+                    borderColor: "#4caf50",
+                    color: "#4caf50",
                     "&:hover": {
                       borderWidth: "1.5px",
-                      bgcolor: "rgba(41, 128, 185, 0.04)",
-                      borderColor: "#1e6ba8",
+                      bgcolor: "rgba(76, 175, 80, 0.04)",
+                      borderColor: "#45a049",
                     },
                   }}
                 >
@@ -1347,10 +1347,10 @@ const HealthRecordsPage = () => {
                           sx={{
                             bgcolor: detail.healthCheckupResult
                               ? "rgba(25, 118, 210, 0.1)"
-                              : "rgba(41, 128, 185, 0.1)",
+                              : "rgba(76, 175, 80, 0.1)",
                             color: detail.healthCheckupResult
                               ? "#1976d2"
-                              : "#2980b9",
+                              : "#4caf50",
                             px: 2,
                             py: 0.5,
                             borderRadius: 5,
@@ -1669,8 +1669,8 @@ const HealthRecordsPage = () => {
                 }
               }}
               sx={{
-                bgcolor: "#2980b9",
-                "&:hover": { bgcolor: "#1e6ba8" },
+                bgcolor: "#4caf50",
+                "&:hover": { bgcolor: "#45a049" },
               }}
             >
               Khai báo sức khỏe
@@ -2041,8 +2041,8 @@ const HealthRecordsPage = () => {
             variant="contained"
             disabled={loading}
             sx={{
-              bgcolor: "#2980b9",
-              "&:hover": { bgcolor: "#1e6ba8" },
+              bgcolor: "#4caf50",
+              "&:hover": { bgcolor: "#45a049" },
             }}
           >
             {loading ? (

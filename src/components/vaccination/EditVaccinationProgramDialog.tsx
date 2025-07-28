@@ -141,7 +141,7 @@ const EditVaccinationProgramDialog: React.FC<
         updateData
       );
 
-      toast.success("Cập nhật chương trình thành công!");
+      toast.success("Cập nhật chương trình tiêm chủng thành công!");
 
       // Cập nhật đối tượng campaign với giá trị mới (cho UI cập nhật ngay lập tức)
       if (campaign) {
@@ -158,7 +158,7 @@ const EditVaccinationProgramDialog: React.FC<
       console.error("Error updating campaign:", error);
       const errorMessage =
         error.response?.data?.message ||
-        "Không thể cập nhật chương trình. Vui lòng thử lại.";
+        "Không thể cập nhật chương trình tiêm chủng. Vui lòng thử lại.";
       toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);

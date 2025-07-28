@@ -83,7 +83,7 @@ const adminMenuCategories: MenuCategory[] = [
       {
         name: "Kho vật tư",
         path: "/medical-supplier",
-        description: "Quản lý vật tư y tế",
+        description: "Quản lý nhà cung cấp",
         roles: ["Admin", "MedicalStaff"],
       },
     ],
@@ -111,21 +111,15 @@ const adminMenuCategories: MenuCategory[] = [
     roles: ["Admin", "MedicalStaff"], // Cả Admin và MedicalStaff
     items: [
       {
-        name: "Quản lý yêu cầu gửi thuốc",
+        name: "Quản lý thuốc",
         path: "/medication/nurse",
-        description: "Quản lý yêu cầu gửi thuốc từ phụ huynh",
-        roles: ["MedicalStaff"],
-      },
-      {
-        name: "Chương trình tiêm phòng & khám sức khỏe định kỳ",
-        path: "/vaccination",
-        description: "Quản lý tiêm phòng và khám sức khỏe định kỳ",
+        description: "Quản lý thuốc và đơn thuốc",
         roles: ["Admin", "MedicalStaff"],
       },
       {
-        name: "Phiếu đồng ý",
-        path: "/consent-forms",
-        description: "Quản lý phiếu đồng ý tiêm phòng",
+        name: "Chương trình tiêm phòng",
+        path: "/vaccination",
+        description: "Quản lý tiêm phòng",
         roles: ["Admin", "MedicalStaff"],
       },
     ],
@@ -243,6 +237,23 @@ const AdminLayout = () => {
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+          <Box
+            sx={{
+              width: 40,
+              height: 40,
+              borderRadius: "8px",
+              background: `linear-gradient(135deg, ${adminColors.primary}, ${adminColors.accent})`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              mr: 2,
+              color: "white",
+              fontSize: "1.2rem",
+              fontWeight: "bold",
+            }}
+          >
+            ⚕️
+          </Box>
           <Box>
             <Typography
               variant="h6"
