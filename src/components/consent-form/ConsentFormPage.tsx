@@ -20,6 +20,7 @@ import {
   Grid,
   Fade,
   Skeleton,
+  CircularProgress,
 } from "@mui/material";
 import {
   CheckCircle,
@@ -32,6 +33,7 @@ import {
   TrendingUp,
   Schedule,
   School,
+  Refresh,
 } from "@mui/icons-material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { ConsentForm } from "../../models/types";
@@ -64,40 +66,89 @@ const ConsentFormPage: React.FC<ConsentFormPageProps> = ({
   const [consentForms, setConsentForms] = useState<ConsentForm[]>([]);
   const [selectedForm, setSelectedForm] = useState<ConsentForm | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const { user } = useAuth();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        if (mode === "parent") {
-          const effectiveParentId = parentId || user?.id;
-          if (effectiveParentId) {
-            const data = await getConsentFormsByParentId(effectiveParentId);
-            setConsentForms(data);
-          } else if (studentId) {
-            const data = await getConsentFormsByStudentId(studentId);
-            setConsentForms(data);
-          } else {
-            setConsentForms([]);
-          }
-        } else if (mode === "admin" && campaignId) {
-          const data = await getConsentFormsByCampaign(campaignId);
-          setConsentForms(data);
-        } else if (mode === "admin") {
-          const data = await getAllConsentForms();
-          setConsentForms(data);
+  const pollingIntervalRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  const fetchData = async () => {
+    try {
+      if (!loading) {
+        setRefreshing(true);
+      }
+
+      let data: ConsentForm[] = [];
+      if (mode === "parent") {
+        const effectiveParentId = parentId || user?.id;
+        if (effectiveParentId) {
+          data = await getConsentFormsByParentId(effectiveParentId);
+        } else if (studentId) {
+          data = await getConsentFormsByStudentId(studentId);
         }
-      } catch (error) {
-        console.error("Error fetching consent forms:", error);
-        setConsentForms([]);
-      } finally {
-        setLoading(false);
+      } else if (mode === "admin" && campaignId) {
+        data = await getConsentFormsByCampaign(campaignId);
+      } else if (mode === "admin") {
+        data = await getAllConsentForms();
+      }
+
+      if (selectedForm) {
+        const updatedSelectedForm = data.find(
+          (form) => form.id === selectedForm.id
+        );
+        if (
+          updatedSelectedForm &&
+          JSON.stringify(updatedSelectedForm) !== JSON.stringify(selectedForm)
+        ) {
+          setSelectedForm(updatedSelectedForm);
+        }
+      }
+
+      setConsentForms(data);
+      if (!loading) {
+        setRefreshing(false);
+      }
+      return true;
+    } catch (error) {
+      console.error("Error fetching consent forms:", error);
+      if (!loading) {
+        setRefreshing(false);
+      }
+      return false;
+    }
+  };
+
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      await fetchData();
+      setLoading(false);
+    };
+    loadData();
+
+    if (mode === "admin") {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+
+      pollingIntervalRef.current = setInterval(() => {
+        fetchData();
+      }, 30000);
+    }
+
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
       }
     };
-    fetchData();
   }, [mode, studentId, parentId, campaignId, scheduleId, user?.id]);
+
+  const handleManualRefresh = () => {
+    if (!refreshing) {
+      fetchData();
+    }
+  };
 
   const handleSubmit = async (payload: {
     campaignId: string;
@@ -108,7 +159,6 @@ const ConsentFormPage: React.FC<ConsentFormPageProps> = ({
   }) => {
     if (!selectedForm) return;
     try {
-      // Add updatedBy to the payload
       const updatedPayload = {
         ...payload,
         updatedBy: user?.id || "current-user",
@@ -116,13 +166,12 @@ const ConsentFormPage: React.FC<ConsentFormPageProps> = ({
 
       await updateConsentForm(selectedForm.id, updatedPayload);
 
-      // Update the local state to reflect the change immediately
       const updatedForm = {
         ...selectedForm,
         isApproved: payload.isApproved,
         consentDate: new Date(payload.consentDate),
         reasonForDecline: payload.reasonForDecline,
-        updatedBy: user?.id || "current-user", // Mark as updated
+        updatedBy: user?.id || "current-user",
       };
 
       setConsentForms((prevForms) =>
@@ -131,8 +180,11 @@ const ConsentFormPage: React.FC<ConsentFormPageProps> = ({
         )
       );
 
-      // Update the selected form as well to show changes immediately
       setSelectedForm(updatedForm);
+
+      if (mode === "admin") {
+        fetchData();
+      }
     } catch (error) {
       console.error("Error updating consent form:", error);
     }
@@ -262,6 +314,34 @@ const ConsentFormPage: React.FC<ConsentFormPageProps> = ({
                   : "Quản lý toàn bộ phiếu đồng ý trong hệ thống"}
               </Typography>
             </Box>
+            {mode === "admin" && (
+              <Box sx={{ display: "flex", alignItems: "center", ml: "auto" }}>
+                {refreshing ? (
+                  <Box sx={{ display: "flex", alignItems: "center" }}>
+                    <CircularProgress size={24} sx={{ mr: 1 }} />
+                    <Typography variant="body2" color="text.secondary">
+                      Đang cập nhật...
+                    </Typography>
+                  </Box>
+                ) : (
+                  <Tooltip title="Làm mới dữ liệu">
+                    <IconButton
+                      onClick={handleManualRefresh}
+                      color="primary"
+                      size="large"
+                      sx={{
+                        "&:hover": {
+                          transform: "rotate(180deg)",
+                          transition: "transform 0.5s",
+                        },
+                      }}
+                    >
+                      <Refresh />
+                    </IconButton>
+                  </Tooltip>
+                )}
+              </Box>
+            )}
           </Stack>
         </Box>
       </Fade>
