@@ -28,6 +28,8 @@ import {
   CircularProgress,
   Alert,
   Breadcrumbs,
+  FormControlLabel,
+  Switch,
 } from "@mui/material";
 import {
   Search as SearchIcon,
@@ -48,6 +50,9 @@ import Link from "@mui/material/Link";
 import { Link as RouterLink } from "react-router-dom";
 import WarningIcon from "@mui/icons-material/Warning";
 import { isAdmin, isMedicalStaff } from "../../utils/roleUtils";
+import CancelIcon from "@mui/icons-material/Cancel";
+import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
+import InfoIcon from "@mui/icons-material/Info";
 
 // Interface definitions
 interface Student {
@@ -61,6 +66,8 @@ interface Student {
   status: number;
   vaccinationDate?: string;
   hasResult: boolean;
+  consentStatus: "approved" | "rejected" | "pending";
+  hasConsentForm: boolean;
 }
 
 interface SelectedStudent {
@@ -81,11 +88,12 @@ interface Schedule {
   campaignType?: number;
 }
 
-const ScheduleStudentsPage: React.FC = () => {
+const ScheduleStudentsPage = () => {
   const { scheduleId } = useParams<{ scheduleId: string }>();
   const navigate = useNavigate();
   const [schedule, setSchedule] = useState<Schedule | null>(null);
   const [students, setStudents] = useState<Student[]>([]);
+  const [showApprovedOnly, setShowApprovedOnly] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -231,9 +239,12 @@ const ScheduleStudentsPage: React.FC = () => {
         if (scheduleInfo.campaignId) {
           fetchCampaignInfo(scheduleInfo.campaignId);
         }
+        return scheduleInfo; // Return the fetched scheduleInfo
       }
+      return null; // Return null if no data
     } catch (err) {
       console.error("Error fetching additional schedule info:", err);
+      return null; // Return null on error
     }
   };
 
@@ -294,6 +305,8 @@ const ScheduleStudentsPage: React.FC = () => {
             status: item.vaccinationResult || item.healthCheckupResult ? 1 : 0,
             vaccinationDate: item.vaccinationDate,
             hasResult: !!item.vaccinationResult || !!item.healthCheckupResult,
+            consentStatus: "pending",
+            hasConsentForm: false,
           }))
         : [];
 
@@ -309,6 +322,18 @@ const ScheduleStudentsPage: React.FC = () => {
       });
 
       setStudents(formattedStudents);
+
+      // After setting students, check for consent forms if campaign ID is available
+      if (schedule?.campaignId) {
+        checkConsentFormsStatus(formattedStudents, schedule.campaignId);
+      } else {
+        // If we don't have the campaign ID yet, wait for schedule to be fetched
+        const scheduleInfo = await fetchAdditionalScheduleInfo(scheduleId);
+        if (scheduleInfo?.campaignId) {
+          checkConsentFormsStatus(formattedStudents, scheduleInfo.campaignId);
+        }
+      }
+
       setError(null);
     } catch (err) {
       console.error("Error fetching students:", err);
@@ -318,6 +343,99 @@ const ScheduleStudentsPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Function to check consent form status for each student
+  const checkConsentFormsStatus = async (
+    studentsList: Student[],
+    campaignId: string
+  ) => {
+    try {
+      console.log("Checking consent forms for campaign ID:", campaignId);
+
+      const consentResponse = await instance.get(
+        `/api/ConsentForm/get-consent-forms-by-campaign-id/${campaignId}`
+      );
+
+      console.log("Consent Forms Response:", consentResponse.data);
+
+      if (consentResponse.data && consentResponse.data.length > 0) {
+        console.log(`Found ${consentResponse.data.length} consent forms`);
+
+        // Log student IDs for debugging
+        console.log(
+          "Student IDs in list:",
+          studentsList.map((s) => ({
+            id: s.id,
+            studentId: s.studentId,
+            name: s.studentName,
+          }))
+        );
+
+        // Log consent form student IDs for debugging
+        console.log(
+          "Consent form student IDs:",
+          consentResponse.data.map((form: any) => ({
+            formId: form.id,
+            studentId: form.studentId,
+            studentName: form.studentName,
+          }))
+        );
+
+        const updatedStudents = studentsList.map((student) => {
+          // Find consent form for this student - check both studentId formats
+          const consentForm = consentResponse.data.find(
+            (form: any) =>
+              // Check multiple possible ID formats
+              form.studentId === student.studentId ||
+              form.studentId === student.id
+          );
+
+          if (consentForm) {
+            console.log(
+              "Found consent form for student:",
+              student.studentName,
+              "ID match type:",
+              consentForm.studentId === student.studentId
+                ? "studentId"
+                : consentForm.studentId === student.id
+                ? "id"
+                : "other"
+            );
+
+            let status: "approved" | "rejected" | "pending" = "pending";
+            if (consentForm.isApproved === true) status = "approved";
+            else if (consentForm.isApproved === false) status = "rejected";
+
+            return {
+              ...student,
+              hasConsentForm: true,
+              consentStatus: status,
+            };
+          }
+
+          console.log(
+            "No consent form found for student:",
+            student.studentName,
+            "IDs:",
+            student.id,
+            student.studentId
+          );
+          return student;
+        });
+
+        setStudents(updatedStudents as Student[]);
+      } else {
+        console.log("No consent forms found for campaign:", campaignId);
+      }
+    } catch (error) {
+      console.error("Error fetching consent forms:", error);
+    }
+  };
+
+  // Toggle to show only approved students
+  const handleToggleApprovedOnly = () => {
+    setShowApprovedOnly(!showApprovedOnly);
   };
 
   // Handle search query change
@@ -506,93 +624,80 @@ const ScheduleStudentsPage: React.FC = () => {
 
   // Consent form functions
   const handleCreateConsentForms = () => {
-    if (students.length === 0) {
-      toast.warning("Không có học sinh nào để tạo phiếu đồng ý");
-      return;
-    }
-
+    // Check if consentFormExists
     if (consentFormExists) {
-      toast.warning("Phiếu đồng ý đã được tạo cho chiến dịch này.");
-      return;
+      // Nếu đã tồn tại, hiển thị thông báo và hỏi xác nhận
+      toast.info(
+        "Phiếu đồng ý đã được tạo cho chiến dịch này. Bạn có muốn tạo lại không?",
+        {
+          autoClose: 5000,
+          closeButton: true,
+        }
+      );
     }
 
-    // Mở dialog xác nhận thay vì sử dụng window.confirm
+    // Hiển thị dialog xác nhận
     setConfirmConsentDialogOpen(true);
   };
 
-  // Hàm xử lý khi người dùng xác nhận tạo phiếu
   const handleConfirmCreateConsent = () => {
-    setConfirmConsentDialogOpen(false);
+    console.log("Creating consent forms...");
     createConsentForms();
   };
 
-  // Thêm hàm mới để xử lý việc tạo phiếu đồng ý
+  // Enhanced consent form creation with better feedback and auto-refresh
   const createConsentForms = async () => {
+    if (!schedule?.campaignId) {
+      toast.error("Thiếu thông tin chương trình!");
+      return;
+    }
+
     try {
       setIsCreatingConsentForms(true);
+      console.log("Creating consent forms for campaign:", schedule.campaignId);
+      console.log(
+        "Students for consent forms:",
+        students
+          .filter((student) => student.studentId)
+          .map((s) => ({
+            id: s.id,
+            studentId: s.studentId,
+            name: s.studentName,
+          }))
+      );
 
-      if (!schedule || !schedule.campaignId) {
-        toast.error("Không tìm thấy ID chiến dịch. Vui lòng kiểm tra lại.");
-        return;
-      }
+      const payload = {
+        campaignId: schedule.campaignId,
+        scheduleId: scheduleId,
+        studentIds: students
+          .filter((student) => student.studentId)
+          .map((student) => student.studentId),
+      };
 
-      // Sử dụng giá trị mặc định: mặc định là đồng ý
-      const currentDate = new Date().toISOString();
-      let successCount = 0;
+      console.log("Consent form creation payload:", payload);
 
-      for (const student of students) {
-        // Kiểm tra studentId trước khi tạo request
-        if (!student.studentId) {
-          console.error(
-            `Bỏ qua: Không tìm thấy ID cho học sinh ${
-              student.studentName || "không xác định"
-            }`
-          );
-          continue; // Bỏ qua học sinh này
-        }
+      const response = await instance.post(
+        "/api/ConsentForm/create-consent-form",
+        payload
+      );
 
-        try {
-          const requestBody = {
-            campaignId: schedule.campaignId,
-            studentId: student.studentId,
-            isApproved: false, // Mặc định là không đồng ý
-            consentDate: currentDate,
-            reasonForDecline: "", // Không cần lý do vì mặc định đồng ý
-          };
-
-          console.log("Request body:", requestBody);
-
-          await instance.post(
-            "/api/ConsentForm/create-consent-form",
-            requestBody
-          );
-          const notification = {
-            campaignId: schedule.campaignId,
-            incidientId: null,
-          };
-          await instance.post(
-            "api/Notification/create-notification",
-            notification
-          );
-          successCount++;
-        } catch (err) {
-          console.error(
-            `Lỗi khi tạo phiếu đồng ý cho học sinh ${student.studentId}:`,
-            err
-          );
-        }
-      }
-
-      if (successCount > 0) {
-        toast.success(
-          `Đã tạo ${successCount}/${students.length} phiếu đồng ý cho học sinh`
-        );
+      if (response.status === 200 || response.status === 201) {
+        toast.success("Tạo phiếu đồng ý thành công!");
         setConsentFormExists(true);
-      } else {
-        toast.error("Không thể tạo phiếu đồng ý. Vui lòng thử lại sau.");
+        setConfirmConsentDialogOpen(false);
+
+        console.log("Consent forms created successfully, refreshing status...");
+
+        // Give backend time to process and update before checking
+        setTimeout(() => {
+          if (schedule?.campaignId) {
+            console.log("Refreshing consent form status after creation");
+            checkConsentFormsStatus(students, schedule.campaignId);
+          }
+        }, 1000);
       }
     } catch (error: any) {
-      console.error("Lỗi khi tạo phiếu đồng ý:", error);
+      console.error("Error creating consent forms:", error);
       toast.error(
         `Không thể tạo phiếu đồng ý: ${
           error.response?.data?.message || "Lỗi không xác định"
@@ -603,20 +708,27 @@ const ScheduleStudentsPage: React.FC = () => {
     }
   };
 
-  // Filter students based on current tab and search query
-  const filteredStudents = students.filter((student) => {
-    const query = searchQuery.toLowerCase().trim();
-    const matchesSearch =
-      student.studentName?.toLowerCase().includes(query) ||
-      student.studentCode?.toLowerCase().includes(query) ||
-      student.className?.toLowerCase().includes(query);
+  // Filter students based on current tab, search query, and consent status
+  const getFilteredStudents = () => {
+    return students.filter((student) => {
+      const query = searchQuery.toLowerCase().trim();
+      const matchesSearch =
+        student.studentName?.toLowerCase().includes(query) ||
+        student.studentCode?.toLowerCase().includes(query) ||
+        student.className?.toLowerCase().includes(query);
 
-    if (tabValue === 0) return matchesSearch; // All students
-    if (tabValue === 1) return matchesSearch && student.hasResult; // Completed
-    if (tabValue === 2) return matchesSearch && !student.hasResult; // Pending
+      // Filter by tab (All, Completed, Pending)
+      let matchesTab = true;
+      if (tabValue === 1) matchesTab = student.hasResult; // Completed
+      if (tabValue === 2) matchesTab = !student.hasResult; // Pending
 
-    return matchesSearch;
-  });
+      // Filter by consent form approval status
+      const matchesConsentStatus =
+        !showApprovedOnly || student.consentStatus === "approved";
+
+      return matchesSearch && matchesTab && matchesConsentStatus;
+    });
+  };
 
   const formatDate = (dateString: string | undefined) => {
     if (!dateString) return "N/A";
@@ -635,6 +747,59 @@ const ScheduleStudentsPage: React.FC = () => {
         return "Nữ";
       default:
         return "Không xác định";
+    }
+  };
+
+  // Helper function to get consent status text and color
+  const getConsentStatusInfo = (student: Student) => {
+    if (!student.hasConsentForm) {
+      return {
+        text: "Chưa có phiếu",
+        color: "default" as
+          | "default"
+          | "success"
+          | "warning"
+          | "error"
+          | "primary",
+        icon: <DescriptionIcon fontSize="small" />,
+      };
+    }
+
+    switch (student.consentStatus) {
+      case "approved":
+        return {
+          text: "Đã đồng ý",
+          color: "success" as
+            | "default"
+            | "success"
+            | "warning"
+            | "error"
+            | "primary",
+          icon: <CheckCircleIcon fontSize="small" />,
+        };
+      case "rejected":
+        return {
+          text: "Đã từ chối",
+          color: "error" as
+            | "default"
+            | "success"
+            | "warning"
+            | "error"
+            | "primary",
+          icon: <CancelIcon fontSize="small" />,
+        };
+      case "pending":
+      default:
+        return {
+          text: "Đang xem xét",
+          color: "warning" as
+            | "default"
+            | "success"
+            | "warning"
+            | "error"
+            | "primary",
+          icon: <HourglassEmptyIcon fontSize="small" />,
+        };
     }
   };
 
@@ -691,21 +856,6 @@ const ScheduleStudentsPage: React.FC = () => {
             {schedule?.location || "N/A"}
           </Typography>
         </Box>
-        <Button
-          variant="outlined"
-          startIcon={<ArrowBackIcon />}
-          onClick={() => {
-            // Điều hướng về trang chi tiết chương trình nếu có campaignId
-            if (schedule?.campaignId) {
-              navigate(`/vaccination/${schedule.campaignId}`);
-            } else {
-              // Nếu không có campaignId, quay lại trang trước đó
-              navigate(-1);
-            }
-          }}
-        >
-          Quay lại
-        </Button>
       </Box>
 
       {/* Stats cards */}
@@ -798,6 +948,25 @@ const ScheduleStudentsPage: React.FC = () => {
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center", flexGrow: 1, mr: 2 }}>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={showApprovedOnly}
+                onChange={handleToggleApprovedOnly}
+                color="primary"
+              />
+            }
+            label={
+              <Typography
+                variant="body2"
+                color={showApprovedOnly ? "primary" : "text.secondary"}
+                fontWeight="500"
+              >
+                Chỉ hiển thị học sinh đã được đồng ý
+              </Typography>
+            }
+            sx={{ mr: 2 }}
+          />
           <TextField
             placeholder="Tìm kiếm theo mã, tên hoặc lớp"
             variant="outlined"
@@ -913,11 +1082,12 @@ const ScheduleStudentsPage: React.FC = () => {
             <Table>
               <TableHead sx={{ bgcolor: "rgba(41, 128, 185, 0.08)" }}>
                 <TableRow>
-                  <TableCell>Mã học sinh</TableCell>
+                  <TableCell>Mã HS</TableCell>
                   <TableCell>Họ tên</TableCell>
                   <TableCell>Lớp</TableCell>
                   <TableCell>Giới tính</TableCell>
                   <TableCell>Ngày sinh</TableCell>
+                  <TableCell>Phiếu đồng ý</TableCell>
                   <TableCell>Trạng thái</TableCell>
                   {(isAdmin() || isMedicalStaff()) && (
                     <TableCell align="center">Thao tác</TableCell>
@@ -925,14 +1095,23 @@ const ScheduleStudentsPage: React.FC = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {filteredStudents.length > 0 ? (
-                  filteredStudents.map((student) => (
+                {getFilteredStudents().length > 0 ? (
+                  getFilteredStudents().map((student) => (
                     <TableRow key={student.id} hover>
                       <TableCell>{student.studentCode}</TableCell>
                       <TableCell>{student.studentName}</TableCell>
                       <TableCell>{student.className}</TableCell>
                       <TableCell>{getGenderText(student.gender)}</TableCell>
                       <TableCell>{formatDate(student.dateOfBirth)}</TableCell>
+                      <TableCell>
+                        <Chip
+                          size="small"
+                          icon={getConsentStatusInfo(student).icon}
+                          label={getConsentStatusInfo(student).text}
+                          color={getConsentStatusInfo(student).color}
+                          sx={{ "& .MuiChip-label": { pl: 0.5 } }}
+                        />
+                      </TableCell>
                       <TableCell>
                         <Chip
                           size="small"
@@ -996,7 +1175,7 @@ const ScheduleStudentsPage: React.FC = () => {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={7} align="center">
+                    <TableCell colSpan={8} align="center">
                       <Box
                         sx={{
                           py: 4,
@@ -1021,6 +1200,33 @@ const ScheduleStudentsPage: React.FC = () => {
                             </Box>
                           ) : searchQuery ? (
                             "Không tìm thấy học sinh phù hợp"
+                          ) : showApprovedOnly && students.length > 0 ? (
+                            <Box sx={{ textAlign: "center" }}>
+                              <Box
+                                sx={{
+                                  mb: 1,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  gap: 1,
+                                }}
+                              >
+                                <InfoIcon color="info" />
+                                <Typography>
+                                  Không có học sinh nào đã được phê duyệt
+                                </Typography>
+                              </Box>
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                              >
+                                Có {students.length} học sinh trong lịch này,
+                                nhưng chưa có phiếu đồng ý được phê duyệt.
+                                <br />
+                                Bỏ chọn "Chỉ hiển thị học sinh đã được đồng ý"
+                                để xem tất cả học sinh.
+                              </Typography>
+                            </Box>
                           ) : (
                             "Chưa có học sinh nào trong lịch này"
                           )}
