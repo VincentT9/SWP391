@@ -486,6 +486,22 @@ const ScheduleStudentsPage: React.FC = () => {
 
   // Record result functions
   const handleRecordResult = (student: Student) => {
+    // Add date check - compare the current date with the scheduled date
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset time part to start of day
+
+    // Get the scheduled date and reset its time part for comparison
+    const scheduledDate = new Date(schedule?.scheduledDate || "");
+    scheduledDate.setHours(0, 0, 0, 0);
+
+    // Check if today is the scheduled date
+    if (scheduledDate.getTime() !== today.getTime()) {
+      toast.warning(
+        "Chỉ được phép ghi nhận kết quả vào đúng ngày diễn ra trong lịch"
+      );
+      return; // Stop here if the dates don't match
+    }
+
     setSelectedStudentForResult({
       id: student.id,
       studentName: student.studentName,
@@ -494,10 +510,6 @@ const ScheduleStudentsPage: React.FC = () => {
     });
 
     setIsRecordResultDialogOpen(true);
-    // console.log(
-    //   "Opening result dialog with campaign type:",
-    //   schedule?.campaignType
-    // );
   };
 
   const handleResultSuccess = () => {
@@ -707,6 +719,16 @@ const ScheduleStudentsPage: React.FC = () => {
           Quay lại
         </Button>
       </Box>
+
+      {/* Add information alert about date restriction */}
+      <Alert severity="info" sx={{ mb: 3 }}>
+        <Typography>
+          <strong>Lưu ý:</strong> Việc ghi nhận kết quả{" "}
+          {schedule?.campaignType === 0 ? "tiêm chủng" : "khám sức khỏe"} chỉ
+          được phép thực hiện vào đúng ngày diễn ra:{" "}
+          {formatDate(schedule?.scheduledDate || "")}
+        </Typography>
+      </Alert>
 
       {/* Stats cards */}
       <Box
@@ -928,74 +950,111 @@ const ScheduleStudentsPage: React.FC = () => {
               </TableHead>
               <TableBody>
                 {filteredStudents.length > 0 ? (
-                  filteredStudents.map((student) => (
-                    <TableRow key={student.id} hover>
-                      <TableCell>{student.studentCode}</TableCell>
-                      <TableCell>{student.studentName}</TableCell>
-                      <TableCell>{student.className}</TableCell>
-                      <TableCell>{getGenderText(student.gender)}</TableCell>
-                      <TableCell>{formatDate(student.dateOfBirth)}</TableCell>
-                      <TableCell>
-                        <Chip
-                          size="small"
-                          label={
-                            student.hasResult
-                              ? schedule?.campaignType === 0
-                                ? "Đã tiêm"
-                                : "Đã khám"
-                              : "Chưa thực hiện"
-                          }
-                          color={student.hasResult ? "success" : "warning"}
-                        />
-                      </TableCell>
-                      {(isAdmin() || isMedicalStaff()) && (
-                        <TableCell align="center">
-                          <Box
-                            sx={{
-                              display: "flex",
-                              justifyContent: "center",
-                              gap: 1,
-                            }}
-                          >
-                            {/* Record result button - Available to both Admin and MedicalStaff */}
-                            <Tooltip
-                              title={
-                                schedule?.campaignType === 0
-                                  ? "Ghi nhận kết quả tiêm"
-                                  : "Ghi nhận kết quả khám"
-                              }
-                            >
-                              <IconButton
-                                size="small"
-                                color="primary"
-                                onClick={() => handleRecordResult(student)}
-                              >
-                                <AssignmentIcon />
-                              </IconButton>
-                            </Tooltip>
+                  filteredStudents.map((student) => {
+                    // Check if today is the scheduled date
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    const scheduledDate = new Date(
+                      schedule?.scheduledDate || ""
+                    );
+                    scheduledDate.setHours(0, 0, 0, 0);
+                    const isScheduledToday =
+                      scheduledDate.getTime() === today.getTime();
 
-                            {/* Delete button - Only for Admin */}
-                            {isAdmin() && (
-                              <Tooltip title="Xóa khỏi lịch">
-                                <IconButton
-                                  size="small"
-                                  color="error"
-                                  onClick={() =>
-                                    handleRemoveStudent(
-                                      student.id,
-                                      student.studentName
-                                    )
-                                  }
-                                >
-                                  <DeleteIcon />
-                                </IconButton>
-                              </Tooltip>
-                            )}
-                          </Box>
+                    return (
+                      <TableRow
+                        key={student.id}
+                        hover
+                        sx={{
+                          backgroundColor: student.hasResult
+                            ? "rgba(46, 125, 50, 0.04)" // Green tint for completed
+                            : !isScheduledToday
+                            ? "rgba(250, 250, 250, 1)" // Light gray for not today
+                            : "inherit", // Default for pending on scheduled day
+                        }}
+                      >
+                        <TableCell>{student.studentCode}</TableCell>
+                        <TableCell>{student.studentName}</TableCell>
+                        <TableCell>{student.className}</TableCell>
+                        <TableCell>{getGenderText(student.gender)}</TableCell>
+                        <TableCell>{formatDate(student.dateOfBirth)}</TableCell>
+                        <TableCell>
+                          <Chip
+                            size="small"
+                            label={
+                              student.hasResult
+                                ? schedule?.campaignType === 0
+                                  ? "Đã tiêm"
+                                  : "Đã khám"
+                                : isScheduledToday
+                                ? "Có thể ghi nhận hôm nay"
+                                : "Chưa thực hiện"
+                            }
+                            color={
+                              student.hasResult
+                                ? "success"
+                                : isScheduledToday
+                                ? "info"
+                                : "warning"
+                            }
+                          />
                         </TableCell>
-                      )}
-                    </TableRow>
-                  ))
+                        {(isAdmin() || isMedicalStaff()) && (
+                          <TableCell align="center">
+                            <Box
+                              sx={{
+                                display: "flex",
+                                justifyContent: "center",
+                                gap: 1,
+                              }}
+                            >
+                              {/* Record result button - Available to both Admin and MedicalStaff */}
+                              <Tooltip
+                                title={
+                                  !isScheduledToday
+                                    ? "Chỉ được phép ghi nhận kết quả vào đúng ngày diễn ra trong lịch"
+                                    : schedule?.campaignType === 0
+                                    ? "Ghi nhận kết quả tiêm (chỉ được phép vào đúng ngày diễn ra)"
+                                    : "Ghi nhận kết quả khám (chỉ được phép vào đúng ngày diễn ra)"
+                                }
+                              >
+                                <span>
+                                  {" "}
+                                  {/* Wrapper to allow tooltip on disabled button */}
+                                  <IconButton
+                                    size="small"
+                                    color="primary"
+                                    onClick={() => handleRecordResult(student)}
+                                    disabled={!isScheduledToday}
+                                  >
+                                    <AssignmentIcon />
+                                  </IconButton>
+                                </span>
+                              </Tooltip>
+
+                              {/* Delete button - Only for Admin */}
+                              {isAdmin() && (
+                                <Tooltip title="Xóa khỏi lịch">
+                                  <IconButton
+                                    size="small"
+                                    color="error"
+                                    onClick={() =>
+                                      handleRemoveStudent(
+                                        student.id,
+                                        student.studentName
+                                      )
+                                    }
+                                  >
+                                    <DeleteIcon />
+                                  </IconButton>
+                                </Tooltip>
+                              )}
+                            </Box>
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    );
+                  })
                 ) : (
                   <TableRow>
                     <TableCell colSpan={7} align="center">
