@@ -45,6 +45,21 @@ interface ScheduleStudentListDialogProps {
   campaignType: number; // 0 cho tiêm chủng, 1 cho khám sức khỏe
 }
 
+// Cập nhật interface Student để có consentFormStatus
+interface Student {
+  id: string;
+  studentId: string;
+  studentName: string;
+  studentCode: string;
+  className: string;
+  dateOfBirth: string;
+  gender: number;
+  status: number;
+  vaccinationDate?: string;
+  hasResult: boolean;
+  consentFormStatus?: number; // -1: chưa có phiếu, 0: chờ xử lý, 1: đã đồng ý, 2: đã từ chối
+}
+
 interface SelectedStudent {
   id: string;
   studentName: string;
@@ -120,6 +135,7 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
             status: item.vaccinationResult || item.healthCheckupResult ? 1 : 0, // 1 = completed, 0 = not done
             vaccinationDate: item.vaccinationDate,
             hasResult: !!item.vaccinationResult || !!item.healthCheckupResult,
+            consentFormStatus: -1, // Mặc định là chưa có phiếu
           }))
         : [];
 
@@ -136,6 +152,66 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
       });
 
       setStudents(formattedStudents);
+
+      // Lấy trạng thái phiếu đồng ý cho từng học sinh
+      const fetchConsentStatus = async () => {
+        try {
+          const updatedStudents = [...formattedStudents];
+
+          // Lấy phiếu đồng ý cho từng học sinh
+          for (let i = 0; i < updatedStudents.length; i++) {
+            const student = updatedStudents[i];
+            if (student.studentId) {
+              try {
+                const consentResponse = await instance.get(
+                  `/api/ConsentForm/get-consent-forms-by-student-id/${student.studentId}`
+                );
+
+                // Nếu có phiếu đồng ý, cập nhật trạng thái
+                if (consentResponse.data) {
+                  // Kiểm tra xem có phải là mảng không
+                  const consentForm = Array.isArray(consentResponse.data)
+                    ? consentResponse.data[0]
+                    : consentResponse.data;
+
+                  if (consentForm) {
+                    let status;
+                    if (consentForm.updatedBy === null) {
+                      status = 0; // Chờ xử lý
+                    } else if (consentForm.isApproved === true) {
+                      status = 1; // Đã đồng ý
+                    } else if (consentForm.isApproved === false) {
+                      status = 2; // Đã từ chối
+                    } else {
+                      status = 0; // Mặc định là chờ xử lý
+                    }
+                    updatedStudents[i] = {
+                      ...student,
+                      consentFormStatus: status,
+                    };
+                  }
+                }
+              } catch (error) {
+                console.error(
+                  `Error fetching consent for student ${student.studentId}:`,
+                  error
+                );
+                // Nếu gặp lỗi, giữ nguyên trạng thái mặc định -1 (chưa có phiếu)
+              }
+            }
+          }
+
+          // Cập nhật danh sách học sinh với thông tin phiếu đồng ý
+          setStudents(updatedStudents);
+        } catch (err) {
+          console.error("Error fetching consent statuses:", err);
+        }
+      };
+
+      // Gọi hàm lấy trạng thái phiếu đồng ý
+      if (schedule?.campaignId) {
+        fetchConsentStatus();
+      }
     } catch (err) {
       console.error("Error fetching students:", err);
       // setError("Không thể tải danh sách học sinh. Vui lòng thử lại sau.");
@@ -275,7 +351,15 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
   };
 
   // Add this function to handle opening the result dialog
-  const handleRecordResult = (student: any) => {
+  const handleRecordResult = (student: Student) => {
+    // Kiểm tra trạng thái phiếu đồng ý trước
+    if (student.consentFormStatus !== 1) {
+      toast.error(
+        "Chỉ được phép ghi nhận kết quả khi phụ huynh đã đồng ý trên phiếu đồng ý"
+      );
+      return;
+    }
+
     setSelectedStudentForResult({
       id: student.id,
       studentName: student.studentName,
@@ -688,7 +772,9 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
                               {/* Record result button */}
                               <Tooltip
                                 title={
-                                  campaignType === 0
+                                  student.consentFormStatus !== 1
+                                    ? "Chỉ được phép ghi nhận kết quả khi phụ huynh đã đồng ý trên phiếu đồng ý"
+                                    : campaignType === 0
                                     ? "Ghi nhận kết quả tiêm"
                                     : "Ghi nhận kết quả khám"
                                 }
@@ -700,6 +786,7 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
                                     e.stopPropagation();
                                     handleRecordResult(student);
                                   }}
+                                  disabled={student.consentFormStatus !== 1}
                                 >
                                   <AssignmentIcon />
                                 </IconButton>

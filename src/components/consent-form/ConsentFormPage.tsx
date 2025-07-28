@@ -54,6 +54,7 @@ interface ConsentFormPageProps {
   parentId?: string;
   campaignId?: string;
   scheduleId?: string;
+  onConsentFormSubmit?: () => void; // Thêm prop để cập nhật sau khi submit
 }
 
 const ConsentFormPage: React.FC<ConsentFormPageProps> = ({
@@ -62,6 +63,7 @@ const ConsentFormPage: React.FC<ConsentFormPageProps> = ({
   parentId,
   campaignId,
   scheduleId,
+  onConsentFormSubmit,
 }) => {
   const [consentForms, setConsentForms] = useState<ConsentForm[]>([]);
   const [selectedForm, setSelectedForm] = useState<ConsentForm | null>(null);
@@ -185,6 +187,11 @@ const ConsentFormPage: React.FC<ConsentFormPageProps> = ({
       if (mode === "admin") {
         fetchData();
       }
+
+      // Gọi callback để cập nhật danh sách học sinh trong component cha
+      if (onConsentFormSubmit) {
+        onConsentFormSubmit();
+      }
     } catch (error) {
       console.error("Error updating consent form:", error);
     }
@@ -196,6 +203,11 @@ const ConsentFormPage: React.FC<ConsentFormPageProps> = ({
       await deleteConsentForm(formId);
       setConsentForms((forms) => forms.filter((f) => f.id !== formId));
       if (selectedForm?.id === formId) setSelectedForm(null);
+
+      // Gọi callback để cập nhật danh sách học sinh trong component cha
+      if (onConsentFormSubmit) {
+        onConsentFormSubmit();
+      }
     } catch (error) {
       alert("Xóa phiếu đồng ý thất bại!");
       console.error(error);
