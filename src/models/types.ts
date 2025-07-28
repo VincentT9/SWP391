@@ -334,3 +334,47 @@ export interface MedicalSupplier {
   supplier: string;
   image: string[];
 }
+// Consent Form Types
+export interface ConsentForm {
+  id: string;
+  campaignId: string;
+  campaignName: string;
+  studentId: string;
+  studentName: string;  
+  isApproved?: boolean; // null = chưa điền, true = đồng ý, false = từ chối
+  consentDate?: Date;
+  reasonForDecline?: string;
+  scheduleConsentForms: scheduleConsentForms[];
+  createdBy: string;
+  updatedBy?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface scheduleConsentForms {
+  scheduledDate : Date;
+  location: string;
+}
+export interface ConsentFormCreateRequest {
+  campaignId: string;
+  studentId: string;
+  isApproved?: boolean; // null = chưa điền, true = đồng ý, false = từ chối
+  consentDate?: Date;
+  reasonForDecline?: string;
+}
+
+export interface ConsentFormResponse {
+  id: string;
+  campaignId: string;
+  campaignName: string;
+  studentId: string;
+  studentName: string;  
+  isApproved?: boolean; // null = chưa điền, true = đồng ý, false = từ chối
+  consentDate?: Date;
+  reasonForDecline?: string;
+  scheduleConsentForms: scheduleConsentForms[];
+  createdBy: string;
+  updatedBy?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}

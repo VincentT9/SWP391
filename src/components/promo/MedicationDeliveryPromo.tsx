@@ -307,46 +307,7 @@ const MedicationDeliveryPromo: React.FC = () => {
         </Container>
       </Box>
 
-      {/* CTA Section */}
-      <Container maxWidth="lg" sx={{ py: 8 }}>
-        <Box
-          sx={{
-            textAlign: 'center',
-            bgcolor: alpha(theme.palette.primary.main, 0.1),
-            p: 6,
-            borderRadius: 4
-          }}
-        >
-          <Typography
-            variant="h4"
-            component="h2"
-            gutterBottom
-            sx={{ fontWeight: 'bold', mb: 3 }}
-          >
-            Sẵn sàng bắt đầu?
-          </Typography>
-          <Typography
-            variant="h6"
-            sx={{ mb: 4, color: 'text.secondary' }}
-          >
-            Đăng ký ngay hôm nay để trải nghiệm dịch vụ tuyệt vời
-          </Typography>
-          <Button
-            variant="contained"
-            size="large"
-            onClick={() => navigate('/register')}
-            sx={{ 
-              px: 6, 
-              py: 2,
-              borderRadius: 3,
-              textTransform: 'none',
-              fontSize: '1.2rem'
-            }}
-          >
-            Đăng ký miễn phí
-          </Button>
-        </Box>
-      </Container>
+      
     </Box>
   );
 };

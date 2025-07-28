@@ -317,6 +317,14 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
         return;
       }
 
+      const notification = {
+            campaignId: campaignId,
+            incidientId: null,
+          }
+      await instance.post(
+            "api/Notification/create-notification", 
+            notification
+          );
       // Hiển thị toast thông báo đang tạo
       toast.info("Đang tạo phiếu đồng ý cho các học sinh...");
 
@@ -333,11 +341,12 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
             consentDate: new Date().toISOString(),
             reasonForDecline: "", // Không có lý do từ chối mặc định
           };
-
+          
           await instance.post(
             "/api/ConsentForm/create-consent-form",
             requestBody
           );
+        
           successCount++;
         } catch (err: any) {
           // Kiểm tra nếu lỗi là do đã tồn tại phiếu đồng ý
@@ -357,7 +366,7 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
 
       if (successCount > 0) {
         toast.success(
-          `Đã tạo ${successCount}/${students.length} phiếu đồng ý cho học sinh`
+          `Đã tạo ${successCount}/${students.length} phiếu đồng ý chos học sinh`
         );
         // Cập nhật trạng thái để biết rằng đã có phiếu đồng ý
         setConsentFormExists(true);
@@ -383,7 +392,7 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
         err.response?.data
       ) {
         console.error("Chi tiết lỗi API:", err.response.data);
-        const errorMessage =
+        const errorMessage = 
           err.response.data.message || (err.message ? String(err.message) : "");
         toast.error(`Không thể tạo phiếu đồng ý: ${errorMessage}`);
       } else {

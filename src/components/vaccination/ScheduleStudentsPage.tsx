@@ -36,12 +36,14 @@ import {
   ArrowBack as ArrowBackIcon,
   Assignment as AssignmentIcon,
   Description as DescriptionIcon,
+  CheckCircle as CheckCircleIcon,
 } from "@mui/icons-material";
 import { format } from "date-fns";
 import { toast } from "react-toastify";
 import instance from "../../utils/axiosConfig";
 import AddStudentToScheduleDialog from "./AddStudentToScheduleDialog";
 import RecordResultDialog from "./RecordResultDialog";
+import ConsentFormPage from "../consent-form/ConsentFormPage"; // Import ConsentFormPage
 import Link from "@mui/material/Link";
 import { Link as RouterLink } from "react-router-dom";
 import WarningIcon from "@mui/icons-material/Warning";
@@ -110,6 +112,9 @@ const ScheduleStudentsPage: React.FC = () => {
     completed: 0,
     pending: 0,
   });
+
+  // Thêm state mới cho dialog kiểm tra phiếu đồng ý
+  const [isConsentFormDialogOpen, setIsConsentFormDialogOpen] = useState<boolean>(false);
 
   // Menu state
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -339,6 +344,11 @@ const ScheduleStudentsPage: React.FC = () => {
     setIsAddStudentDialogOpen(true);
   };
 
+  // Thêm hàm mới để xử lý kiểm tra phiếu đồng ý
+  const handleCheckConsentForms = () => {
+    setIsConsentFormDialogOpen(true);
+  };
+
   // Cập nhật hàm handleAddStudentSuccess để thêm timeout và retry
   const handleAddStudentSuccess = () => {
     // Hiển thị loading state ngay lập tức
@@ -555,6 +565,14 @@ const ScheduleStudentsPage: React.FC = () => {
           await instance.post(
             "/api/ConsentForm/create-consent-form",
             requestBody
+          );
+          const notification = {
+            campaignId: schedule.campaignId,
+            incidientId: null,
+          }
+      await instance.post(
+            "api/Notification/create-notification", 
+            notification
           );
           successCount++;
         } catch (err) {
@@ -781,7 +799,7 @@ const ScheduleStudentsPage: React.FC = () => {
         </Box>
 
         {/* Cải thiện bố cục các nút thao tác */}
-        {isAdmin() && (
+        {(isAdmin() || isMedicalStaff()) && (
           <Box
             sx={{
               display: "flex",
@@ -790,14 +808,16 @@ const ScheduleStudentsPage: React.FC = () => {
               justifyContent: { xs: "flex-start", sm: "flex-end" },
             }}
           >
-            <Button
-              variant="contained"
-              color="primary"
-              startIcon={<AddIcon />}
-              onClick={handleAddStudent}
-            >
-              Thêm học sinh
-            </Button>
+            {isAdmin() && (
+              <Button
+                variant="contained"
+                color="primary"
+                startIcon={<AddIcon />}
+                onClick={handleAddStudent}
+              >
+                Thêm học sinh
+              </Button>
+            )}
 
             <Button
               variant="outlined"
@@ -808,14 +828,26 @@ const ScheduleStudentsPage: React.FC = () => {
               Tạo phiếu đồng ý
             </Button>
 
+            {/* Nút mới: Kiểm tra phiếu đồng ý */}
             <Button
               variant="outlined"
-              color="error"
-              startIcon={<DeleteIcon />}
-              onClick={handleDeleteAllStudents}
+              color="success"
+              startIcon={<CheckCircleIcon />}
+              onClick={handleCheckConsentForms}
             >
-              Xóa tất cả
+              Kiểm tra phiếu đồng ý
             </Button>
+
+            {isAdmin() && (
+              <Button
+                variant="outlined"
+                color="error"
+                startIcon={<DeleteIcon />}
+                onClick={handleDeleteAllStudents}
+              >
+                Xóa tất cả
+              </Button>
+            )}
           </Box>
         )}
       </Paper>
@@ -869,7 +901,8 @@ const ScheduleStudentsPage: React.FC = () => {
                   <TableCell>Giới tính</TableCell>
                   <TableCell>Ngày sinh</TableCell>
                   <TableCell>Trạng thái</TableCell>
-                  <TableCell align="center">Thao tác</TableCell>
+                  {( isAdmin() || isMedicalStaff()) && (
+                  <TableCell align="center">Thao tác</TableCell>)}
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -894,6 +927,7 @@ const ScheduleStudentsPage: React.FC = () => {
                           color={student.hasResult ? "success" : "warning"}
                         />
                       </TableCell>
+                      {((isAdmin() || isMedicalStaff()) && ( 
                       <TableCell align="center">
                         <Box
                           sx={{
@@ -937,7 +971,7 @@ const ScheduleStudentsPage: React.FC = () => {
                             </Tooltip>
                           )}
                         </Box>
-                      </TableCell>
+                      </TableCell>))}
                     </TableRow>
                   ))
                 ) : (
@@ -1128,11 +1162,11 @@ const ScheduleStudentsPage: React.FC = () => {
               không?
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              Hệ thống sẽ tự động tạo phiếu đồng ý với trạng thái "Đồng ý" cho
+              Hệ thống sẽ tự động tạo phiếu đồng ý với trạng thái "Chưa đồng ý" cho
               tất cả học sinh.
               {schedule?.campaignType === 0
-                ? " Phụ huynh sẽ nhận được thông báo về việc đồng ý cho con em tham gia tiêm chủng."
-                : " Phụ huynh sẽ nhận được thông báo về việc đồng ý cho con em tham gia khám sức khỏe."}
+                ? " Phụ huynh sẽ nhận được thông báo và cần xem xét phiếu đồng ý cho con em tham gia tiêm chủng."
+                : " Phụ huynh sẽ nhận được thông báo và cần xem xét phiếu đồng ý cho con em tham gia khám sức khỏe."}
             </Typography>
           </Box>
         </DialogContent>
@@ -1160,6 +1194,55 @@ const ScheduleStudentsPage: React.FC = () => {
             {isCreatingConsentForms ? "Đang xử lý..." : "Xác nhận tạo phiếu"}
           </Button>
         </DialogActions>
+      </Dialog>
+
+      {/* Consent Form Dialog */}
+      <Dialog
+        open={isConsentFormDialogOpen}
+        onClose={() => setIsConsentFormDialogOpen(false)}
+        aria-labelledby="consent-form-dialog-title"
+        maxWidth="lg"
+        fullWidth
+        PaperProps={{
+          sx: {
+            height: '90vh',
+            maxHeight: '90vh',
+          }
+        }}
+      >
+        <DialogTitle 
+          id="consent-form-dialog-title"
+          sx={{ 
+            borderBottom: 1, 
+            borderColor: 'divider',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <CheckCircleIcon color="success" />
+            <Typography variant="h6">
+              Phiếu Đồng Ý - {schedule?.campaignName || "Chương trình y tế"}
+            </Typography>
+          </Box>
+          <Button 
+            onClick={() => setIsConsentFormDialogOpen(false)}
+            variant="outlined"
+            size="small"
+          >
+            Đóng
+          </Button>
+        </DialogTitle>
+        <DialogContent sx={{ p: 0, overflow: 'hidden' }}>
+          {schedule?.campaignId && (
+            <ConsentFormPage
+              mode="admin"
+              campaignId={schedule.campaignId}
+              scheduleId={scheduleId}
+            />
+          )}
+        </DialogContent>
       </Dialog>
     </Container>
   );

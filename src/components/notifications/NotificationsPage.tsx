@@ -535,7 +535,7 @@ const NotificationsPage: React.FC = () => {
                                 <Button
                                   size="small"
                                   startIcon={<LinkIcon />}
-                                  href={`http://localhost:3000${notification.returnUrl}`}
+                                  href={`${notification.returnUrl}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   sx={{ 
@@ -547,7 +547,7 @@ const NotificationsPage: React.FC = () => {
                                     }
                                   }}
                                 >
-                                  {`localhost:3000${notification.returnUrl}`}
+                                  {`${notification.returnUrl}`}
                                 </Button>
                               </Box>
                             ) : (

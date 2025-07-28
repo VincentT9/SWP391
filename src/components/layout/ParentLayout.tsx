@@ -43,7 +43,9 @@ const menuItems = [
   { label: "Trang chủ", path: "/" },
   { label: "Hồ sơ sức khỏe", path: "/health-records" },
   { label: "Sự kiện y tế", path: "/medical-events" },
-  { label: "Gửi thuốc cho con", path: "/medication" },
+  { label: "Gửi thuốc", path: "/medication" },
+  { label: "Phiếu đồng ý", path: "/my-consent-forms" },
+
   // { label: "Tiêm phòng", path: "/vaccination" },
   { label: "Thông báo", path: "/notifications" },
 ];
@@ -104,10 +106,10 @@ const ParentLayout: React.FC = () => {
             >
               <Box
                 component="img"
-                src="https://musical-indigo-mongoose.myfilebase.com/ipfs/QmPfdMNtJhcNfztJtxK88SXCrqWm54KuSWHKBW4TNhPr3x"
+                src="https://musical-indigo-mongoose.myfilebase.com/ipfs/Qmf9vib7J7Rm85u4CTK5WCXXTQ6dxzoKWjwCrkVjiXhT35"
                 alt="FPT"
                 sx={{
-                  height: { xs: 34, md: 40 },
+                  height: { xs: 45, md: 55 },
                   width: "auto",
                 }}
               />
@@ -282,4 +284,6 @@ const ParentLayout: React.FC = () => {
   );
 };
 
+
 export default ParentLayout;
+

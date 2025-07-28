@@ -28,6 +28,7 @@ import VaccinationPage from "./components/vaccination/VaccinationPage";
 import ParentMedicationDashboard from "./components/medication/parent/ParentMedicationDashboard";
 import VaccinationProgramDetailsPage from "./components/vaccination/VaccinationProgramDetailsPage";
 import ScheduleStudentsPage from "./components/vaccination/ScheduleStudentsPage";
+import ConsentFormPage from "./components/consent-form/ConsentFormPage";
 
 // Promo Pages
 import MedicationDeliveryPromo from "./components/promo/MedicationDeliveryPromo";
@@ -60,6 +61,17 @@ function App() {
                 path="health-declaration"
                 element={<HealthDeclarationFormPage />}
               />
+
+              <Route
+                path="my-consent-forms"
+                element={<ConsentFormPage mode ="parent" />}
+              />
+              <Route
+                path="consent-forms"
+                element={<ConsentFormPage mode ="admin" />}
+              />
+              
+
               <Route path="medication" element={<MedicationPage />} />
               <Route path="medication/nurse" element={<MedicationPage />} />
               <Route path="medication/parent" element={<MedicationPage />} />
