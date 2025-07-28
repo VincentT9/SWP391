@@ -205,8 +205,6 @@ const MedicationAdministrationForm: React.FC<MedicationAdministrationFormProps> 
       // Check status with current medication request ID (no additional API call needed here)
       await checkAndUpdateMedicationStatus(medicationRequest.id);
 
-      toast.success("Đã ghi nhận lần cho uống thuốc thành công");
-
       // Reset form and close dialog first
       setDescription("");
       setGivenDialogOpen(false);

@@ -635,25 +635,7 @@ const HomePage = () => {
                 chúng tôi để nâng cao chất lượng chăm sóc sức khỏe học sinh.
               </Typography>
               <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
-                <Button
-                  variant="contained"
-                  size="large"
-                  component={Link}
-                  to="/register"
-                  sx={{
-                    bgcolor: "white",
-                    color: colors.primary,
-                    px: 4,
-                    py: 1.5,
-                    "&:hover": { bgcolor: "rgba(255,255,255,0.9)" },
-                    fontWeight: 600,
-                    textTransform: "none",
-                    fontSize: "1rem",
-                    borderRadius: 2,
-                  }}
-                >
-                  Đăng ký ngay
-                </Button>
+                
                 
               </Box>
             </Box>

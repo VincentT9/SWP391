@@ -113,6 +113,19 @@ const ScheduleStudentsPage: React.FC = () => {
     pending: 0,
   });
 
+  const isScheduleDatePassed = () => {
+  if (!schedule?.scheduledDate) return false;
+  
+  const scheduleDate = new Date(schedule.scheduledDate);
+  const today = new Date();
+  
+  // Reset thời gian về 00:00:00 để so sánh chỉ ngày
+  scheduleDate.setHours(0, 0, 0, 0);
+  today.setHours(0, 0, 0, 0);
+  
+  return today >= scheduleDate;
+};
+
   // Thêm state mới cho dialog kiểm tra phiếu đồng ý
   const [isConsentFormDialogOpen, setIsConsentFormDialogOpen] =
     useState<boolean>(false);
@@ -892,21 +905,40 @@ const ScheduleStudentsPage: React.FC = () => {
                             }}
                           >
                             {/* Record result button - Available to both Admin and MedicalStaff */}
-                            <Tooltip
-                              title={
-                                schedule?.campaignType === 0
-                                  ? "Ghi nhận kết quả tiêm"
-                                  : "Ghi nhận kết quả khám"
-                              }
-                            >
-                              <IconButton
-                                size="small"
-                                color="primary"
-                                onClick={() => handleRecordResult(student)}
+                            {isScheduleDatePassed() ? (
+                              <Tooltip
+                                title={
+                                  schedule?.campaignType === 0
+                                    ? "Ghi nhận kết quả tiêm"
+                                    : "Ghi nhận kết quả khám"
+                                }
                               >
-                                <AssignmentIcon />
-                              </IconButton>
-                            </Tooltip>
+                                <IconButton
+                                  size="small"
+                                  color="primary"
+                                  onClick={() => handleRecordResult(student)}
+                                >
+                                  <AssignmentIcon />
+                                </IconButton>
+                              </Tooltip>
+                            ) : (
+                              <Tooltip
+                                title={`Chưa thể ghi nhận kết quả. Ngày ${schedule?.campaignType === 0 ? 'tiêm' : 'khám'} là ${formatDate(schedule?.scheduledDate)}`}
+                              >
+                                <span>
+                                  <IconButton
+                                    size="small"
+                                    disabled
+                                    sx={{
+                                      color: 'action.disabled',
+                                      cursor: 'not-allowed'
+                                    }}
+                                  >
+                                    <AssignmentIcon />
+                                  </IconButton>
+                                </span>
+                              </Tooltip>
+                            )}
 
                             {/* Delete button - Only for Admin */}
                             {isAdmin() && (

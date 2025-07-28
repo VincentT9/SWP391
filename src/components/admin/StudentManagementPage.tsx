@@ -681,41 +681,33 @@ const StudentManagementPage: React.FC = () => {
                 </Box>
 
                 <Box sx={{ flex: "1 1 calc(50% - 8px)", minWidth: "240px" }}>
-                  <FormControl fullWidth required>
-                    <InputLabel>Lớp</InputLabel>
-                    <Select
-                      value={formData.class || ""}
-                      onChange={(e) =>
-                        setFormData({ ...formData, class: e.target.value })
-                      }
-                      label="Lớp"
-                    >
-                      {classes.map((className) => (
-                        <MenuItem key={className} value={className}>
-                          {className}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+                  <TextField
+                    fullWidth
+                    required
+                    label="Lớp"
+                    value={formData.class || ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, class: e.target.value })
+                    }
+                    placeholder="Ví dụ: 12A1, 11B2, 10C3"
+                    helperText="Nhập tên lớp học"
+                  />
                 </Box>
 
                 <Box sx={{ flex: "1 1 calc(50% - 8px)", minWidth: "240px" }}>
-                  <FormControl fullWidth required>
-                    <InputLabel>Năm học</InputLabel>
-                    <Select
-                      value={formData.schoolYear || "2023-2024"}
-                      onChange={(e) =>
-                        setFormData({ ...formData, schoolYear: e.target.value })
-                      }
-                      label="Năm học"
-                    >
-                      {schoolYears.map((year) => (
-                        <MenuItem key={year} value={year}>
-                          {year}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+                  <TextField
+                    fullWidth
+                    required
+                    label="Năm học"
+                    value={formData.schoolYear || "2023-2024"}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setFormData({ ...formData, schoolYear: value });
+                    }}
+                    placeholder="Ví dụ: 2023-2024"
+                    helperText="Nhập năm học theo định dạng: YYYY-YYYY"
+                    error={formData.schoolYear && !/^\d{4}-\d{4}$/.test(formData.schoolYear)}
+                  />
                 </Box>
               </Box>
 

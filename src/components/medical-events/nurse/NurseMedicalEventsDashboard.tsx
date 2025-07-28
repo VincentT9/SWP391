@@ -183,7 +183,7 @@ const NurseMedicalEventsDashboard: React.FC<
       setIsEditing(false);
       setIsViewingDetails(false);
       setSelectedEvent(null);
-      toast.success("Đã cập nhật sự kiện y tế thành công!");
+      
     } catch (err) {
       console.error("Error updating incident:", err);
       // setError("Có lỗi khi cập nhật sự kiện y tế");
