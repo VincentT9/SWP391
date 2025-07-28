@@ -108,7 +108,13 @@ const ConsentFormPage: React.FC<ConsentFormPageProps> = ({
   }) => {
     if (!selectedForm) return;
     try {
-      await updateConsentForm(selectedForm.id, payload);
+      // Add updatedBy to the payload
+      const updatedPayload = {
+        ...payload,
+        updatedBy: user?.id || "current-user",
+      };
+
+      await updateConsentForm(selectedForm.id, updatedPayload);
 
       // Update the local state to reflect the change immediately
       const updatedForm = {

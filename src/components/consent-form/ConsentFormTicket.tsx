@@ -94,7 +94,7 @@ const ConsentFormTicket: React.FC<ConsentFormTicketProps> = ({
   };
 
   const getStatusIcon = (isApproved?: boolean) => {
-    if (isApproved === undefined)
+    if (isApproved === undefined || consentForm.updatedBy === null)
       return <HourglassEmpty color="warning" sx={{ fontSize: 28 }} />;
     return isApproved ? (
       <CheckCircle color="success" sx={{ fontSize: 28 }} />
@@ -106,12 +106,14 @@ const ConsentFormTicket: React.FC<ConsentFormTicketProps> = ({
   const getStatusColor = (
     isApproved?: boolean
   ): "default" | "success" | "error" | "warning" => {
-    if (isApproved === undefined) return "warning";
+    if (isApproved === undefined || consentForm.updatedBy === null)
+      return "warning";
     return isApproved ? "success" : "error";
   };
 
   const getStatusText = (isApproved?: boolean) => {
-    if (isApproved === undefined) return "Đang chờ xử lý";
+    if (isApproved === undefined || consentForm.updatedBy === null)
+      return "Đang chờ xử lý";
     return isApproved ? "Đã đồng ý tiêm chủng" : "Đã từ chối tiêm chủng";
   };
 
