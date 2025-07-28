@@ -45,6 +45,7 @@ const menuItems = [
   { label: "Sự kiện y tế", path: "/medical-events" },
   { label: "Gửi thuốc", path: "/medication" },
   { label: "Phiếu đồng ý", path: "/my-consent-forms" },
+
   // { label: "Tiêm phòng", path: "/vaccination" },
   { label: "Thông báo", path: "/notifications" },
 ];
@@ -283,4 +284,6 @@ const ParentLayout: React.FC = () => {
   );
 };
 
+
 export default ParentLayout;
+

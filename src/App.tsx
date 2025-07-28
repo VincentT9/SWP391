@@ -61,6 +61,7 @@ function App() {
                 path="health-declaration"
                 element={<HealthDeclarationFormPage />}
               />
+
               <Route
                 path="my-consent-forms"
                 element={<ConsentFormPage mode ="parent" />}
@@ -70,6 +71,7 @@ function App() {
                 element={<ConsentFormPage mode ="admin" />}
               />
               
+
               <Route path="medication" element={<MedicationPage />} />
               <Route path="medication/nurse" element={<MedicationPage />} />
               <Route path="medication/parent" element={<MedicationPage />} />

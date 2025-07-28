@@ -83,7 +83,9 @@ const adminMenuCategories: MenuCategory[] = [
       {
         name: "Kho vật tư",
         path: "/medical-supplier",
+
         description: "Quản lý vật tư y tế",
+
         roles: ["Admin", "MedicalStaff"],
       },
     ],
@@ -113,8 +115,10 @@ const adminMenuCategories: MenuCategory[] = [
       {
         name: "Quản lý yêu cầu gửi thuốc",
         path: "/medication/nurse",
+
         description: "Quản lý yêu cầu gửi thuốc từ phụ huynh",
         roles: ["MedicalStaff"],
+
       },
       {
         name: "Chương trình tiêm phòng & khám sức khỏe định kỳ",
@@ -243,6 +247,7 @@ const AdminLayout = () => {
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+
           <Box>
             <Typography
               variant="h6"
