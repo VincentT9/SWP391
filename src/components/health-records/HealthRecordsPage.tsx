@@ -1916,7 +1916,7 @@ const HealthRecordsPage = () => {
                       <TextField
                         label="Thị lực mắt trái"
                         fullWidth
-                        placeholder="VD: 10/10 hoặc 20/20"
+                        placeholder="Trên thang điểm 10"
                         value={updatedRecord.visionLeft || ""}
                         onChange={(e) =>
                           setUpdatedRecord({
@@ -1928,7 +1928,7 @@ const HealthRecordsPage = () => {
                       <TextField
                         label="Thị lực mắt phải"
                         fullWidth
-                        placeholder="VD: 10/10 hoặc 20/20"
+                        placeholder="Trên thang điểm 10"
                         value={updatedRecord.visionRight || ""}
                         onChange={(e) =>
                           setUpdatedRecord({

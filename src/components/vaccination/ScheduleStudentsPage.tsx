@@ -1052,14 +1052,16 @@ const ScheduleStudentsPage = () => {
               </Button>
             )}
 
-            <Button
-              variant="outlined"
-              color="primary"
-              startIcon={<DescriptionIcon />}
-              onClick={handleCreateConsentForms}
-            >
-              Tạo phiếu đồng ý
-            </Button>
+            {isAdmin() && (
+              <Button
+                variant="outlined"
+                color="primary"
+                startIcon={<DescriptionIcon />}
+                onClick={handleCreateConsentForms}
+              >
+                Tạo phiếu đồng ý
+              </Button>
+            )}
 
             {/* Nút mới: Kiểm tra phiếu đồng ý */}
             <Button
@@ -1295,7 +1297,7 @@ const ScheduleStudentsPage = () => {
                           )}
                         </Typography>
 
-                        {!error && students.length === 0 && (
+                        {!error && students.length === 0 && isAdmin() && (
                           <Button
                             variant="contained"
                             color="primary"

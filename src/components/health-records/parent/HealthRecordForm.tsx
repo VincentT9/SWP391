@@ -327,7 +327,7 @@ const HealthRecordForm: React.FC<HealthRecordFormProps> = ({
                           {...field}
                           fullWidth
                           label="Thị lực mắt trái"
-                          placeholder="VD: 10/10 hoặc 20/20"
+                          placeholder="Trên thang điểm 10"
                         />
                       )}
                     />
@@ -341,7 +341,7 @@ const HealthRecordForm: React.FC<HealthRecordFormProps> = ({
                           {...field}
                           fullWidth
                           label="Thị lực mắt phải"
-                          placeholder="VD: 10/10 hoặc 20/20"
+                          placeholder="Trên thang điểm 10"
                         />
                       )}
                     />
