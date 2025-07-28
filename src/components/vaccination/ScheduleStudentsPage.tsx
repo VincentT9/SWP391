@@ -114,7 +114,8 @@ const ScheduleStudentsPage: React.FC = () => {
   });
 
   // Thêm state mới cho dialog kiểm tra phiếu đồng ý
-  const [isConsentFormDialogOpen, setIsConsentFormDialogOpen] = useState<boolean>(false);
+  const [isConsentFormDialogOpen, setIsConsentFormDialogOpen] =
+    useState<boolean>(false);
 
   // Menu state
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -405,7 +406,6 @@ const ScheduleStudentsPage: React.FC = () => {
 
       // Thử lại nếu còn lượt retry
       if (retries > 0) {
-
         setTimeout(() => fetchStudentsWithRetry(retries - 1), 1000);
       } else {
         setStudents([]);
@@ -569,9 +569,9 @@ const ScheduleStudentsPage: React.FC = () => {
           const notification = {
             campaignId: schedule.campaignId,
             incidientId: null,
-          }
-      await instance.post(
-            "api/Notification/create-notification", 
+          };
+          await instance.post(
+            "api/Notification/create-notification",
             notification
           );
           successCount++;
@@ -718,7 +718,13 @@ const ScheduleStudentsPage: React.FC = () => {
         }}
       >
         <Box sx={{ flex: 1, minWidth: { xs: "100%", sm: "0" } }}>
-          <Card sx={{ bgcolor: "rgba(41, 128, 185, 0.08)", borderRadius: 2, height: "100%" }}>
+          <Card
+            sx={{
+              bgcolor: "rgba(41, 128, 185, 0.08)",
+              borderRadius: 2,
+              height: "100%",
+            }}
+          >
             <CardContent>
               <Typography color="text.secondary" gutterBottom>
                 Tổng số học sinh
@@ -731,7 +737,13 @@ const ScheduleStudentsPage: React.FC = () => {
         </Box>
 
         <Box sx={{ flex: 1, minWidth: { xs: "100%", sm: "0" } }}>
-          <Card sx={{ bgcolor: "rgba(41, 128, 185, 0.08)", borderRadius: 2, height: "100%" }}>
+          <Card
+            sx={{
+              bgcolor: "rgba(41, 128, 185, 0.08)",
+              borderRadius: 2,
+              height: "100%",
+            }}
+          >
             <CardContent>
               <Typography color="text.secondary" gutterBottom>
                 Đã hoàn thành
@@ -749,7 +761,13 @@ const ScheduleStudentsPage: React.FC = () => {
         </Box>
 
         <Box sx={{ flex: 1, minWidth: { xs: "100%", sm: "0" } }}>
-          <Card sx={{ bgcolor: "rgba(41, 128, 185, 0.08)", borderRadius: 2, height: "100%" }}>
+          <Card
+            sx={{
+              bgcolor: "rgba(41, 128, 185, 0.08)",
+              borderRadius: 2,
+              height: "100%",
+            }}
+          >
             <CardContent>
               <Typography color="text.secondary" gutterBottom>
                 Chưa thực hiện
@@ -901,8 +919,9 @@ const ScheduleStudentsPage: React.FC = () => {
                   <TableCell>Giới tính</TableCell>
                   <TableCell>Ngày sinh</TableCell>
                   <TableCell>Trạng thái</TableCell>
-                  {( isAdmin() || isMedicalStaff()) && (
-                  <TableCell align="center">Thao tác</TableCell>)}
+                  {(isAdmin() || isMedicalStaff()) && (
+                    <TableCell align="center">Thao tác</TableCell>
+                  )}
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -927,51 +946,52 @@ const ScheduleStudentsPage: React.FC = () => {
                           color={student.hasResult ? "success" : "warning"}
                         />
                       </TableCell>
-                      {((isAdmin() || isMedicalStaff()) && ( 
-                      <TableCell align="center">
-                        <Box
-                          sx={{
-                            display: "flex",
-                            justifyContent: "center",
-                            gap: 1,
-                          }}
-                        >
-                          {/* Record result button - Available to both Admin and MedicalStaff */}
-                          <Tooltip
-                            title={
-                              schedule?.campaignType === 0
-                                ? "Ghi nhận kết quả tiêm"
-                                : "Ghi nhận kết quả khám"
-                            }
+                      {(isAdmin() || isMedicalStaff()) && (
+                        <TableCell align="center">
+                          <Box
+                            sx={{
+                              display: "flex",
+                              justifyContent: "center",
+                              gap: 1,
+                            }}
                           >
-                            <IconButton
-                              size="small"
-                              color="primary"
-                              onClick={() => handleRecordResult(student)}
+                            {/* Record result button - Available to both Admin and MedicalStaff */}
+                            <Tooltip
+                              title={
+                                schedule?.campaignType === 0
+                                  ? "Ghi nhận kết quả tiêm"
+                                  : "Ghi nhận kết quả khám"
+                              }
                             >
-                              <AssignmentIcon />
-                            </IconButton>
-                          </Tooltip>
-
-                          {/* Delete button - Only for Admin */}
-                          {isAdmin() && (
-                            <Tooltip title="Xóa khỏi lịch">
                               <IconButton
                                 size="small"
-                                color="error"
-                                onClick={() =>
-                                  handleRemoveStudent(
-                                    student.id,
-                                    student.studentName
-                                  )
-                                }
+                                color="primary"
+                                onClick={() => handleRecordResult(student)}
                               >
-                                <DeleteIcon />
+                                <AssignmentIcon />
                               </IconButton>
                             </Tooltip>
-                          )}
-                        </Box>
-                      </TableCell>))}
+
+                            {/* Delete button - Only for Admin */}
+                            {isAdmin() && (
+                              <Tooltip title="Xóa khỏi lịch">
+                                <IconButton
+                                  size="small"
+                                  color="error"
+                                  onClick={() =>
+                                    handleRemoveStudent(
+                                      student.id,
+                                      student.studentName
+                                    )
+                                  }
+                                >
+                                  <DeleteIcon />
+                                </IconButton>
+                              </Tooltip>
+                            )}
+                          </Box>
+                        </TableCell>
+                      )}
                     </TableRow>
                   ))
                 ) : (
@@ -1162,8 +1182,8 @@ const ScheduleStudentsPage: React.FC = () => {
               không?
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              Hệ thống sẽ tự động tạo phiếu đồng ý với trạng thái "Chưa đồng ý" cho
-              tất cả học sinh.
+              Hệ thống sẽ tự động tạo phiếu đồng ý với trạng thái "Chưa đồng ý"
+              cho tất cả học sinh.
               {schedule?.campaignType === 0
                 ? " Phụ huynh sẽ nhận được thông báo và cần xem xét phiếu đồng ý cho con em tham gia tiêm chủng."
                 : " Phụ huynh sẽ nhận được thông báo và cần xem xét phiếu đồng ý cho con em tham gia khám sức khỏe."}
@@ -1201,23 +1221,26 @@ const ScheduleStudentsPage: React.FC = () => {
         open={isConsentFormDialogOpen}
         onClose={() => setIsConsentFormDialogOpen(false)}
         aria-labelledby="consent-form-dialog-title"
-        maxWidth="lg"
+        maxWidth="xl"
         fullWidth
         PaperProps={{
           sx: {
-            height: '90vh',
-            maxHeight: '90vh',
-          }
+            height: "90vh",
+            maxHeight: "90vh",
+            width: "95vw",
+            maxWidth: "95vw",
+          },
         }}
       >
-        <DialogTitle 
+        <DialogTitle
           id="consent-form-dialog-title"
-          sx={{ 
-            borderBottom: 1, 
-            borderColor: 'divider',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center'
+          sx={{
+            borderBottom: 1,
+            borderColor: "divider",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            p: 2,
           }}
         >
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -1226,7 +1249,7 @@ const ScheduleStudentsPage: React.FC = () => {
               Phiếu Đồng Ý - {schedule?.campaignName || "Chương trình y tế"}
             </Typography>
           </Box>
-          <Button 
+          <Button
             onClick={() => setIsConsentFormDialogOpen(false)}
             variant="outlined"
             size="small"
@@ -1234,7 +1257,9 @@ const ScheduleStudentsPage: React.FC = () => {
             Đóng
           </Button>
         </DialogTitle>
-        <DialogContent sx={{ p: 0, overflow: 'hidden' }}>
+        <DialogContent
+          sx={{ p: 0, overflow: "auto", height: "calc(90vh - 68px)" }}
+        >
           {schedule?.campaignId && (
             <ConsentFormPage
               mode="admin"

@@ -318,13 +318,10 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
       }
 
       const notification = {
-            campaignId: campaignId,
-            incidientId: null,
-          }
-      await instance.post(
-            "api/Notification/create-notification", 
-            notification
-          );
+        campaignId: campaignId,
+        incidientId: null,
+      };
+      await instance.post("api/Notification/create-notification", notification);
       // Hiển thị toast thông báo đang tạo
       toast.info("Đang tạo phiếu đồng ý cho các học sinh...");
 
@@ -341,12 +338,12 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
             consentDate: new Date().toISOString(),
             reasonForDecline: "", // Không có lý do từ chối mặc định
           };
-          
+
           await instance.post(
             "/api/ConsentForm/create-consent-form",
             requestBody
           );
-        
+
           successCount++;
         } catch (err: any) {
           // Kiểm tra nếu lỗi là do đã tồn tại phiếu đồng ý
@@ -392,7 +389,7 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
         err.response?.data
       ) {
         console.error("Chi tiết lỗi API:", err.response.data);
-        const errorMessage = 
+        const errorMessage =
           err.response.data.message || (err.message ? String(err.message) : "");
         toast.error(`Không thể tạo phiếu đồng ý: ${errorMessage}`);
       } else {
@@ -876,11 +873,19 @@ const ScheduleStudentListDialog: React.FC<ScheduleStudentListDialogProps> = ({
         open={consentFormDialogOpen}
         onClose={() => setConsentFormDialogOpen(false)}
         aria-labelledby="consent-form-dialog-title"
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            minHeight: "40vh",
+            maxHeight: "80vh",
+          },
+        }}
       >
         <DialogTitle id="consent-form-dialog-title">
           Tạo phiếu đồng ý cho {students.length} học sinh
         </DialogTitle>
-        <DialogContent>
+        <DialogContent sx={{ overflow: "auto" }}>
           <Box sx={{ pt: 1 }}>
             <Typography variant="subtitle1" gutterBottom>
               Thông tin phiếu đồng ý
