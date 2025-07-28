@@ -604,6 +604,12 @@ const ScheduleStudentsPage = () => {
 
   // Record result functions
   const handleRecordResult = (student: Student) => {
+    // Check if consent form is rejected
+    if (student.consentStatus === "rejected") {
+      toast.error("Không thể ghi nhận kết quả vì phiếu đồng ý đã bị từ chối!");
+      return;
+    }
+
     setSelectedStudentForResult({
       id: student.id,
       studentName: student.studentName,
@@ -612,10 +618,6 @@ const ScheduleStudentsPage = () => {
     });
 
     setIsRecordResultDialogOpen(true);
-    // console.log(
-    //   "Opening result dialog with campaign type:",
-    //   schedule?.campaignType
-    // );
   };
 
   const handleResultSuccess = () => {
@@ -1137,18 +1139,31 @@ const ScheduleStudentsPage = () => {
                             {/* Record result button - Available to both Admin and MedicalStaff */}
                             <Tooltip
                               title={
-                                schedule?.campaignType === 0
+                                student.consentStatus === "rejected"
+                                  ? "Không thể ghi nhận kết quả vì phiếu đồng ý đã bị từ chối"
+                                  : schedule?.campaignType === 0
                                   ? "Ghi nhận kết quả tiêm"
                                   : "Ghi nhận kết quả khám"
                               }
                             >
-                              <IconButton
-                                size="small"
-                                color="primary"
-                                onClick={() => handleRecordResult(student)}
-                              >
-                                <AssignmentIcon />
-                              </IconButton>
+                              <span>
+                                <IconButton
+                                  size="small"
+                                  color="primary"
+                                  onClick={() => handleRecordResult(student)}
+                                  disabled={
+                                    student.consentStatus === "rejected"
+                                  }
+                                  sx={{
+                                    opacity:
+                                      student.consentStatus === "rejected"
+                                        ? 0.5
+                                        : 1,
+                                  }}
+                                >
+                                  <AssignmentIcon />
+                                </IconButton>
+                              </span>
                             </Tooltip>
 
                             {/* Delete button - Only for Admin */}
