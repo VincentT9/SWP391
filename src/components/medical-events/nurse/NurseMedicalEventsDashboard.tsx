@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { Typography, Box, Tabs, Tab, Button, Paper, CircularProgress } from "@mui/material";
+import {
+  Typography,
+  Box,
+  Tabs,
+  Tab,
+  Button,
+  Paper,
+  CircularProgress,
+} from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import { MedicalEventForm, MedicalEventsList, MedicalEventDetails } from ".";
 import { MedicalIncident } from "../../../models/types";
@@ -17,7 +25,9 @@ const NurseMedicalEventsDashboard: React.FC<
 > = ({ nurseId, nurseName }) => {
   const [tabValue, setTabValue] = useState(0);
   const [events, setEvents] = useState<MedicalIncident[]>([]);
-  const [selectedEvent, setSelectedEvent] = useState<MedicalIncident | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<MedicalIncident | null>(
+    null
+  );
   const [isCreating, setIsCreating] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isViewingDetails, setIsViewingDetails] = useState(false);
@@ -28,7 +38,7 @@ const NurseMedicalEventsDashboard: React.FC<
     setLoading(true);
     setError(null);
     try {
-      const response = await instance.get('/api/medical-incident/all');
+      const response = await instance.get("/api/medical-incident/all");
       setEvents(response.data);
     } catch (err) {
       console.error("Error fetching incidents:", err);
@@ -68,17 +78,20 @@ const NurseMedicalEventsDashboard: React.FC<
   const handleSaveEvent = async (incidentData: any) => {
     setLoading(true);
     setError(null);
-    
+
     try {
-      const response = await instance.post('/api/medical-incident/create', incidentData);
+      const response = await instance.post(
+        "/api/medical-incident/create",
+        incidentData
+      );
       console.log(response);
       const notification = {
-            campaignId: null,
-            incidientId: response.data.id,
-          }
+        campaignId: null,
+        incidientId: response.data.id,
+      };
       // Refresh incidents list after creating a new one
       await fetchIncidents();
-      
+
       setIsCreating(false);
       setIsViewingDetails(false);
       setSelectedEvent(null);
@@ -93,12 +106,12 @@ const NurseMedicalEventsDashboard: React.FC<
   const handleUpdateEvent = async (incidentData: any) => {
     setLoading(true);
     setError(null);
-    
+
     try {
       if (!selectedEvent?.id) {
         throw new Error("Không tìm thấy ID sự kiện");
       }
-      
+
       // Format the data according to the API schema
       const updateData = {
         incidentType: incidentData.incidentType,
@@ -108,43 +121,65 @@ const NurseMedicalEventsDashboard: React.FC<
         outcome: incidentData.outcome,
         status: incidentData.status,
         parentNotified: incidentData.parentNotified || false,
-        parentNotificationDate: incidentData.parentNotificationDate || null
+        parentNotificationDate: incidentData.parentNotificationDate || null,
       };
-      
+
       // Update the incident
-      await instance.put(`/api/medical-incident/update/${selectedEvent.id}`, updateData);
-      
+      await instance.put(
+        `/api/medical-incident/update/${selectedEvent.id}`,
+        updateData
+      );
+
       // If there are new medical supplies to add, process them
-      if (incidentData.medicalSupplierUsage && incidentData.medicalSupplierUsage.length > 0) {
+      if (
+        incidentData.medicalSupplierUsage &&
+        incidentData.medicalSupplierUsage.length > 0
+      ) {
         // Get only the new supplies (those not in the original event)
         const originalSupplies = selectedEvent.medicalSupplyUsages || [];
         const newSupplies = incidentData.medicalSupplierUsage.filter(
-          (newSupply: any) => !originalSupplies.some(
-            (origSupply: any) => (origSupply.medicalSupplierId || origSupply.supplyId) === (newSupply.medicalSupplierId || newSupply.supplyId) && 
-            (origSupply.quantityUsed || origSupply.quantity) === (newSupply.quantityUsed || newSupply.quantity)
-          )
+          (newSupply: any) =>
+            !originalSupplies.some(
+              (origSupply: any) =>
+                (origSupply.medicalSupplierId || origSupply.supplyId) ===
+                  (newSupply.medicalSupplierId || newSupply.supplyId) &&
+                (origSupply.quantityUsed || origSupply.quantity) ===
+                  (newSupply.quantityUsed || newSupply.quantity)
+            )
         );
-        
+
         // Update supplier quantities for any new supplies added
         for (const supply of newSupplies) {
           // Get current supplier details
-          const supplierResponse = await instance.get(`/api/MedicalSupplier/get-supplier-by-id/${supply.medicalSupplierId || supply.supplyId}`);
+          const supplierResponse = await instance.get(
+            `/api/MedicalSupplier/get-supplier-by-id/${
+              supply.medicalSupplierId || supply.supplyId
+            }`
+          );
           const supplierData = supplierResponse.data;
-          
+
           // Calculate new quantity
-          const newQuantity = Math.max(0, supplierData.quantity - (supply.quantityUsed || supply.quantity));
-          
+          const newQuantity = Math.max(
+            0,
+            supplierData.quantity - (supply.quantityUsed || supply.quantity)
+          );
+
           // Update the supplier inventory
-          await instance.put(`/api/MedicalSupplier/update-supplier/${supply.medicalSupplierId || supply.supplyId}`, {
-            ...supplierData,
-            quantity: newQuantity
-          });
+          await instance.put(
+            `/api/MedicalSupplier/update-supplier/${
+              supply.medicalSupplierId || supply.supplyId
+            }`,
+            {
+              ...supplierData,
+              quantity: newQuantity,
+            }
+          );
         }
       }
-      
+
       // Refresh incidents list after updating
       await fetchIncidents();
-      
+
       setIsEditing(false);
       setIsViewingDetails(false);
       setSelectedEvent(null);
@@ -161,7 +196,7 @@ const NurseMedicalEventsDashboard: React.FC<
     setIsCreating(false);
     setSelectedEvent(null);
   };
-  
+
   const handleCancelEdit = () => {
     setIsEditing(false);
     setSelectedEvent(null);
@@ -174,7 +209,7 @@ const NurseMedicalEventsDashboard: React.FC<
 
   return (
     <Box>
-      <PageHeader 
+      <PageHeader
         title="Quản lý sự kiện y tế"
         subtitle="Ghi nhận và theo dõi các sự kiện y tế của học sinh tại trường"
         showRefresh={true}
@@ -209,7 +244,7 @@ const NurseMedicalEventsDashboard: React.FC<
           </Paper>
 
           {loading ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+            <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
               <CircularProgress />
             </Box>
           ) : (
@@ -247,9 +282,9 @@ const NurseMedicalEventsDashboard: React.FC<
       )}
 
       {isViewingDetails && selectedEvent && (
-        <MedicalEventDetails 
-          event={selectedEvent} 
-          onBack={handleBackToList} 
+        <MedicalEventDetails
+          event={selectedEvent}
+          onBack={handleBackToList}
           onEdit={handleEditEvent}
           isNurse={true}
         />

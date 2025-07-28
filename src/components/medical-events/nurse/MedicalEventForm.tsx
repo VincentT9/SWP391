@@ -786,17 +786,6 @@ const MedicalEventForm: React.FC<MedicalEventFormProps> = ({
             )}
           </Paper>
 
-          {/* Notify Parent */}
-          <FormControlLabel
-            control={
-              <Switch
-                checked={notifyParent}
-                onChange={(e) => setNotifyParent(e.target.checked)}
-              />
-            }
-            label="Thông báo cho phụ huynh"
-          />
-
           {/* Form Actions */}
           <Box
             sx={{ display: "flex", justifyContent: "flex-end", gap: 2, pt: 2 }}
