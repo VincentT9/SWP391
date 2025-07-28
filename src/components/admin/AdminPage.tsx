@@ -408,18 +408,6 @@ const AdminPage = () => {
         <PageHeader
           title="Quản lý người dùng"
           subtitle="Quản lý tài khoản và phân quyền người dùng trong hệ thống"
-          showRefresh={true}
-          onRefresh={fetchUsers}
-          actions={
-            <Button
-              variant="contained"
-              color="primary"
-              startIcon={<AddIcon />}
-              onClick={() => setOpenDialog(true)}
-            >
-              Thêm người dùng
-            </Button>
-          }
         />
 
         <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
