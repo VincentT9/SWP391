@@ -28,8 +28,6 @@ import {
   CircularProgress,
   Alert,
   Breadcrumbs,
-  FormControlLabel,
-  Switch,
 } from "@mui/material";
 import {
   Search as SearchIcon,
@@ -50,9 +48,6 @@ import Link from "@mui/material/Link";
 import { Link as RouterLink } from "react-router-dom";
 import WarningIcon from "@mui/icons-material/Warning";
 import { isAdmin, isMedicalStaff } from "../../utils/roleUtils";
-import CancelIcon from "@mui/icons-material/Cancel";
-import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
-import InfoIcon from "@mui/icons-material/Info";
 
 // Interface definitions
 interface Student {
@@ -66,8 +61,6 @@ interface Student {
   status: number;
   vaccinationDate?: string;
   hasResult: boolean;
-  consentStatus: "approved" | "rejected" | "pending";
-  hasConsentForm: boolean;
 }
 
 interface SelectedStudent {
@@ -88,12 +81,11 @@ interface Schedule {
   campaignType?: number;
 }
 
-const ScheduleStudentsPage = () => {
+const ScheduleStudentsPage: React.FC = () => {
   const { scheduleId } = useParams<{ scheduleId: string }>();
   const navigate = useNavigate();
   const [schedule, setSchedule] = useState<Schedule | null>(null);
   const [students, setStudents] = useState<Student[]>([]);
-  const [showApprovedOnly, setShowApprovedOnly] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -239,12 +231,9 @@ const ScheduleStudentsPage = () => {
         if (scheduleInfo.campaignId) {
           fetchCampaignInfo(scheduleInfo.campaignId);
         }
-        return scheduleInfo; // Return the fetched scheduleInfo
       }
-      return null; // Return null if no data
     } catch (err) {
       console.error("Error fetching additional schedule info:", err);
-      return null; // Return null on error
     }
   };
 
@@ -305,8 +294,6 @@ const ScheduleStudentsPage = () => {
             status: item.vaccinationResult || item.healthCheckupResult ? 1 : 0,
             vaccinationDate: item.vaccinationDate,
             hasResult: !!item.vaccinationResult || !!item.healthCheckupResult,
-            consentStatus: "pending",
-            hasConsentForm: false,
           }))
         : [];
 
@@ -322,18 +309,6 @@ const ScheduleStudentsPage = () => {
       });
 
       setStudents(formattedStudents);
-
-      // After setting students, check for consent forms if campaign ID is available
-      if (schedule?.campaignId) {
-        checkConsentFormsStatus(formattedStudents, schedule.campaignId);
-      } else {
-        // If we don't have the campaign ID yet, wait for schedule to be fetched
-        const scheduleInfo = await fetchAdditionalScheduleInfo(scheduleId);
-        if (scheduleInfo?.campaignId) {
-          checkConsentFormsStatus(formattedStudents, scheduleInfo.campaignId);
-        }
-      }
-
       setError(null);
     } catch (err) {
       console.error("Error fetching students:", err);
@@ -343,99 +318,6 @@ const ScheduleStudentsPage = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  // Function to check consent form status for each student
-  const checkConsentFormsStatus = async (
-    studentsList: Student[],
-    campaignId: string
-  ) => {
-    try {
-      console.log("Checking consent forms for campaign ID:", campaignId);
-
-      const consentResponse = await instance.get(
-        `/api/ConsentForm/get-consent-forms-by-campaign-id/${campaignId}`
-      );
-
-      console.log("Consent Forms Response:", consentResponse.data);
-
-      if (consentResponse.data && consentResponse.data.length > 0) {
-        console.log(`Found ${consentResponse.data.length} consent forms`);
-
-        // Log student IDs for debugging
-        console.log(
-          "Student IDs in list:",
-          studentsList.map((s) => ({
-            id: s.id,
-            studentId: s.studentId,
-            name: s.studentName,
-          }))
-        );
-
-        // Log consent form student IDs for debugging
-        console.log(
-          "Consent form student IDs:",
-          consentResponse.data.map((form: any) => ({
-            formId: form.id,
-            studentId: form.studentId,
-            studentName: form.studentName,
-          }))
-        );
-
-        const updatedStudents = studentsList.map((student) => {
-          // Find consent form for this student - check both studentId formats
-          const consentForm = consentResponse.data.find(
-            (form: any) =>
-              // Check multiple possible ID formats
-              form.studentId === student.studentId ||
-              form.studentId === student.id
-          );
-
-          if (consentForm) {
-            console.log(
-              "Found consent form for student:",
-              student.studentName,
-              "ID match type:",
-              consentForm.studentId === student.studentId
-                ? "studentId"
-                : consentForm.studentId === student.id
-                ? "id"
-                : "other"
-            );
-
-            let status: "approved" | "rejected" | "pending" = "pending";
-            if (consentForm.isApproved === true) status = "approved";
-            else if (consentForm.isApproved === false) status = "rejected";
-
-            return {
-              ...student,
-              hasConsentForm: true,
-              consentStatus: status,
-            };
-          }
-
-          console.log(
-            "No consent form found for student:",
-            student.studentName,
-            "IDs:",
-            student.id,
-            student.studentId
-          );
-          return student;
-        });
-
-        setStudents(updatedStudents as Student[]);
-      } else {
-        console.log("No consent forms found for campaign:", campaignId);
-      }
-    } catch (error) {
-      console.error("Error fetching consent forms:", error);
-    }
-  };
-
-  // Toggle to show only approved students
-  const handleToggleApprovedOnly = () => {
-    setShowApprovedOnly(!showApprovedOnly);
   };
 
   // Handle search query change
@@ -604,18 +486,6 @@ const ScheduleStudentsPage = () => {
 
   // Record result functions
   const handleRecordResult = (student: Student) => {
-    // Check if results already recorded
-    if (student.hasResult) {
-      toast.info("Học sinh này đã được ghi nhận kết quả trước đó!");
-      return;
-    }
-
-    // Check if consent form is rejected
-    if (student.consentStatus === "rejected") {
-      toast.error("Không thể ghi nhận kết quả vì phiếu đồng ý đã bị từ chối!");
-      return;
-    }
-
     setSelectedStudentForResult({
       id: student.id,
       studentName: student.studentName,
@@ -624,6 +494,10 @@ const ScheduleStudentsPage = () => {
     });
 
     setIsRecordResultDialogOpen(true);
+    // console.log(
+    //   "Opening result dialog with campaign type:",
+    //   schedule?.campaignType
+    // );
   };
 
   const handleResultSuccess = () => {
@@ -632,121 +506,96 @@ const ScheduleStudentsPage = () => {
 
   // Consent form functions
   const handleCreateConsentForms = () => {
-    // Check if any student in the list already has a consent form
-    const studentsWithConsent = students.filter(
-      (student) => student.hasConsentForm
-    );
-    const studentsWithoutConsent = students.filter(
-      (student) => !student.hasConsentForm
-    );
-
-    if (studentsWithoutConsent.length === 0) {
-      toast.info(
-        "Tất cả học sinh trong danh sách này đã có phiếu đồng ý cho chiến dịch này!",
-        {
-          autoClose: 5000,
-          closeButton: true,
-        }
-      );
+    if (students.length === 0) {
+      toast.warning("Không có học sinh nào để tạo phiếu đồng ý");
       return;
     }
 
-    if (studentsWithConsent.length > 0) {
-      toast.info(
-        `${studentsWithConsent.length}/${students.length} học sinh đã có phiếu đồng ý. Hệ thống sẽ chỉ tạo phiếu cho ${studentsWithoutConsent.length} học sinh còn lại.`,
-        {
-          autoClose: 5000,
-          closeButton: true,
-        }
-      );
+    if (consentFormExists) {
+      toast.warning("Phiếu đồng ý đã được tạo cho chiến dịch này.");
+      return;
     }
 
-    // Hiển thị dialog xác nhận
+    // Mở dialog xác nhận thay vì sử dụng window.confirm
     setConfirmConsentDialogOpen(true);
   };
 
+  // Hàm xử lý khi người dùng xác nhận tạo phiếu
   const handleConfirmCreateConsent = () => {
-    console.log("Creating consent forms...");
+    setConfirmConsentDialogOpen(false);
     createConsentForms();
   };
 
-  // Enhanced consent form creation with better feedback and auto-refresh
+  // Thêm hàm mới để xử lý việc tạo phiếu đồng ý
   const createConsentForms = async () => {
-    if (!schedule?.campaignId) {
-      toast.error("Thiếu thông tin chương trình!");
-      return;
-    }
-
     try {
       setIsCreatingConsentForms(true);
-      console.log("Creating consent forms for campaign:", schedule.campaignId);
 
-      // Filter students who don't already have consent forms in this campaign
-      const studentsWithoutConsent = students.filter(
-        (student) => student.studentId && !student.hasConsentForm
-      );
-
-      if (studentsWithoutConsent.length === 0) {
-        toast.info("Tất cả học sinh trong danh sách này đã có phiếu đồng ý!");
-        setConfirmConsentDialogOpen(false);
-        setIsCreatingConsentForms(false);
+      if (!schedule || !schedule.campaignId) {
+        toast.error("Không tìm thấy ID chiến dịch. Vui lòng kiểm tra lại.");
         return;
       }
 
-      console.log(
-        "Students for consent forms:",
-        studentsWithoutConsent.map((s) => ({
-          id: s.id,
-          studentId: s.studentId,
-          name: s.studentName,
-        }))
-      );
+      // Sử dụng giá trị mặc định: mặc định là đồng ý
+      const currentDate = new Date().toISOString();
+      let successCount = 0;
 
-      const payload = {
-        campaignId: schedule.campaignId,
-        scheduleId: scheduleId,
-        studentIds: studentsWithoutConsent.map((student) => student.studentId),
-      };
-
-      console.log("Consent form creation payload:", payload);
-
-      const response = await instance.post(
-        "/api/ConsentForm/create-consent-form",
-        payload
-      );
-
-      if (response.status === 200 || response.status === 201) {
-        if (studentsWithoutConsent.length < students.length) {
-          toast.success(
-            `Tạo phiếu đồng ý thành công cho ${studentsWithoutConsent.length}/${
-              students.length
-            } học sinh! (${
-              students.length - studentsWithoutConsent.length
-            } học sinh đã có phiếu đồng ý trước đó)`
+      for (const student of students) {
+        // Kiểm tra studentId trước khi tạo request
+        if (!student.studentId) {
+          console.error(
+            `Bỏ qua: Không tìm thấy ID cho học sinh ${
+              student.studentName || "không xác định"
+            }`
           );
-        } else {
-          toast.success("Tạo phiếu đồng ý thành công!");
+          continue; // Bỏ qua học sinh này
         }
 
+        try {
+          const requestBody = {
+            campaignId: schedule.campaignId,
+            studentId: student.studentId,
+            isApproved: false, // Mặc định là không đồng ý
+            consentDate: currentDate,
+            reasonForDecline: "", // Không cần lý do vì mặc định đồng ý
+          };
+
+          console.log("Request body:", requestBody);
+
+          await instance.post(
+            "/api/ConsentForm/create-consent-form",
+            requestBody
+          );
+          const notification = {
+            campaignId: schedule.campaignId,
+            incidientId: null,
+          };
+          await instance.post(
+            "api/Notification/create-notification",
+            notification
+          );
+          successCount++;
+        } catch (err) {
+          console.error(
+            `Lỗi khi tạo phiếu đồng ý cho học sinh ${student.studentId}:`,
+            err
+          );
+        }
+      }
+
+      if (successCount > 0) {
+        toast.success(
+          `Đã tạo ${successCount}/${students.length} phiếu đồng ý cho học sinh`
+        );
         setConsentFormExists(true);
-        setConfirmConsentDialogOpen(false);
-
-        console.log("Consent forms created successfully, refreshing status...");
-
-        // Give backend time to process and update before checking
-        setTimeout(() => {
-          if (schedule?.campaignId) {
-            console.log("Refreshing consent form status after creation");
-            checkConsentFormsStatus(students, schedule.campaignId);
-          }
-        }, 1000);
+      } else {
+        toast.error("Không thể tạo phiếu đồng ý. Vui lòng thử lại sau.");
       }
     } catch (error: any) {
-      console.error("Error creating consent forms:", error);
+      console.error("Lỗi khi tạo phiếu đồng ý:", error);
       toast.error(
         `Không thể tạo phiếu đồng ý: ${
-          error.response?.data?.message ||
-          "Học sinh chưa liên kết với tài khoản phụ huynh"
+          error.response?.data?.message || "Lỗi không xác định"
         }`
       );
     } finally {
@@ -754,27 +603,20 @@ const ScheduleStudentsPage = () => {
     }
   };
 
-  // Filter students based on current tab, search query, and consent status
-  const getFilteredStudents = () => {
-    return students.filter((student) => {
-      const query = searchQuery.toLowerCase().trim();
-      const matchesSearch =
-        student.studentName?.toLowerCase().includes(query) ||
-        student.studentCode?.toLowerCase().includes(query) ||
-        student.className?.toLowerCase().includes(query);
+  // Filter students based on current tab and search query
+  const filteredStudents = students.filter((student) => {
+    const query = searchQuery.toLowerCase().trim();
+    const matchesSearch =
+      student.studentName?.toLowerCase().includes(query) ||
+      student.studentCode?.toLowerCase().includes(query) ||
+      student.className?.toLowerCase().includes(query);
 
-      // Filter by tab (All, Completed, Pending)
-      let matchesTab = true;
-      if (tabValue === 1) matchesTab = student.hasResult; // Completed
-      if (tabValue === 2) matchesTab = !student.hasResult; // Pending
+    if (tabValue === 0) return matchesSearch; // All students
+    if (tabValue === 1) return matchesSearch && student.hasResult; // Completed
+    if (tabValue === 2) return matchesSearch && !student.hasResult; // Pending
 
-      // Filter by consent form approval status
-      const matchesConsentStatus =
-        !showApprovedOnly || student.consentStatus === "approved";
-
-      return matchesSearch && matchesTab && matchesConsentStatus;
-    });
-  };
+    return matchesSearch;
+  });
 
   const formatDate = (dateString: string | undefined) => {
     if (!dateString) return "N/A";
@@ -793,59 +635,6 @@ const ScheduleStudentsPage = () => {
         return "Nữ";
       default:
         return "Không xác định";
-    }
-  };
-
-  // Helper function to get consent status text and color
-  const getConsentStatusInfo = (student: Student) => {
-    if (!student.hasConsentForm) {
-      return {
-        text: "Chưa có phiếu",
-        color: "default" as
-          | "default"
-          | "success"
-          | "warning"
-          | "error"
-          | "primary",
-        icon: <DescriptionIcon fontSize="small" />,
-      };
-    }
-
-    switch (student.consentStatus) {
-      case "approved":
-        return {
-          text: "Đã đồng ý",
-          color: "success" as
-            | "default"
-            | "success"
-            | "warning"
-            | "error"
-            | "primary",
-          icon: <CheckCircleIcon fontSize="small" />,
-        };
-      case "rejected":
-        return {
-          text: "Đã từ chối",
-          color: "error" as
-            | "default"
-            | "success"
-            | "warning"
-            | "error"
-            | "primary",
-          icon: <CancelIcon fontSize="small" />,
-        };
-      case "pending":
-      default:
-        return {
-          text: "Đang xem xét",
-          color: "warning" as
-            | "default"
-            | "success"
-            | "warning"
-            | "error"
-            | "primary",
-          icon: <HourglassEmptyIcon fontSize="small" />,
-        };
     }
   };
 
@@ -902,6 +691,21 @@ const ScheduleStudentsPage = () => {
             {schedule?.location || "N/A"}
           </Typography>
         </Box>
+        <Button
+          variant="outlined"
+          startIcon={<ArrowBackIcon />}
+          onClick={() => {
+            // Điều hướng về trang chi tiết chương trình nếu có campaignId
+            if (schedule?.campaignId) {
+              navigate(`/vaccination/${schedule.campaignId}`);
+            } else {
+              // Nếu không có campaignId, quay lại trang trước đó
+              navigate(-1);
+            }
+          }}
+        >
+          Quay lại
+        </Button>
       </Box>
 
       {/* Stats cards */}
@@ -994,25 +798,6 @@ const ScheduleStudentsPage = () => {
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center", flexGrow: 1, mr: 2 }}>
-          <FormControlLabel
-            control={
-              <Switch
-                checked={showApprovedOnly}
-                onChange={handleToggleApprovedOnly}
-                color="primary"
-              />
-            }
-            label={
-              <Typography
-                variant="body2"
-                color={showApprovedOnly ? "primary" : "text.secondary"}
-                fontWeight="500"
-              >
-                Chỉ hiển thị học sinh đã được đồng ý
-              </Typography>
-            }
-            sx={{ mr: 2 }}
-          />
           <TextField
             placeholder="Tìm kiếm theo mã, tên hoặc lớp"
             variant="outlined"
@@ -1128,12 +913,11 @@ const ScheduleStudentsPage = () => {
             <Table>
               <TableHead sx={{ bgcolor: "rgba(41, 128, 185, 0.08)" }}>
                 <TableRow>
-                  <TableCell>Mã HS</TableCell>
+                  <TableCell>Mã học sinh</TableCell>
                   <TableCell>Họ tên</TableCell>
                   <TableCell>Lớp</TableCell>
                   <TableCell>Giới tính</TableCell>
                   <TableCell>Ngày sinh</TableCell>
-                  <TableCell>Phiếu đồng ý</TableCell>
                   <TableCell>Trạng thái</TableCell>
                   {(isAdmin() || isMedicalStaff()) && (
                     <TableCell align="center">Thao tác</TableCell>
@@ -1141,23 +925,14 @@ const ScheduleStudentsPage = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {getFilteredStudents().length > 0 ? (
-                  getFilteredStudents().map((student) => (
+                {filteredStudents.length > 0 ? (
+                  filteredStudents.map((student) => (
                     <TableRow key={student.id} hover>
                       <TableCell>{student.studentCode}</TableCell>
                       <TableCell>{student.studentName}</TableCell>
                       <TableCell>{student.className}</TableCell>
                       <TableCell>{getGenderText(student.gender)}</TableCell>
                       <TableCell>{formatDate(student.dateOfBirth)}</TableCell>
-                      <TableCell>
-                        <Chip
-                          size="small"
-                          icon={getConsentStatusInfo(student).icon}
-                          label={getConsentStatusInfo(student).text}
-                          color={getConsentStatusInfo(student).color}
-                          sx={{ "& .MuiChip-label": { pl: 0.5 } }}
-                        />
-                      </TableCell>
                       <TableCell>
                         <Chip
                           size="small"
@@ -1183,35 +958,18 @@ const ScheduleStudentsPage = () => {
                             {/* Record result button - Available to both Admin and MedicalStaff */}
                             <Tooltip
                               title={
-                                student.hasResult
-                                  ? "Đã ghi nhận kết quả trước đó"
-                                  : student.consentStatus === "rejected"
-                                  ? "Không thể ghi nhận kết quả vì phiếu đồng ý đã bị từ chối"
-                                  : schedule?.campaignType === 0
+                                schedule?.campaignType === 0
                                   ? "Ghi nhận kết quả tiêm"
                                   : "Ghi nhận kết quả khám"
                               }
                             >
-                              <span>
-                                <IconButton
-                                  size="small"
-                                  color="primary"
-                                  onClick={() => handleRecordResult(student)}
-                                  disabled={
-                                    student.consentStatus === "rejected" ||
-                                    student.hasResult
-                                  }
-                                  sx={{
-                                    opacity:
-                                      student.consentStatus === "rejected" ||
-                                      student.hasResult
-                                        ? 0.5
-                                        : 1,
-                                  }}
-                                >
-                                  <AssignmentIcon />
-                                </IconButton>
-                              </span>
+                              <IconButton
+                                size="small"
+                                color="primary"
+                                onClick={() => handleRecordResult(student)}
+                              >
+                                <AssignmentIcon />
+                              </IconButton>
                             </Tooltip>
 
                             {/* Delete button - Only for Admin */}
@@ -1238,7 +996,7 @@ const ScheduleStudentsPage = () => {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={8} align="center">
+                    <TableCell colSpan={7} align="center">
                       <Box
                         sx={{
                           py: 4,
@@ -1263,33 +1021,6 @@ const ScheduleStudentsPage = () => {
                             </Box>
                           ) : searchQuery ? (
                             "Không tìm thấy học sinh phù hợp"
-                          ) : showApprovedOnly && students.length > 0 ? (
-                            <Box sx={{ textAlign: "center" }}>
-                              <Box
-                                sx={{
-                                  mb: 1,
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  gap: 1,
-                                }}
-                              >
-                                <InfoIcon color="info" />
-                                <Typography>
-                                  Không có học sinh nào đã được phê duyệt
-                                </Typography>
-                              </Box>
-                              <Typography
-                                variant="body2"
-                                color="text.secondary"
-                              >
-                                Có {students.length} học sinh trong lịch này,
-                                nhưng chưa có phiếu đồng ý được phê duyệt.
-                                <br />
-                                Bỏ chọn "Chỉ hiển thị học sinh đã được đồng ý"
-                                để xem tất cả học sinh.
-                              </Typography>
-                            </Box>
                           ) : (
                             "Chưa có học sinh nào trong lịch này"
                           )}
@@ -1446,44 +1177,13 @@ const ScheduleStudentsPage = () => {
         <DialogContent>
           <Box sx={{ mb: 2 }}>
             <Typography variant="body1">
-              {(() => {
-                const studentsWithoutConsent = students.filter(
-                  (student) => !student.hasConsentForm
-                );
-                const studentsWithConsent = students.filter(
-                  (student) => student.hasConsentForm
-                );
-
-                if (studentsWithConsent.length > 0) {
-                  return (
-                    <>
-                      Bạn có chắc chắn muốn tạo phiếu đồng ý cho{" "}
-                      <strong>{studentsWithoutConsent.length} học sinh</strong>{" "}
-                      chưa có phiếu đồng ý?
-                      <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        sx={{ mt: 1 }}
-                      >
-                        ({studentsWithConsent.length} học sinh đã có phiếu đồng
-                        ý trong chiến dịch này và sẽ được bỏ qua)
-                      </Typography>
-                    </>
-                  );
-                } else {
-                  return (
-                    <>
-                      Bạn có chắc chắn muốn tạo phiếu đồng ý cho{" "}
-                      <strong>{students.length} học sinh</strong> trong danh
-                      sách này không?
-                    </>
-                  );
-                }
-              })()}
+              Bạn có chắc chắn muốn tạo phiếu đồng ý cho{" "}
+              <strong>{students.length} học sinh</strong> trong danh sách này
+              không?
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
               Hệ thống sẽ tự động tạo phiếu đồng ý với trạng thái "Chưa đồng ý"
-              cho các học sinh chưa có phiếu.
+              cho tất cả học sinh.
               {schedule?.campaignType === 0
                 ? " Phụ huynh sẽ nhận được thông báo và cần xem xét phiếu đồng ý cho con em tham gia tiêm chủng."
                 : " Phụ huynh sẽ nhận được thông báo và cần xem xét phiếu đồng ý cho con em tham gia khám sức khỏe."}
@@ -1521,14 +1221,12 @@ const ScheduleStudentsPage = () => {
         open={isConsentFormDialogOpen}
         onClose={() => setIsConsentFormDialogOpen(false)}
         aria-labelledby="consent-form-dialog-title"
-        maxWidth="xl"
+        maxWidth="lg"
         fullWidth
         PaperProps={{
           sx: {
             height: "90vh",
             maxHeight: "90vh",
-            width: "95vw",
-            maxWidth: "95vw",
           },
         }}
       >
@@ -1540,7 +1238,6 @@ const ScheduleStudentsPage = () => {
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            p: 2,
           }}
         >
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -1557,9 +1254,7 @@ const ScheduleStudentsPage = () => {
             Đóng
           </Button>
         </DialogTitle>
-        <DialogContent
-          sx={{ p: 0, overflow: "auto", height: "calc(90vh - 68px)" }}
-        >
+        <DialogContent sx={{ p: 0, overflow: "hidden" }}>
           {schedule?.campaignId && (
             <ConsentFormPage
               mode="admin"
