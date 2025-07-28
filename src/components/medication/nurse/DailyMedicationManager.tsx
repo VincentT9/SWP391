@@ -64,7 +64,8 @@ const DailyMedicationManager: React.FC<DailyMedicationManagerProps> = ({
   const [dailyDosages, setDailyDosages] = useState<DailyDosageEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [adminDialogOpen, setAdminDialogOpen] = useState(false);
-  const [selectedMedication, setSelectedMedication] = useState<DailyDosageEntry | null>(null);
+  const [selectedMedication, setSelectedMedication] =
+    useState<DailyDosageEntry | null>(null);
   const [description, setDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -85,26 +86,36 @@ const DailyMedicationManager: React.FC<DailyMedicationManagerProps> = ({
         const diaryResponse = await instance.get(
           `${BASE_API}/api/MedicaDiary/medication-request/${request.id}`
         );
-        
+
         const diaryEntries: MedicationDiaryEntry[] = diaryResponse.data || [];
-        
+
         // Count doses administered today
-        const todayEntries = diaryEntries.filter(entry => {
+        const todayEntries = diaryEntries.filter((entry) => {
           const entryDate = parseISO(entry.createAt);
           return isToday(entryDate) && entry.status === 1; // status 1 = administered
         });
 
         const completedDosesToday = todayEntries.length;
         const totalDosesPerDay = request.dosage; // Assuming dosage is doses per day
-        const remainingDosesToday = Math.max(0, totalDosesPerDay - completedDosesToday);
-        
+        const remainingDosesToday = Math.max(
+          0,
+          totalDosesPerDay - completedDosesToday
+        );
+
         // Calculate days remaining
         const startDate = parseISO(request.startDate);
         const endDate = new Date(startDate);
-        endDate.setDate(endDate.getDate() + request.numberOfDayToTake - 1);
-        
-        const daysRemaining = Math.max(0, differenceInDays(endDate, today) + 1);
-        
+        // Add full numberOfDayToTake days for display
+        endDate.setDate(endDate.getDate() + request.numberOfDayToTake);
+
+        // For calculating days remaining, use the actual medication period end date (subtract 1)
+        const medicationEndDate = new Date(endDate);
+        medicationEndDate.setDate(medicationEndDate.getDate() - 1);
+        const daysRemaining = Math.max(
+          0,
+          differenceInDays(medicationEndDate, today) + 1
+        );
+
         const dailyEntry: DailyDosageEntry = {
           medicationRequestId: request.id,
           medicationName: request.medicationName,
@@ -114,7 +125,7 @@ const DailyMedicationManager: React.FC<DailyMedicationManagerProps> = ({
           remainingDosesToday: remainingDosesToday,
           completedDosesToday: completedDosesToday,
           startDate: request.startDate,
-          endDate: format(endDate, 'yyyy-MM-dd'),
+          endDate: format(endDate, "yyyy-MM-dd"),
           instructions: request.instructions,
           isCompleteForToday: remainingDosesToday === 0,
           daysRemaining: daysRemaining,
@@ -149,15 +160,15 @@ const DailyMedicationManager: React.FC<DailyMedicationManagerProps> = ({
       await instance.post(`${BASE_API}/api/MedicaDiary/create`, {
         medicationReqId: selectedMedication.medicationRequestId,
         status: 1, // 1 for administered
-        description: description
+        description: description,
       });
 
       toast.success("Đã ghi nhận lần cho uống thuốc");
-      
+
       // Refresh data
       await calculateDailyDosages();
       onMedicationAdministered();
-      
+
       // Reset form
       setDescription("");
       setAdminDialogOpen(false);
@@ -182,11 +193,11 @@ const DailyMedicationManager: React.FC<DailyMedicationManagerProps> = ({
       await instance.post(`${BASE_API}/api/MedicaDiary/create`, {
         medicationReqId: selectedMedication.medicationRequestId,
         status: 0, // 0 for not administered
-        description: description
+        description: description,
       });
 
       toast.info("Đã ghi nhận thông tin hủy lần uống thuốc");
-      
+
       // Reset form
       setDescription("");
       setAdminDialogOpen(false);
@@ -229,7 +240,14 @@ const DailyMedicationManager: React.FC<DailyMedicationManagerProps> = ({
           {dailyDosages.map((medication) => (
             <Card key={medication.medicationRequestId} elevation={2}>
               <CardContent>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "flex-start",
+                    mb: 2,
+                  }}
+                >
                   <Box sx={{ flex: 1 }}>
                     <Typography variant="h6" component="div">
                       {medication.studentName}
@@ -238,14 +256,17 @@ const DailyMedicationManager: React.FC<DailyMedicationManagerProps> = ({
                       Mã số: {medication.studentCode}
                     </Typography>
                   </Box>
-                  
-                  <Box sx={{ textAlign: 'right' }}>
+
+                  <Box sx={{ textAlign: "right" }}>
                     {medication.isCompleteForToday ? (
                       <Chip label="Hoàn thành hôm nay" color="success" />
                     ) : medication.daysRemaining === 0 ? (
                       <Chip label="Đã hết hạn" color="error" />
                     ) : (
-                      <Chip label={`Còn ${medication.daysRemaining} ngày`} color="primary" />
+                      <Chip
+                        label={`Còn ${medication.daysRemaining} ngày`}
+                        color="primary"
+                      />
                     )}
                   </Box>
                 </Box>
@@ -255,44 +276,72 @@ const DailyMedicationManager: React.FC<DailyMedicationManagerProps> = ({
                 <Typography variant="subtitle1" gutterBottom>
                   <strong>{medication.medicationName}</strong>
                 </Typography>
-                
+
                 <Typography variant="body2" color="text.secondary" gutterBottom>
                   {medication.instructions}
                 </Typography>
 
                 <Box sx={{ mt: 2, mb: 2 }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      mb: 1,
+                    }}
+                  >
                     <Typography variant="body2">
-                      Tiến độ hôm nay: {medication.completedDosesToday}/{medication.totalDosesPerDay} liều
+                      Tiến độ hôm nay: {medication.completedDosesToday}/
+                      {medication.totalDosesPerDay} liều
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      {Math.round(((medication.completedDosesToday) / medication.totalDosesPerDay) * 100)}%
+                      {Math.round(
+                        (medication.completedDosesToday /
+                          medication.totalDosesPerDay) *
+                          100
+                      )}
+                      %
                     </Typography>
                   </Box>
-                  
+
                   <LinearProgress
                     variant="determinate"
-                    value={(medication.completedDosesToday / medication.totalDosesPerDay) * 100}
-                    color={getProgressColor(medication.remainingDosesToday, medication.totalDosesPerDay)}
+                    value={
+                      (medication.completedDosesToday /
+                        medication.totalDosesPerDay) *
+                      100
+                    }
+                    color={getProgressColor(
+                      medication.remainingDosesToday,
+                      medication.totalDosesPerDay
+                    )}
                     sx={{ height: 8, borderRadius: 4 }}
                   />
                 </Box>
 
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
                   <Typography variant="body2" color="text.secondary">
-                    Từ {format(parseISO(medication.startDate), "dd/MM/yyyy")} đến {format(parseISO(medication.endDate), "dd/MM/yyyy")}
+                    Từ {format(parseISO(medication.startDate), "dd/MM/yyyy")}{" "}
+                    đến {format(parseISO(medication.endDate), "dd/MM/yyyy")}
                   </Typography>
-                  
-                  {!medication.isCompleteForToday && medication.daysRemaining > 0 && (
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      onClick={() => handleAdministerDose(medication)}
-                      size="small"
-                    >
-                      Cho uống thuốc
-                    </Button>
-                  )}
+
+                  {!medication.isCompleteForToday &&
+                    medication.daysRemaining > 0 && (
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={() => handleAdministerDose(medication)}
+                        size="small"
+                      >
+                        Cho uống thuốc
+                      </Button>
+                    )}
                 </Box>
               </CardContent>
             </Card>
@@ -301,7 +350,12 @@ const DailyMedicationManager: React.FC<DailyMedicationManagerProps> = ({
       )}
 
       {/* Administration Dialog */}
-      <Dialog open={adminDialogOpen} onClose={() => setAdminDialogOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog
+        open={adminDialogOpen}
+        onClose={() => setAdminDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
         <DialogTitle>
           Cho uống thuốc - {selectedMedication?.studentName}
         </DialogTitle>
@@ -315,9 +369,11 @@ const DailyMedicationManager: React.FC<DailyMedicationManagerProps> = ({
                 <strong>Chỉ dẫn:</strong> {selectedMedication.instructions}
               </Typography>
               <Typography variant="body2" color="text.secondary" gutterBottom>
-                <strong>Đã cho uống hôm nay:</strong> {selectedMedication.completedDosesToday}/{selectedMedication.totalDosesPerDay} liều
+                <strong>Đã cho uống hôm nay:</strong>{" "}
+                {selectedMedication.completedDosesToday}/
+                {selectedMedication.totalDosesPerDay} liều
               </Typography>
-              
+
               <TextField
                 autoFocus
                 margin="dense"
@@ -335,19 +391,22 @@ const DailyMedicationManager: React.FC<DailyMedicationManagerProps> = ({
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setAdminDialogOpen(false)} disabled={isSubmitting}>
+          <Button
+            onClick={() => setAdminDialogOpen(false)}
+            disabled={isSubmitting}
+          >
             Hủy
           </Button>
-          <Button 
-            onClick={handleNotAdministered} 
-            color="warning" 
+          <Button
+            onClick={handleNotAdministered}
+            color="warning"
             disabled={isSubmitting}
           >
             Không cho uống
           </Button>
-          <Button 
-            onClick={handleSubmitAdministration} 
-            variant="contained" 
+          <Button
+            onClick={handleSubmitAdministration}
+            variant="contained"
             disabled={isSubmitting || !description.trim()}
           >
             {isSubmitting ? <CircularProgress size={20} /> : "Đã cho uống"}

@@ -1,14 +1,14 @@
 import React, { useState } from "react";
 import {
-  Box,
-  Typography,
-  Paper,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
+  Paper,
+  Box,
+  Typography,
   Chip,
   IconButton,
   Tooltip,
@@ -17,10 +17,16 @@ import {
   DialogContent,
   DialogActions,
   Button,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemAvatar,
+  Avatar,
 } from "@mui/material";
-import { format } from "date-fns";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import MedicationIcon from "@mui/icons-material/Medication";
+import { format } from "date-fns";
 import { MedicationRequest } from "../../../models/types";
 
 interface MedicationRequestListProps {
@@ -64,125 +70,158 @@ const MedicationRequestList: React.FC<MedicationRequestListProps> = ({
 
   return (
     <Paper elevation={3} sx={{ p: 3, mb: 3, borderRadius: 2 }}>
-      <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, color: 'primary.main' }}>
+      <Typography
+        variant="h6"
+        gutterBottom
+        sx={{ fontWeight: 600, color: "primary.main" }}
+      >
         Danh sách thuốc đã gửi
       </Typography>
 
       {requests.length === 0 ? (
-        <Box sx={{ textAlign: 'center', py: 4 }}>
+        <Box sx={{ textAlign: "center", py: 4 }}>
           <Typography variant="body1" color="text.secondary">
             Chưa có yêu cầu gửi thuốc nào.
           </Typography>
         </Box>
       ) : (
-        <TableContainer sx={{ borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
+        <TableContainer
+          sx={{ borderRadius: 1, border: "1px solid", borderColor: "divider" }}
+        >
           <Table size="small">
             <TableHead>
-              <TableRow sx={{ bgcolor: 'grey.50' }}>
+              <TableRow sx={{ bgcolor: "grey.50" }}>
                 <TableCell sx={{ fontWeight: 600 }}>Tên học sinh</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Tên thuốc và thành phần</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>
+                  Tên thuốc và thành phần
+                </TableCell>
                 <TableCell sx={{ fontWeight: 600 }}>Số ngày cần uống</TableCell>
-                <TableCell align="center" sx={{ fontWeight: 600 }}>Ngày bắt đầu</TableCell>
-                <TableCell align="center" sx={{ fontWeight: 600 }}>Ngày kết thúc</TableCell>
-                <TableCell align="center" sx={{ fontWeight: 600 }}>Trạng thái</TableCell>
-                <TableCell align="center" sx={{ fontWeight: 600 }}>Tác vụ</TableCell>
+                <TableCell align="center" sx={{ fontWeight: 600 }}>
+                  Ngày bắt đầu
+                </TableCell>
+                <TableCell align="center" sx={{ fontWeight: 600 }}>
+                  Ngày kết thúc
+                </TableCell>
+                <TableCell align="center" sx={{ fontWeight: 600 }}>
+                  Trạng thái
+                </TableCell>
+                <TableCell align="center" sx={{ fontWeight: 600 }}>
+                  Tác vụ
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {[...requests]
-                .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                .sort(
+                  (a, b) =>
+                    new Date(b.createdAt).getTime() -
+                    new Date(a.createdAt).getTime()
+                )
                 .map((request) => (
-                <TableRow key={request.id} sx={{ '&:hover': { bgcolor: 'grey.50' } }}>
-                  <TableCell>
-                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                      {request.studentName}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Tooltip title="Xem chi tiết">
+                  <TableRow
+                    key={request.id}
+                    sx={{ "&:hover": { bgcolor: "grey.50" } }}
+                  >
+                    <TableCell>
+                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                        {request.studentName}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Tooltip title="Xem chi tiết">
+                        <Box
+                          sx={{
+                            maxWidth: 160,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                            cursor: "pointer",
+                            "&:hover": { color: "primary.main" },
+                          }}
+                          onClick={() => handleOpenDetail(request)}
+                        >
+                          {request.components
+                            ? request.components.split("\n")[0] +
+                              (request.components.includes("\n") ? "..." : "")
+                            : request.medicationName || "Không có tên"}
+                        </Box>
+                      </Tooltip>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2">
+                        {request.daysRequired} ngày
+                      </Typography>
+                    </TableCell>
+                    <TableCell align="center">
+                      <Typography variant="body2" color="text.secondary">
+                        {format(
+                          request.startDate instanceof Date
+                            ? request.startDate
+                            : new Date(request.startDate),
+                          "dd/MM/yyyy"
+                        )}
+                      </Typography>
+                    </TableCell>
+                    <TableCell align="center">
+                      <Typography variant="body2" color="text.secondary">
+                        {format(
+                          request.endDate instanceof Date
+                            ? request.endDate
+                            : new Date(request.endDate),
+                          "dd/MM/yyyy"
+                        )}
+                      </Typography>
+                    </TableCell>
+                    <TableCell align="center">
+                      {getStatusChip(request.status)}
+                    </TableCell>
+                    <TableCell align="center">
                       <Box
                         sx={{
-                          maxWidth: 160,
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                          cursor: "pointer",
-                          '&:hover': { color: 'primary.main' }
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                          gap: 0.5,
                         }}
-                        onClick={() => handleOpenDetail(request)}
                       >
-                        {request.components
-                          ? request.components.split("\n")[0] +
-                            (request.components.includes("\n") ? "..." : "")
-                          : request.medicationName || "Không có tên"}
-                      </Box>
-                    </Tooltip>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2">
-                      {request.daysRequired} ngày
-                    </Typography>
-                  </TableCell>
-                  <TableCell align="center">
-                    <Typography variant="body2" color="text.secondary">
-                      {format(new Date(request.startDate), "dd/MM/yyyy")}
-                    </Typography>
-                  </TableCell>
-                  <TableCell align="center">
-                    <Typography variant="body2" color="text.secondary">
-                      {format(new Date(request.endDate), "dd/MM/yyyy")}
-                    </Typography>
-                  </TableCell>
-                  <TableCell align="center">
-                    {getStatusChip(request.status)}
-                  </TableCell>
-                  <TableCell align="center">
-                    <Box
-                      sx={{
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        gap: 0.5
-                      }}
-                    >
-                      <Tooltip title="Xem nhật ký uống thuốc">
-                        <span>
-                          <IconButton
-                            size="small"
-                            color="primary"
-                            onClick={() =>
-                              onViewLogs(request.id, request.studentId)
-                            }
-                            disabled={request.status === "requested"}
-                            sx={{ 
-                              borderRadius: 1,
-                              '&:hover': { bgcolor: 'primary.50' }
-                            }}
-                          >
-                            <VisibilityIcon fontSize="small" />
-                          </IconButton>
-                        </span>
-                      </Tooltip>
+                        <Tooltip title="Xem nhật ký uống thuốc">
+                          <span>
+                            <IconButton
+                              size="small"
+                              color="primary"
+                              onClick={() =>
+                                onViewLogs(request.id, request.studentId)
+                              }
+                              disabled={request.status === "requested"}
+                              sx={{
+                                borderRadius: 1,
+                                "&:hover": { bgcolor: "primary.50" },
+                              }}
+                            >
+                              <VisibilityIcon fontSize="small" />
+                            </IconButton>
+                          </span>
+                        </Tooltip>
 
-                      <Tooltip title="Xem chi tiết">
-                        <span>
-                          <IconButton
-                            size="small"
-                            color="default"
-                            sx={{ 
-                              borderRadius: 1,
-                              '&:hover': { bgcolor: 'grey.100' }
-                            }}
-                            onClick={() => onViewDetail(request.id)}
-                          >
-                            <InfoOutlinedIcon fontSize="small" />
-                          </IconButton>
-                        </span>
-                      </Tooltip>
-                    </Box>
-                  </TableCell>
-                </TableRow>
-              ))}
+                        <Tooltip title="Xem chi tiết">
+                          <span>
+                            <IconButton
+                              size="small"
+                              color="default"
+                              sx={{
+                                borderRadius: 1,
+                                "&:hover": { bgcolor: "grey.100" },
+                              }}
+                              onClick={() => onViewDetail(request.id)}
+                            >
+                              <InfoOutlinedIcon fontSize="small" />
+                            </IconButton>
+                          </span>
+                        </Tooltip>
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                ))}
             </TableBody>
           </Table>
         </TableContainer>

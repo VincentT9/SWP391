@@ -101,10 +101,11 @@ const MedicationRequestList: React.FC<MedicationRequestListProps> = ({
     return format(new Date(dateString), "dd/MM/yyyy");
   };
 
-  const calculateEndDate = (startDate: string, numberOfDays: number) => {
-    const start = parseISO(startDate);
-    const end = addDays(start, numberOfDays - 1);
-    return formatDate(format(end, "yyyy-MM-dd"));
+  const formatDateRange = (startDateStr: string, numberOfDays: number) => {
+    const start = parseISO(startDateStr);
+    // Add full number of days for display
+    const end = addDays(start, numberOfDays);
+    return `${format(start, "dd/MM/yyyy")} - ${format(end, "dd/MM/yyyy")}`;
   };
 
   // Filter to show only pending requests with status 0
@@ -119,7 +120,6 @@ const MedicationRequestList: React.FC<MedicationRequestListProps> = ({
     try {
       setProcessingRequestId(requestId);
       pendingRequests.current.add(requestId);
-
 
       const requestData = requests.find((req) => req.id === requestId);
       if (!requestData) {
@@ -152,8 +152,6 @@ const MedicationRequestList: React.FC<MedicationRequestListProps> = ({
         status: 1, // Set status to 1 for accepted
         medicalStaffId: nurseId,
       };
-
-
 
       // Make the API call
       const apiUrl = `${BASE_API}/api/MedicationRequest/update-medication-request/${requestId}`;
@@ -331,7 +329,7 @@ const MedicationRequestList: React.FC<MedicationRequestListProps> = ({
                     </Typography>
                     <Typography variant="body2">
                       Kết thúc:{" "}
-                      {calculateEndDate(
+                      {formatDateRange(
                         request.startDate,
                         request.numberOfDayToTake
                       )}

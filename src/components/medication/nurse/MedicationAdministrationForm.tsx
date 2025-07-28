@@ -5,8 +5,6 @@ import {
   Button,
   TextField,
   Typography,
-  Snackbar,
-  Alert,
   Card,
   CardContent,
   Dialog,
@@ -64,19 +62,13 @@ interface MedicationRequest {
 interface MedicationAdministrationFormProps {
   medicationRequest: MedicationRequest;
   nurseName: string;
-  onMedicationAdministered: (
-    wasGiven: boolean,
-    description: string
-  ) => void;
+  onMedicationAdministered: (wasGiven: boolean, description: string) => void;
 }
 
-const MedicationAdministrationForm: React.FC<MedicationAdministrationFormProps> = ({
-  medicationRequest,
-  nurseName,
-  onMedicationAdministered,
-}) => {
+const MedicationAdministrationForm: React.FC<
+  MedicationAdministrationFormProps
+> = ({ medicationRequest, nurseName, onMedicationAdministered }) => {
   const [description, setDescription] = useState("");
-  const [openSnackbar, setOpenSnackbar] = useState(false);
   const [notGivenDialogOpen, setNotGivenDialogOpen] = useState(false);
   const [givenDialogOpen, setGivenDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -87,49 +79,56 @@ const MedicationAdministrationForm: React.FC<MedicationAdministrationFormProps> 
   const [todayDiaryCount, setTodayDiaryCount] = useState(0);
 
   // Function to check diary entries from medication request data (if available) or fetch from API
-  const checkAndUpdateMedicationStatus = async (medicationRequestId: string) => {
+  const checkAndUpdateMedicationStatus = async (
+    medicationRequestId: string
+  ) => {
     try {
       setCheckingStatus(true);
-      
+
       let diaryEntries: MedicationDiaryEntry[] = [];
-      
+
       // First, check if diary entries are already available in the medicationRequest prop
-      if (medicationRequest.medicalDiaries && Array.isArray(medicationRequest.medicalDiaries)) {
+      if (
+        medicationRequest.medicalDiaries &&
+        Array.isArray(medicationRequest.medicalDiaries)
+      ) {
         diaryEntries = medicationRequest.medicalDiaries;
       } else {
         // If not available in props, fetch from API
         const medicationResponse = await instance.get(
           `${BASE_API}/api/MedicationRequest/get-medication-request-by-id/${medicationRequestId}`
         );
-        
+
         const medicationData = medicationResponse.data;
         diaryEntries = medicationData.medicalDiaries || [];
       }
-      
+
       // Filter diary entries that were created today for this specific medication request
-      const todayEntries = diaryEntries.filter(entry => {
+      const todayEntries = diaryEntries.filter((entry) => {
         const entryDate = parseISO(entry.createAt);
         const today = new Date();
-        
+
         // Check if the entry was created today (same date)
-        return entryDate.getDate() === today.getDate() &&
-               entryDate.getMonth() === today.getMonth() &&
-               entryDate.getFullYear() === today.getFullYear();
+        return (
+          entryDate.getDate() === today.getDate() &&
+          entryDate.getMonth() === today.getMonth() &&
+          entryDate.getFullYear() === today.getFullYear()
+        );
       });
 
       // If there are any diary entries for today (regardless of status), medication is completed for today
       const hasEntriesForToday = todayEntries.length > 0;
       setIsCompletedToday(hasEntriesForToday);
       setTodayDiaryCount(todayEntries.length);
-      
+
       if (hasEntriesForToday) {
         // Log details about each entry
         todayEntries.forEach((entry, index) => {
-          const statusText = entry.status === 1 ? 'đã cho uống' : 'đã hủy';
-          const createTime = format(parseISO(entry.createAt), 'HH:mm:ss');
+          const statusText = entry.status === 1 ? "đã cho uống" : "đã hủy";
+          const createTime = format(parseISO(entry.createAt), "HH:mm:ss");
         });
       }
-      
+
       return hasEntriesForToday;
     } catch (error) {
       console.error("Error checking medication request details:", error);
@@ -146,10 +145,12 @@ const MedicationAdministrationForm: React.FC<MedicationAdministrationFormProps> 
       if (medicationRequest.studentCode) {
         setLoadingStudent(true);
         try {
-          const response = await instance.get(`/api/Student/get-student-by-student-code/${medicationRequest.studentCode}`);
+          const response = await instance.get(
+            `/api/Student/get-student-by-student-code/${medicationRequest.studentCode}`
+          );
           setStudent(response.data);
         } catch (error) {
-          console.error('Error fetching student data:', error);
+          console.error("Error fetching student data:", error);
         } finally {
           setLoadingStudent(false);
         }
@@ -161,14 +162,26 @@ const MedicationAdministrationForm: React.FC<MedicationAdministrationFormProps> 
 
   // Check medication status on component mount and when medicationRequest changes
   useEffect(() => {
-    // Debounce to prevent multiple calls
-    const timeoutId = setTimeout(() => {
-      if (medicationRequest.id) {
-        checkAndUpdateMedicationStatus(medicationRequest.id);
-      }
-    }, 100);
+    // Only check if ID exists and component is mounted
+    let isMounted = true;
 
-    return () => clearTimeout(timeoutId);
+    if (medicationRequest.id) {
+      // Increase timeout to prevent frequent checking
+      const timeoutId = setTimeout(() => {
+        if (isMounted) {
+          checkAndUpdateMedicationStatus(medicationRequest.id);
+        }
+      }, 500);
+
+      return () => {
+        isMounted = false;
+        clearTimeout(timeoutId);
+      };
+    }
+
+    return () => {
+      isMounted = false;
+    };
   }, [medicationRequest.id]);
 
   const handleGiveMedicationClick = () => {
@@ -181,7 +194,7 @@ const MedicationAdministrationForm: React.FC<MedicationAdministrationFormProps> 
 
   const handleGivenSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!description.trim()) {
       toast.error("Vui lòng nhập mô tả");
       return;
@@ -194,28 +207,36 @@ const MedicationAdministrationForm: React.FC<MedicationAdministrationFormProps> 
 
     try {
       setIsSubmitting(true);
-      
+
       // Create medication diary entry for administered medication
-      const createResponse = await instance.post(`${BASE_API}/api/MedicaDiary/create`, {
-        medicationReqId: medicationRequest.id,
-        status: 1, // 1 for administered
-        description: description
-      });
+      const createResponse = await instance.post(
+        `${BASE_API}/api/MedicaDiary/create`,
+        {
+          medicationReqId: medicationRequest.id,
+          status: 1, // 1 for administered
+          description: description,
+        }
+      );
 
       // Check status with current medication request ID (no additional API call needed here)
       await checkAndUpdateMedicationStatus(medicationRequest.id);
 
-      // Reset form and close dialog first
+      // Show success message here instead of relying on parent notification
+      toast.success("Đã ghi nhận thông tin dùng thuốc");
+
+      // Reset form and close dialog
       setDescription("");
       setGivenDialogOpen(false);
 
-      // Call the parent callback AFTER successful creation and UI update
+      // Call the parent callback with a small delay to prevent duplicate UI updates
       setTimeout(() => {
         onMedicationAdministered(true, description);
-      }, 100);
+      }, 300);
     } catch (error) {
       console.error("Error administering medication:", error);
-      toast.error("Không thể cập nhật thông tin dùng thuốc. Vui lòng thử lại sau.");
+      toast.error(
+        "Không thể cập nhật thông tin dùng thuốc. Vui lòng thử lại sau."
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -234,71 +255,101 @@ const MedicationAdministrationForm: React.FC<MedicationAdministrationFormProps> 
 
     try {
       setIsSubmitting(true);
-      
+
       // Create medication diary entry for not administered medication
-      const createResponse = await instance.post(`${BASE_API}/api/MedicaDiary/create`, {
-        medicationReqId: medicationRequest.id,
-        status: 0, // 0 for not administered
-        description: description
-      });
+      const createResponse = await instance.post(
+        `${BASE_API}/api/MedicaDiary/create`,
+        {
+          medicationReqId: medicationRequest.id,
+          status: 0, // 0 for not administered
+          description: description,
+        }
+      );
 
       // Check status with current medication request ID
       await checkAndUpdateMedicationStatus(medicationRequest.id);
 
       toast.info("Đã ghi nhận thông tin hủy lần uống thuốc");
 
-      // Reset form and close dialog first
+      // Reset form and close dialog
       setDescription("");
       setNotGivenDialogOpen(false);
 
-      // Call the parent callback AFTER successful creation and UI update
+      // Call the parent callback with a small delay to prevent duplicate UI updates
       setTimeout(() => {
         onMedicationAdministered(false, description);
-      }, 100);
+      }, 300);
     } catch (error) {
       console.error("Error logging not given medication:", error);
-      toast.error("Không thể cập nhật thông tin hủy dùng thuốc. Vui lòng thử lại sau.");
+      toast.error(
+        "Không thể cập nhật thông tin hủy dùng thuốc. Vui lòng thử lại sau."
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleCloseSnackbar = () => {
-    setOpenSnackbar(false);
-  };
-
   // Calculate the end date based on startDate + numberOfDayToTake
   const startDate = parseISO(medicationRequest.startDate);
-  const startDateOnly = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
-  const endDate = addDays(startDateOnly, medicationRequest.numberOfDayToTake - 1);
+  const startDateOnly = new Date(
+    startDate.getFullYear(),
+    startDate.getMonth(),
+    startDate.getDate()
+  );
+  // Calculate the end date for medication period
+  // For display purposes we use the full number of days
+  const endDate = addDays(startDateOnly, medicationRequest.numberOfDayToTake);
   const formattedEndDate = format(endDate, "dd/MM/yyyy");
   const formattedStartDate = format(startDateOnly, "dd/MM/yyyy");
-  
+
   // Check if today is in the valid date range
   const today = new Date();
-  const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  const isToday = todayDateOnly >= startDateOnly && todayDateOnly <= endDate;
-  
-  // Calculate days remaining
-  const daysRemaining = Math.ceil((endDate.getTime() - todayDateOnly.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+  const todayDateOnly = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate()
+  );
+  // Since we changed the endDate calculation, we need to adjust the comparison
+  // by subtracting 1 day from the endDate for the range check
+  const endDateForRangeCheck = addDays(endDate, -1);
+  const isToday =
+    todayDateOnly >= startDateOnly && todayDateOnly <= endDateForRangeCheck;
+
+  // Calculate days remaining (use endDateForRangeCheck instead of endDate)
+  const daysRemaining =
+    Math.ceil(
+      (endDateForRangeCheck.getTime() - todayDateOnly.getTime()) /
+        (1000 * 60 * 60 * 24)
+    ) + 1;
 
   return (
-    <Card elevation={2} sx={{ mb: 3, border: isToday ? '1px solid #2ecc71' : 'none' }}>
+    <Card
+      elevation={2}
+      sx={{ mb: 3, border: isToday ? "1px solid #2ecc71" : "none" }}
+    >
       <CardContent>
-        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2 }}>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: { xs: "column", md: "row" },
+            gap: 2,
+          }}
+        >
           {/* Student Information */}
-          <Box sx={{ 
-            width: { xs: '100%', md: '25%' }, 
-            display: 'flex', 
-            flexDirection: 'column', 
-            alignItems: 'center' 
-          }}>
+          <Box
+            sx={{
+              width: { xs: "100%", md: "25%" },
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+          >
             <Stack direction="column" spacing={2} alignItems="center">
               {loadingStudent ? (
                 <CircularProgress size={80} />
               ) : (
                 <Avatar
-                  src={student?.image || '/default-avatar.png'}
+                  src={student?.image || "/default-avatar.png"}
                   alt={medicationRequest.studentName}
                   sx={{ width: 80, height: 80 }}
                 />
@@ -306,11 +357,7 @@ const MedicationAdministrationForm: React.FC<MedicationAdministrationFormProps> 
               <Typography variant="subtitle1" align="center">
                 {medicationRequest.studentName}
               </Typography>
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                align="center"
-              >
+              <Typography variant="body2" color="text.secondary" align="center">
                 {student?.class && `${student.class} | `}
                 {medicationRequest.studentCode}
               </Typography>
@@ -318,17 +365,15 @@ const MedicationAdministrationForm: React.FC<MedicationAdministrationFormProps> 
           </Box>
 
           {/* Medication Information */}
-          <Box sx={{ 
-            width: { xs: '100%', md: '58.33%' }, 
-            pl: { md: 2 } 
-          }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-              <Typography variant="h6">
-                Chi tiết thuốc
-              </Typography>
-              {checkingStatus && (
-                <CircularProgress size={20} />
-              )}
+          <Box
+            sx={{
+              width: { xs: "100%", md: "58.33%" },
+              pl: { md: 2 },
+            }}
+          >
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
+              <Typography variant="h6">Chi tiết thuốc</Typography>
+              {checkingStatus && <CircularProgress size={20} />}
             </Box>
 
             <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
@@ -345,13 +390,15 @@ const MedicationAdministrationForm: React.FC<MedicationAdministrationFormProps> 
               </Typography>
 
               <Typography variant="body1">
-                <strong>Ngày uống:</strong> {formattedStartDate} - {formattedEndDate}
+                <strong>Ngày uống:</strong> {formattedStartDate} -{" "}
+                {formattedEndDate}
               </Typography>
 
               <Typography variant="body1">
-                <strong>Số ngày uống:</strong> {medicationRequest.numberOfDayToTake} 
+                <strong>Số ngày uống:</strong>{" "}
+                {medicationRequest.numberOfDayToTake}
                 {isToday && daysRemaining > 0 && (
-                  <span style={{ color: '#2ecc71', marginLeft: '8px' }}>
+                  <span style={{ color: "#2ecc71", marginLeft: "8px" }}>
                     (Còn {daysRemaining} ngày)
                   </span>
                 )}
@@ -360,13 +407,15 @@ const MedicationAdministrationForm: React.FC<MedicationAdministrationFormProps> 
           </Box>
 
           {/* Action Buttons */}
-          <Box sx={{ 
-            width: { xs: '100%', md: '16.67%' },
-            minWidth: '200px',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center'
-          }}>
+          <Box
+            sx={{
+              width: { xs: "100%", md: "16.67%" },
+              minWidth: "200px",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+            }}
+          >
             <Stack
               direction="column"
               spacing={2}
@@ -375,28 +424,28 @@ const MedicationAdministrationForm: React.FC<MedicationAdministrationFormProps> 
             >
               {isCompletedToday ? (
                 <Stack spacing={1}>
-                  <Typography 
-                    variant="body2" 
+                  <Typography
+                    variant="body2"
                     color="success.main"
-                    sx={{ 
-                      textAlign: 'center', 
+                    sx={{
+                      textAlign: "center",
                       fontWeight: 600,
                       p: 1.5,
-                      border: '1px solid',
-                      borderColor: 'success.main',
+                      border: "1px solid",
+                      borderColor: "success.main",
                       borderRadius: 1,
-                      bgcolor: 'success.50'
+                      bgcolor: "success.50",
                     }}
                   >
                     Hôm nay đã uống thuốc
                   </Typography>
-                  <Typography 
-                    variant="caption" 
+                  <Typography
+                    variant="caption"
                     color="text.secondary"
-                    sx={{ 
-                      textAlign: 'center', 
-                      fontStyle: 'italic',
-                      whiteSpace: 'nowrap'
+                    sx={{
+                      textAlign: "center",
+                      fontStyle: "italic",
+                      whiteSpace: "nowrap",
                     }}
                   >
                     Không thể thực hiện thêm thao tác
@@ -457,7 +506,7 @@ const MedicationAdministrationForm: React.FC<MedicationAdministrationFormProps> 
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button 
+          <Button
             onClick={() => setGivenDialogOpen(false)}
             disabled={isSubmitting}
           >
@@ -496,14 +545,14 @@ const MedicationAdministrationForm: React.FC<MedicationAdministrationFormProps> 
           />
         </DialogContent>
         <DialogActions>
-          <Button 
+          <Button
             onClick={() => setNotGivenDialogOpen(false)}
             disabled={isSubmitting}
           >
             Hủy
           </Button>
-          <Button 
-            onClick={handleNotGivenSubmit} 
+          <Button
+            onClick={handleNotGivenSubmit}
             color="error"
             disabled={isSubmitting}
           >
@@ -511,21 +560,8 @@ const MedicationAdministrationForm: React.FC<MedicationAdministrationFormProps> 
           </Button>
         </DialogActions>
       </Dialog>
-
-      <Snackbar
-        open={openSnackbar}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <Alert onClose={handleCloseSnackbar} severity="success">
-          Đã cập nhật thông tin uống thuốc!
-        </Alert>
-      </Snackbar>
     </Card>
   );
 };
-
-
 
 export default MedicationAdministrationForm;

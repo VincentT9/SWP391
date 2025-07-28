@@ -53,7 +53,7 @@ const getStatusLabel = (status: number, isExpired: boolean) => {
   if (isExpired) {
     return <Chip label="Quá hạn" color="error" />;
   }
-  
+
   switch (status) {
     case 2:
       return <Chip label="Hoàn thành" color="success" />;
@@ -64,10 +64,9 @@ const getStatusLabel = (status: number, isExpired: boolean) => {
   }
 };
 
-const CompletedExpiredRequestsList: React.FC<CompletedExpiredRequestsListProps> = ({
-  nurseId,
-  isLoading: parentLoading,
-}) => {
+const CompletedExpiredRequestsList: React.FC<
+  CompletedExpiredRequestsListProps
+> = ({ nurseId, isLoading: parentLoading }) => {
   const [requests, setRequests] = useState<MedicationRequestItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [tabValue, setTabValue] = useState(0);
@@ -85,12 +84,14 @@ const CompletedExpiredRequestsList: React.FC<CompletedExpiredRequestsListProps> 
       const response = await instance.get(
         `${BASE_API}/api/MedicationRequest/get-all-medication-requests`
       );
-      
+
       const allRequests: MedicationRequestItem[] = response.data;
-      
+
       // Filter requests assigned to this nurse
-      const nurseRequests = allRequests.filter(req => req.medicalStaffId === nurseId);
-      
+      const nurseRequests = allRequests.filter(
+        (req) => req.medicalStaffId === nurseId
+      );
+
       setRequests(nurseRequests);
     } catch (error) {
       console.error("Error fetching completed and expired requests:", error);
@@ -106,12 +107,15 @@ const CompletedExpiredRequestsList: React.FC<CompletedExpiredRequestsListProps> 
 
   const calculateEndDate = (startDate: string, numberOfDays: number) => {
     const start = parseISO(startDate);
-    const end = addDays(start, numberOfDays - 1);
+    // Add full number of days for display
+    const end = addDays(start, numberOfDays);
     return end;
   };
 
   const isRequestExpired = (startDate: string, numberOfDays: number) => {
-    const endDate = calculateEndDate(startDate, numberOfDays);
+    // For expiration checking, we need to use the actual last day of medication
+    const start = parseISO(startDate);
+    const endDate = addDays(start, numberOfDays - 1);
     return isAfter(new Date(), endDate);
   };
 
@@ -125,17 +129,23 @@ const CompletedExpiredRequestsList: React.FC<CompletedExpiredRequestsListProps> 
   };
 
   // Separate completed and expired requests
-  const completedRequests = requests.filter(req => req.status === 2);
-  const expiredRequests = requests.filter(req => 
-    req.status === 1 && isRequestExpired(req.startDate, req.numberOfDayToTake)
+  const completedRequests = requests.filter((req) => req.status === 2);
+  const expiredRequests = requests.filter(
+    (req) =>
+      req.status === 1 && isRequestExpired(req.startDate, req.numberOfDayToTake)
   );
-  const cancelledRequests = requests.filter(req => req.status === 3);
+  const cancelledRequests = requests.filter((req) => req.status === 3);
 
-  const renderRequestsTable = (requestsList: MedicationRequestItem[], showExpired = false) => {
+  const renderRequestsTable = (
+    requestsList: MedicationRequestItem[],
+    showExpired = false
+  ) => {
     if (requestsList.length === 0) {
       return (
         <Typography variant="body1" color="textSecondary" sx={{ p: 2 }}>
-          {showExpired ? "Không có yêu cầu thuốc nào quá hạn." : "Không có yêu cầu thuốc nào trong danh sách này."}
+          {showExpired
+            ? "Không có yêu cầu thuốc nào quá hạn."
+            : "Không có yêu cầu thuốc nào trong danh sách này."}
         </Typography>
       );
     }
@@ -155,8 +165,10 @@ const CompletedExpiredRequestsList: React.FC<CompletedExpiredRequestsListProps> 
           </TableHead>
           <TableBody>
             {requestsList.map((request) => {
-              const isExpired = showExpired || isRequestExpired(request.startDate, request.numberOfDayToTake);
-              
+              const isExpired =
+                showExpired ||
+                isRequestExpired(request.startDate, request.numberOfDayToTake);
+
               return (
                 <TableRow
                   key={request.id}
@@ -195,7 +207,14 @@ const CompletedExpiredRequestsList: React.FC<CompletedExpiredRequestsListProps> 
                       Bắt đầu: {formatDate(request.startDate)}
                     </Typography>
                     <Typography variant="body2">
-                      Kết thúc: {format(calculateEndDate(request.startDate, request.numberOfDayToTake), "dd/MM/yyyy")}
+                      Kết thúc:{" "}
+                      {format(
+                        calculateEndDate(
+                          request.startDate,
+                          request.numberOfDayToTake
+                        ),
+                        "dd/MM/yyyy"
+                      )}
                     </Typography>
                   </TableCell>
                   <TableCell>
@@ -245,7 +264,7 @@ const CompletedExpiredRequestsList: React.FC<CompletedExpiredRequestsListProps> 
       </Typography>
 
       {/* Summary Cards */}
-      <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+      <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
         <Card sx={{ minWidth: 200 }}>
           <CardContent>
             <Typography color="textSecondary" gutterBottom>
@@ -256,7 +275,7 @@ const CompletedExpiredRequestsList: React.FC<CompletedExpiredRequestsListProps> 
             </Typography>
           </CardContent>
         </Card>
-        
+
         <Card sx={{ minWidth: 200 }}>
           <CardContent>
             <Typography color="textSecondary" gutterBottom>
@@ -267,7 +286,7 @@ const CompletedExpiredRequestsList: React.FC<CompletedExpiredRequestsListProps> 
             </Typography>
           </CardContent>
         </Card>
-        
+
         <Card sx={{ minWidth: 200 }}>
           <CardContent>
             <Typography color="textSecondary" gutterBottom>

@@ -22,7 +22,7 @@ import {
   MedicationLog as MedicationLogType,
   MedicationDiaryEntry,
 } from "../../../models/types";
-import { addDays as dateAddDays } from "date-fns"; // Renamed to avoid conflict
+import { addDays as dateAddDays, parseISO, format } from "date-fns"; // Add parseISO to fix date handling
 import instance from "../../../utils/axiosConfig"; // Importing axios instance for API calls
 import MedicationRequestDetail from "./MedicationRequestDetail"; // Thêm import cho component mới
 
@@ -118,6 +118,9 @@ const adaptApiToInternalMedicationRequest = (
   student: Student,
   parentId: string
 ): MedicationRequestType => {
+  // Parse ISO date string properly to avoid timezone issues
+  const parsedStartDate = parseISO(req.startDate);
+
   return {
     id: req.id,
     studentId: student.id,
@@ -126,11 +129,11 @@ const adaptApiToInternalMedicationRequest = (
     components: req.medicationName,
     dosesPerDay: req.dosage,
     daysRequired: req.numberOfDayToTake,
-    // Convert string dates to Date objects
-    startDate: new Date(req.startDate),
+    // Use parseISO for proper date handling
+    startDate: parsedStartDate,
     endDate: req.endDate
-      ? new Date(req.endDate)
-      : dateAddDays(new Date(req.startDate), req.numberOfDayToTake),
+      ? parseISO(req.endDate)
+      : dateAddDays(parsedStartDate, req.numberOfDayToTake - 1),
     hasReceipt: req.imagesMedicalInvoice && req.imagesMedicalInvoice.length > 0,
     notes: req.instructions,
     status: mapStatus(req.status),
@@ -138,9 +141,9 @@ const adaptApiToInternalMedicationRequest = (
     // Convert number dosage to string as required by the type
     dosage: req.dosage.toString(),
     instructions: req.instructions,
-    // Convert string dates to Date objects
-    createdAt: new Date(req.startDate),
-    updatedAt: new Date(req.startDate),
+    // Use parseISO for created/updated dates too
+    createdAt: parsedStartDate,
+    updatedAt: parsedStartDate,
   };
 };
 
@@ -213,7 +216,6 @@ const ParentMedicationDashboard: React.FC<ParentMedicationDashboardProps> = ({
           }
         }
 
-
         // console.log("Requests by status:", {
         //   requested: allRequests.filter(r => r.status === 'requested').length,
         //   received: allRequests.filter(r => r.status === 'received').length,
@@ -240,12 +242,11 @@ const ParentMedicationDashboard: React.FC<ParentMedicationDashboardProps> = ({
         setError(null);
 
         const baseUrl = process.env.REACT_APP_BASE_URL;
-        
+
         // Fetch students using the specified API
         const studentsResponse = await instance.get<Student[]>(
           `${baseUrl}/api/Student/get-student-by-parent-id/${parentId}`
         );
-
 
         const options: StudentOption[] = studentsResponse.data.map(
           (student) => ({
@@ -259,7 +260,10 @@ const ParentMedicationDashboard: React.FC<ParentMedicationDashboardProps> = ({
         // Fetch medication requests for each student using the specified API
         await fetchMedicationRequests(studentsResponse.data);
       } catch (error) {
-        console.error("Error fetching students and medication requests:", error);
+        console.error(
+          "Error fetching students and medication requests:",
+          error
+        );
         // setError("Không thể tải danh sách học sinh và yêu cầu thuốc. Vui lòng thử lại sau.");
       } finally {
         setLoading(false);
@@ -290,8 +294,6 @@ const ParentMedicationDashboard: React.FC<ParentMedicationDashboardProps> = ({
       const response = await instance.get<MedicationDiaryEntry[]>(
         `${baseUrl}/api/MedicaDiary/student/${studentId}`
       );
-
-
 
       // Lưu dữ liệu nhật ký vào state
       setMedicationDiaries(response.data);
@@ -334,7 +336,7 @@ const ParentMedicationDashboard: React.FC<ParentMedicationDashboardProps> = ({
   return (
     <Container maxWidth="lg">
       <Box sx={{ my: 4 }}>
-        <PageHeader 
+        <PageHeader
           title="Quản lý thuốc"
           subtitle="Theo dõi việc sử dụng thuốc và lịch uống thuốc của con em"
           showRefresh={true}
@@ -371,29 +373,40 @@ const ParentMedicationDashboard: React.FC<ParentMedicationDashboardProps> = ({
           <Box>
             {/* Hiển thị thống kê trạng thái yêu cầu thuốc */}
             {!loading && requests.length > 0 && (
-              <Box sx={{ mb: 3, p: 2, bgcolor: 'background.paper', borderRadius: 1 }}>
+              <Box
+                sx={{
+                  mb: 3,
+                  p: 2,
+                  bgcolor: "background.paper",
+                  borderRadius: 1,
+                }}
+              >
                 <Typography variant="h6" gutterBottom>
                   Tổng quan yêu cầu thuốc
                 </Typography>
-                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
                   <Box sx={{ minWidth: 120 }}>
                     <Typography variant="body2" color="text.secondary">
-                      Đã gửi: {requests.filter(r => r.status === 'requested').length}
+                      Đã gửi:{" "}
+                      {requests.filter((r) => r.status === "requested").length}
                     </Typography>
                   </Box>
                   <Box sx={{ minWidth: 120 }}>
                     <Typography variant="body2" color="success.main">
-                      Đã nhận: {requests.filter(r => r.status === 'received').length}
+                      Đã nhận:{" "}
+                      {requests.filter((r) => r.status === "received").length}
                     </Typography>
                   </Box>
                   <Box sx={{ minWidth: 120 }}>
                     <Typography variant="body2" color="info.main">
-                      Hoàn thành: {requests.filter(r => r.status === 'completed').length}
+                      Hoàn thành:{" "}
+                      {requests.filter((r) => r.status === "completed").length}
                     </Typography>
                   </Box>
                   <Box sx={{ minWidth: 120 }}>
                     <Typography variant="body2" color="error.main">
-                      Đã hủy: {requests.filter(r => r.status === 'cancelled').length}
+                      Đã hủy:{" "}
+                      {requests.filter((r) => r.status === "cancelled").length}
                     </Typography>
                   </Box>
                 </Box>
@@ -409,7 +422,11 @@ const ParentMedicationDashboard: React.FC<ParentMedicationDashboardProps> = ({
                 <Typography variant="h6" color="text.secondary">
                   Hiện không có yêu cầu thuốc nào
                 </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mt: 1 }}
+                >
                   Bạn có thể tạo yêu cầu thuốc mới ở tab "Gửi thuốc"
                 </Typography>
               </Box>

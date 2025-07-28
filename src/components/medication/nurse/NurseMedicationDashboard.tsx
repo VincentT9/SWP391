@@ -54,10 +54,12 @@ const NurseMedicationDashboard: React.FC<NurseMedicationDashboardProps> = ({
 }) => {
   const [tabValue, setTabValue] = useState(0);
   const [requests, setRequests] = useState<MedicationRequest[]>([]);
-  const [todayMedications, setTodayMedications] = useState<ApiMedicationRequest[]>(
-    []
-  );
-  const [apiMedicationRequests, setApiMedicationRequests] = useState<ApiMedicationRequest[]>([]);
+  const [todayMedications, setTodayMedications] = useState<
+    ApiMedicationRequest[]
+  >([]);
+  const [apiMedicationRequests, setApiMedicationRequests] = useState<
+    ApiMedicationRequest[]
+  >([]);
   const [isLoading, setIsLoading] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -71,7 +73,8 @@ const NurseMedicationDashboard: React.FC<NurseMedicationDashboardProps> = ({
   // Auto refresh every 30 seconds to keep data updated
   useEffect(() => {
     const interval = setInterval(() => {
-      if (tabValue === 0) { // Only refresh if on medication administration tab
+      if (tabValue === 0) {
+        // Only refresh if on medication administration tab
         fetchTodayMedications();
       }
     }, 30000); // 30 seconds
@@ -80,7 +83,7 @@ const NurseMedicationDashboard: React.FC<NurseMedicationDashboardProps> = ({
   }, [tabValue]);
 
   const refreshData = useCallback(() => {
-    setRefreshKey(prev => prev + 1);
+    setRefreshKey((prev) => prev + 1);
   }, []);
 
   const fetchMedicationRequests = async () => {
@@ -92,40 +95,40 @@ const NurseMedicationDashboard: React.FC<NurseMedicationDashboardProps> = ({
       );
 
       setApiMedicationRequests(response.data);
-      
-      // Convert API format to local format for compatibility with existing components
-      const convertedRequests = response.data.map((req: ApiMedicationRequest) => {
 
-        // Calculate end date by adding numberOfDayToTake to startDate
-        const startDate = parseISO(req.startDate);
-        const calculatedEndDate = addDays(startDate, req.numberOfDayToTake - 1); // subtract 1 because first day counts
-        const endDateStr = format(calculatedEndDate, 'yyyy-MM-dd');
-        
-        return {
-          id: req.id,
-          studentId: req.studentCode,
-          studentName: req.studentName,
-          medicationName: req.medicationName,
-          dosage: req.dosage,
-          instructions: req.instructions,
-          startDate: req.startDate,
-          endDate: endDateStr, // Use calculated end date
-          status: statusNumberToString(req.status),
-          receivedBy: req.medicalStaffId || null,
-          updatedAt: new Date(),
-        };
-      });
-      
+      // Convert API format to local format for compatibility with existing components
+      const convertedRequests = response.data.map(
+        (req: ApiMedicationRequest) => {
+          // Calculate end date by adding numberOfDayToTake to startDate
+          const startDate = parseISO(req.startDate);
+          const calculatedEndDate = addDays(startDate, req.numberOfDayToTake); // Add full number of days for display
+          const endDateStr = format(calculatedEndDate, "yyyy-MM-dd");
+
+          return {
+            id: req.id,
+            studentId: req.studentCode,
+            studentName: req.studentName,
+            medicationName: req.medicationName,
+            dosage: req.dosage,
+            instructions: req.instructions,
+            startDate: req.startDate,
+            endDate: endDateStr, // Use calculated end date
+            status: statusNumberToString(req.status),
+            receivedBy: req.medicalStaffId || null,
+            updatedAt: new Date(),
+          };
+        }
+      );
+
       setRequests(convertedRequests);
     } catch (error) {
-    
       console.error("Error fetching medication requests:", error);
       // toast.error("Không thể tải danh sách yêu cầu thuốc. Vui lòng thử lại sau.");
     } finally {
       setIsLoading(false);
     }
   };
-  
+
   const fetchTodayMedications = async () => {
     setIsLoading(true);
     try {
@@ -133,35 +136,46 @@ const NurseMedicationDashboard: React.FC<NurseMedicationDashboardProps> = ({
       const response = await instance.get(
         `${API_BASE_URL}/api/MedicationRequest/get-medication-requests-by-status/1`
       );
-      
 
-      
       // Get today's date without time component for accurate comparison
       const today = new Date();
-      const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-      
-      const medicationsForToday = response.data.filter((req: ApiMedicationRequest) => {
-        // Only include medications assigned to this nurse
-        if (req.medicalStaffId !== nurseId) {
-          return false;
-        }
-        
-        // Parse the start date and calculate end date
-        const startDate = parseISO(req.startDate);
-        const startDateOnly = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
-        
-        // Calculate end date by adding numberOfDayToTake to startDate
-        const calculatedEndDate = addDays(startDateOnly, req.numberOfDayToTake - 1);
-        
-        // Check if today is within the medication date range
-        const isInDateRange = todayDateOnly >= startDateOnly && todayDateOnly <= calculatedEndDate;
-        
-        // Debugging logs
+      const todayDateOnly = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        today.getDate()
+      );
 
-        
-        return isInDateRange;
-      });
-      
+      const medicationsForToday = response.data.filter(
+        (req: ApiMedicationRequest) => {
+          // Only include medications assigned to this nurse
+          if (req.medicalStaffId !== nurseId) {
+            return false;
+          }
+
+          // Parse the start date and calculate end date
+          const startDate = parseISO(req.startDate);
+          const startDateOnly = new Date(
+            startDate.getFullYear(),
+            startDate.getMonth(),
+            startDate.getDate()
+          );
+
+          // Calculate end date by adding numberOfDayToTake to startDate
+          const calculatedEndDate = addDays(
+            startDateOnly,
+            req.numberOfDayToTake
+          ); // Add full number of days for display
+
+          // For range checking, we still need to subtract 1 since we're comparing with inclusive end date
+          const isInDateRange =
+            todayDateOnly >= startDateOnly &&
+            todayDateOnly <= addDays(calculatedEndDate, -1);
+
+          // Debugging logs
+
+          return isInDateRange;
+        }
+      );
 
       setTodayMedications(medicationsForToday);
     } catch (error) {
@@ -171,15 +185,20 @@ const NurseMedicationDashboard: React.FC<NurseMedicationDashboardProps> = ({
       setIsLoading(false);
     }
   };
-  
+
   // Helper function to convert numeric status to string status
   const statusNumberToString = (statusNumber: number): string => {
     switch (statusNumber) {
-      case 0: return "requested";
-      case 1: return "received";
-      case 2: return "rejected";
-      case 3: return "completed";
-      default: return "unknown";
+      case 0:
+        return "requested";
+      case 1:
+        return "received";
+      case 2:
+        return "rejected";
+      case 3:
+        return "completed";
+      default:
+        return "unknown";
     }
   };
 
@@ -190,11 +209,14 @@ const NurseMedicationDashboard: React.FC<NurseMedicationDashboardProps> = ({
   const handleReceiveMedication = async (requestId: string) => {
     try {
       // In a real implementation, you would call the API to update the medication status
-      await instance.put(`${API_BASE_URL}/api/MedicationRequest/update-medication-request/${requestId}`, {
-        status: 1, // 1 = received
-        medicalStaffId: nurseId
-      });
-      
+      await instance.put(
+        `${API_BASE_URL}/api/MedicationRequest/update-medication-request/${requestId}`,
+        {
+          status: 1, // 1 = received
+          medicalStaffId: nurseId,
+        }
+      );
+
       // Refresh medication requests after receiving
       fetchMedicationRequests();
       fetchTodayMedications();
@@ -206,31 +228,32 @@ const NurseMedicationDashboard: React.FC<NurseMedicationDashboardProps> = ({
   const handleMedicationAdministered = async (
     requestId: string,
     wasAdministered: boolean,
-    description: string  // Simplified to just take a description string instead of object
+    description: string // Simplified to just take a description string instead of object
   ) => {
     try {
       // Don't create diary entry here since MedicationAdministrationForm already creates it
       // Just show success message and refresh the list
 
-      
       if (wasAdministered) {
         toast.success("Đã ghi nhận thông tin dùng thuốc của học sinh");
       } else {
         toast.info("Đã ghi nhận thông tin hủy lần uống thuốc");
       }
-      
+
       // Refresh the medications list to get updated data
       await fetchTodayMedications();
     } catch (error) {
       console.error("Error refreshing medication list:", error);
-      toast.error("Không thể cập nhật danh sách thuốc. Vui lòng làm mới trang.");
+      toast.error(
+        "Không thể cập nhật danh sách thuốc. Vui lòng làm mới trang."
+      );
     }
   };
 
   return (
     <Container maxWidth="lg">
       <Box sx={{ my: 4 }}>
-        <PageHeader 
+        <PageHeader
           title="Quản lý thuốc"
           subtitle="Theo dõi và quản lý việc phát thuốc cho học sinh"
           showRefresh={true}
@@ -270,8 +293,12 @@ const NurseMedicationDashboard: React.FC<NurseMedicationDashboardProps> = ({
                     <MedicationAdministrationForm
                       medicationRequest={medication}
                       nurseName={nurseName}
-                      onMedicationAdministered={(wasGiven, description) => 
-                        handleMedicationAdministered(medication.id, wasGiven, description)
+                      onMedicationAdministered={(wasGiven, description) =>
+                        handleMedicationAdministered(
+                          medication.id,
+                          wasGiven,
+                          description
+                        )
                       }
                     />
                   </Box>
@@ -283,7 +310,9 @@ const NurseMedicationDashboard: React.FC<NurseMedicationDashboardProps> = ({
 
         {tabValue === 1 && (
           <NurseMedicationList
-            requests={requests.filter(req => req.status === "received" && req.receivedBy === nurseId)}
+            requests={requests.filter(
+              (req) => req.status === "received" && req.receivedBy === nurseId
+            )}
             onReceiveMedication={handleReceiveMedication}
             isLoading={isLoading}
             nurseId={nurseId}
@@ -291,7 +320,7 @@ const NurseMedicationDashboard: React.FC<NurseMedicationDashboardProps> = ({
         )}
 
         {tabValue === 2 && (
-          <MedicationRequestList 
+          <MedicationRequestList
             requests={apiMedicationRequests}
             onAccept={(requestId) => {
               // Just refresh the data after a successful operation
@@ -317,9 +346,5 @@ const NurseMedicationDashboard: React.FC<NurseMedicationDashboardProps> = ({
     </Container>
   );
 };
-
-
-
-
 
 export default NurseMedicationDashboard;
