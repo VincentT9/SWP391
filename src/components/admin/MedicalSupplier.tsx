@@ -56,8 +56,8 @@ enum SupplyType {
 
 // Danh sách đơn vị
 const UNIT_OPTIONS = [
-  "viên", "hộp", "lọ", "túi", "chai", "ống", "gói", "vỉ", "kg", "gram", 
-  "lít", "ml", "cái", "chiếc", "bộ", "đôi", "thùng", "lon", "tuýp", "miếng"
+  "viên", "chai", "ống", "gói", "vỉ", "gram", 
+   "ml", "cái", "chiếc", "tuýp", "miếng"
 ];
 
 const MedicalSupplierPage = () => {
@@ -72,6 +72,14 @@ const MedicalSupplierPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  
+  // Validation states
+  const [validationErrors, setValidationErrors] = useState({
+    supplyName: false,
+    unit: false,
+    quantity: false,
+  });
+  const [showValidation, setShowValidation] = useState(false);
   
   // Thêm state cho detail dialog
   const [openDetailDialog, setOpenDetailDialog] = useState(false);
@@ -407,6 +415,14 @@ const MedicalSupplierPage = () => {
   };
 
   const handleOpenDialog = async (item?: any) => {
+    // Reset validation khi mở dialog
+    setValidationErrors({
+      supplyName: false,
+      unit: false,
+      quantity: false,
+    });
+    setShowValidation(false);
+
     if (item) {
       try {
         const supplierData = await fetchSupplierById(item.id);
@@ -433,9 +449,34 @@ const MedicalSupplierPage = () => {
     setOpenDialog(false);
     setSelectedItem(null);
     setFormData({});
+    // Reset validation khi đóng dialog
+    setValidationErrors({
+      supplyName: false,
+      unit: false,
+      quantity: false,
+    });
+    setShowValidation(false);
+  };
+
+  const validateForm = () => {
+    const errors = {
+      supplyName: !formData.supplyName || formData.supplyName.trim() === "",
+      unit: !formData.unit || formData.unit.trim() === "",
+      quantity: formData.quantity < 0,
+    };
+    
+    setValidationErrors(errors);
+    setShowValidation(true); // Chỉ hiện validation khi validate
+    return !Object.values(errors).some(error => error);
   };
 
   const handleSave = async () => {
+    // Validate form trước khi save
+    if (!validateForm()) {
+      toast.error("Vui lòng điền đầy đủ thông tin bắt buộc!");
+      return;
+    }
+    
     try {
       setIsSaving(true);
       if (selectedItem) {
@@ -653,9 +694,7 @@ const MedicalSupplierPage = () => {
                     <TableCell sx={{ fontWeight: "bold" }}>
                       Nhà cung cấp
                     </TableCell>
-                    <TableCell sx={{ fontWeight: "bold" }}>
-                      Cập nhật cuối
-                    </TableCell>
+                    
                     <TableCell sx={{ fontWeight: "bold" }}>Thao tác</TableCell>
                   </TableRow>
                 </TableHead>
@@ -779,13 +818,7 @@ const MedicalSupplierPage = () => {
                             {item.supplier}
                           </Typography>
                         </TableCell>
-                        <TableCell>
-                          <Typography variant="body2" color="text.secondary">
-                            {new Date(item.updatedAt).toLocaleDateString(
-                              "vi-VN"
-                            )}
-                          </Typography>
-                        </TableCell>
+                        
                         <TableCell>
                           <IconButton
                             onClick={() => handleOpenDialog(item)}
@@ -1031,9 +1064,9 @@ const MedicalSupplierPage = () => {
                       }
                       fullWidth
                       required
-                      error={!formData.supplyName}
+                      error={showValidation && validationErrors.supplyName}
                       helperText={
-                        !formData.supplyName ? "Tên vật tư là bắt buộc" : ""
+                        showValidation && validationErrors.supplyName ? "Tên vật tư là bắt buộc" : ""
                       }
                       variant="outlined"
                     />
@@ -1079,8 +1112,8 @@ const MedicalSupplierPage = () => {
                         sx={{ flex: 1 }}
                         required
                         inputProps={{ min: 0 }}
-                        error={formData.quantity < 0}
-                        helperText={formData.quantity < 0 ? "Số lượng phải >= 0" : ""}
+                        error={showValidation && validationErrors.quantity}
+                        helperText={showValidation && validationErrors.quantity ? "Số lượng phải >= 0" : ""}
                         variant="outlined"
                       />
                       <FormControl sx={{ flex: 1 }} required>
@@ -1091,7 +1124,7 @@ const MedicalSupplierPage = () => {
                             setFormData({ ...formData, unit: e.target.value })
                           }
                           label="Đơn vị"
-                          error={!formData.unit}
+                          error={showValidation && validationErrors.unit}
                         >
                           {UNIT_OPTIONS.map((unit) => (
                             <MenuItem key={unit} value={unit}>
@@ -1099,6 +1132,11 @@ const MedicalSupplierPage = () => {
                             </MenuItem>
                           ))}
                         </Select>
+                        {showValidation && validationErrors.unit && (
+                          <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.75 }}>
+                            Đơn vị là bắt buộc
+                          </Typography>
+                        )}
                       </FormControl>
                     </Box>
 
@@ -1138,7 +1176,7 @@ const MedicalSupplierPage = () => {
                     </Box>
 
                     {/* Validation summary */}
-                    {(!formData.supplyName || !formData.unit || formData.quantity < 0) && (
+                    {showValidation && (validationErrors.supplyName || validationErrors.unit || validationErrors.quantity) && (
                       <Alert severity="error" sx={{ mt: 2 }}>
                         <Typography variant="body2">
                           Vui lòng kiểm tra lại thông tin vật tư. Các trường có dấu
@@ -1158,13 +1196,7 @@ const MedicalSupplierPage = () => {
             <Button
               onClick={handleSave}
               variant="contained"
-              disabled={
-                !formData.supplyName || 
-                !formData.unit || 
-                formData.quantity < 0 || 
-                isSaving || 
-                isUploadingImage
-              }
+              disabled={isSaving || isUploadingImage}
               startIcon={isSaving ? <CircularProgress size={20} /> : null}
             >
               {isSaving 

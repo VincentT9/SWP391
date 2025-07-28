@@ -154,7 +154,7 @@ const NotificationsPage: React.FC = () => {
       setNotifications(transformedNotifications);
     } catch (error) {
       console.error('Error fetching notifications:', error);
-      setError('Không thể tải thông báo. Vui lòng thử lại.');
+      
       setNotifications([]);
     } finally {
       setLoading(false);

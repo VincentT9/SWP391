@@ -114,6 +114,19 @@ const ScheduleStudentsPage: React.FC = () => {
     pending: 0,
   });
 
+  const isScheduleDatePassed = () => {
+    if (!schedule?.scheduledDate) return false;
+
+    const scheduleDate = new Date(schedule.scheduledDate);
+    const today = new Date();
+
+    // Reset thời gian về 00:00:00 để so sánh chỉ ngày
+    scheduleDate.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+
+    return today >= scheduleDate;
+  };
+
   // Thêm state mới cho dialog kiểm tra phiếu đồng ý
   const [isConsentFormDialogOpen, setIsConsentFormDialogOpen] =
     useState<boolean>(false);
@@ -1021,74 +1034,6 @@ const ScheduleStudentsPage: React.FC = () => {
 
   return (
     <Container maxWidth="xl">
-      {/* Breadcrumbs */}
-      <Box sx={{ mb: 3, mt: 2 }}>
-        <Breadcrumbs separator="›" aria-label="breadcrumb">
-          <Link
-            underline="hover"
-            color="inherit"
-            component={RouterLink}
-            to="/vaccination"
-          >
-            Chương trình y tế
-          </Link>
-          {schedule?.campaignId && (
-            <Link
-              underline="hover"
-              color="inherit"
-              component={RouterLink}
-              to={`/vaccination/${schedule.campaignId}`}
-            >
-              {schedule?.campaignName || "Chi tiết chương trình"}
-            </Link>
-          )}
-          <Typography color="text.primary">Danh sách học sinh</Typography>
-        </Breadcrumbs>
-      </Box>
-
-      {/* Header section */}
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          mb: 3,
-        }}
-      >
-        <Box>
-          <Typography
-            variant="h4"
-            component="h1"
-            gutterBottom
-            fontWeight="bold"
-          >
-            Danh sách học sinh -{" "}
-            {schedule?.campaignType === 0
-              ? "Lịch tiêm chủng"
-              : "Lịch khám sức khỏe"}
-          </Typography>
-          <Typography variant="subtitle1" color="text.secondary">
-            Ngày: {formatDate(schedule?.scheduledDate || "")} | Địa điểm:{" "}
-            {schedule?.location || "N/A"}
-          </Typography>
-        </Box>
-        <Button
-          variant="outlined"
-          startIcon={<ArrowBackIcon />}
-          onClick={() => {
-            // Điều hướng về trang chi tiết chương trình nếu có campaignId
-            if (schedule?.campaignId) {
-              navigate(`/vaccination/${schedule.campaignId}`);
-            } else {
-              // Nếu không có campaignId, quay lại trang trước đó
-              navigate(-1);
-            }
-          }}
-        >
-          Quay lại
-        </Button>
-      </Box>
-
       {/* Add information alert about date restriction */}
       <Alert severity="info" sx={{ mb: 3 }}>
         <Typography>
