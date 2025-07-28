@@ -653,9 +653,7 @@ const MedicalSupplierPage = () => {
                     <TableCell sx={{ fontWeight: "bold" }}>
                       Nhà cung cấp
                     </TableCell>
-                    <TableCell sx={{ fontWeight: "bold" }}>
-                      Cập nhật cuối
-                    </TableCell>
+                    
                     <TableCell sx={{ fontWeight: "bold" }}>Thao tác</TableCell>
                   </TableRow>
                 </TableHead>
@@ -779,13 +777,7 @@ const MedicalSupplierPage = () => {
                             {item.supplier}
                           </Typography>
                         </TableCell>
-                        <TableCell>
-                          <Typography variant="body2" color="text.secondary">
-                            {new Date(item.updatedAt).toLocaleDateString(
-                              "vi-VN"
-                            )}
-                          </Typography>
-                        </TableCell>
+                        
                         <TableCell>
                           <IconButton
                             onClick={() => handleOpenDialog(item)}

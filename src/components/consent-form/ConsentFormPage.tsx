@@ -281,16 +281,7 @@ const ConsentFormPage: React.FC<ConsentFormPageProps> = ({
       <Fade in timeout={800}>
         <Box sx={{ mb: 4 }}>
           <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
-            <Avatar
-              sx={{
-                bgcolor: "primary.main",
-                width: 56,
-                height: 56,
-                boxShadow: 3,
-              }}
-            >
-              <Assignment sx={{ fontSize: 28 }} />
-            </Avatar>
+            
             <Box>
               <Typography
                 variant="h3"

@@ -447,7 +447,7 @@ const StudentManagementPage: React.FC = () => {
           }}
         >
           <Box sx={{ display: "flex", alignItems: "center" }}>
-            <SchoolIcon sx={{ fontSize: 40, color: "#2980b9", mr: 2 }} />
+            
             <PageHeader 
               title="Quản lý học sinh" 
               subtitle="Quản lý thông tin học sinh trong hệ thống"
