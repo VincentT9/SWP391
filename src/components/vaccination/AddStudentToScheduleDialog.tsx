@@ -79,23 +79,40 @@ const AddStudentToScheduleDialog: React.FC<AddStudentToScheduleDialogProps> = ({
             className: student.class,
             dateOfBirth: student.dateOfBirth,
             gender: student.gender,
+            parentId: student.parentId,
           }))
         : [];
 
+      console.log("All students:", allStudents);
+
+      // Filter students to only include those with a parentId
+      const studentsWithParent = allStudents.filter(
+        (student) => student.parentId
+      );
+
+      console.log("Students with parent accounts:", studentsWithParent);
+
       // Filter out students that are already in the schedule
-      const availableStudents = allStudents.filter(
+      const availableStudents = studentsWithParent.filter(
         (student) => !existingStudentIds.includes(student.id)
       );
 
       setStudents(availableStudents);
 
-      // Show message if all students have already been added
-      if (allStudents.length > 0 && availableStudents.length === 0) {
+      // Show appropriate messages based on filtering results
+      if (allStudents.length > 0 && studentsWithParent.length === 0) {
+        setError(
+          "Không có học sinh nào được liên kết với tài khoản phụ huynh."
+        );
+      } else if (
+        studentsWithParent.length > 0 &&
+        availableStudents.length === 0
+      ) {
         setError("Tất cả học sinh đã được thêm vào lịch này.");
       }
     } catch (err) {
       console.error("Error fetching students:", err);
-      // setError("Không thể tải danh sách học sinh. Vui lòng thử lại sau.");
+      setError("Không thể tải danh sách học sinh. Vui lòng thử lại sau.");
       setStudents([]);
     } finally {
       setLoading(false);
@@ -195,6 +212,9 @@ const AddStudentToScheduleDialog: React.FC<AddStudentToScheduleDialogProps> = ({
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle>
         <Typography variant="h6">Thêm học sinh vào lịch</Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+          Chỉ hiển thị những học sinh đã được liên kết với tài khoản phụ huynh
+        </Typography>
       </DialogTitle>
       <DialogContent dividers>
         <Box sx={{ mb: 2 }}>
@@ -277,7 +297,9 @@ const AddStudentToScheduleDialog: React.FC<AddStudentToScheduleDialogProps> = ({
                       <Typography variant="body1" sx={{ py: 2 }}>
                         {searchQuery
                           ? "Không tìm thấy học sinh phù hợp"
-                          : "Không có học sinh khả dụng"}
+                          : loading
+                          ? "Đang tải..."
+                          : "Không có học sinh nào khả dụng. Chỉ những học sinh đã được liên kết với tài khoản phụ huynh mới được hiển thị."}
                       </Typography>
                     </TableCell>
                   </TableRow>
