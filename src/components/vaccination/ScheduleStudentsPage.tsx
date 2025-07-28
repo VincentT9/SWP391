@@ -626,11 +626,28 @@ const ScheduleStudentsPage = () => {
 
   // Consent form functions
   const handleCreateConsentForms = () => {
-    // Check if consentFormExists
-    if (consentFormExists) {
-      // Nếu đã tồn tại, hiển thị thông báo và hỏi xác nhận
+    // Check if any student in the list already has a consent form
+    const studentsWithConsent = students.filter(
+      (student) => student.hasConsentForm
+    );
+    const studentsWithoutConsent = students.filter(
+      (student) => !student.hasConsentForm
+    );
+
+    if (studentsWithoutConsent.length === 0) {
       toast.info(
-        "Phiếu đồng ý đã được tạo cho chiến dịch này. Bạn có muốn tạo lại không?",
+        "Tất cả học sinh trong danh sách này đã có phiếu đồng ý cho chiến dịch này!",
+        {
+          autoClose: 5000,
+          closeButton: true,
+        }
+      );
+      return;
+    }
+
+    if (studentsWithConsent.length > 0) {
+      toast.info(
+        `${studentsWithConsent.length}/${students.length} học sinh đã có phiếu đồng ý. Hệ thống sẽ chỉ tạo phiếu cho ${studentsWithoutConsent.length} học sinh còn lại.`,
         {
           autoClose: 5000,
           closeButton: true,
@@ -657,23 +674,32 @@ const ScheduleStudentsPage = () => {
     try {
       setIsCreatingConsentForms(true);
       console.log("Creating consent forms for campaign:", schedule.campaignId);
+
+      // Filter students who don't already have consent forms in this campaign
+      const studentsWithoutConsent = students.filter(
+        (student) => student.studentId && !student.hasConsentForm
+      );
+
+      if (studentsWithoutConsent.length === 0) {
+        toast.info("Tất cả học sinh trong danh sách này đã có phiếu đồng ý!");
+        setConfirmConsentDialogOpen(false);
+        setIsCreatingConsentForms(false);
+        return;
+      }
+
       console.log(
         "Students for consent forms:",
-        students
-          .filter((student) => student.studentId)
-          .map((s) => ({
-            id: s.id,
-            studentId: s.studentId,
-            name: s.studentName,
-          }))
+        studentsWithoutConsent.map((s) => ({
+          id: s.id,
+          studentId: s.studentId,
+          name: s.studentName,
+        }))
       );
 
       const payload = {
         campaignId: schedule.campaignId,
         scheduleId: scheduleId,
-        studentIds: students
-          .filter((student) => student.studentId)
-          .map((student) => student.studentId),
+        studentIds: studentsWithoutConsent.map((student) => student.studentId),
       };
 
       console.log("Consent form creation payload:", payload);
@@ -684,7 +710,18 @@ const ScheduleStudentsPage = () => {
       );
 
       if (response.status === 200 || response.status === 201) {
-        toast.success("Tạo phiếu đồng ý thành công!");
+        if (studentsWithoutConsent.length < students.length) {
+          toast.success(
+            `Tạo phiếu đồng ý thành công cho ${studentsWithoutConsent.length}/${
+              students.length
+            } học sinh! (${
+              students.length - studentsWithoutConsent.length
+            } học sinh đã có phiếu đồng ý trước đó)`
+          );
+        } else {
+          toast.success("Tạo phiếu đồng ý thành công!");
+        }
+
         setConsentFormExists(true);
         setConfirmConsentDialogOpen(false);
 
@@ -702,7 +739,8 @@ const ScheduleStudentsPage = () => {
       console.error("Error creating consent forms:", error);
       toast.error(
         `Không thể tạo phiếu đồng ý: ${
-          error.response?.data?.message || "Lỗi không xác định"
+          error.response?.data?.message ||
+          "Học sinh chưa liên kết với tài khoản phụ huynh"
         }`
       );
     } finally {
@@ -1398,13 +1436,44 @@ const ScheduleStudentsPage = () => {
         <DialogContent>
           <Box sx={{ mb: 2 }}>
             <Typography variant="body1">
-              Bạn có chắc chắn muốn tạo phiếu đồng ý cho{" "}
-              <strong>{students.length} học sinh</strong> trong danh sách này
-              không?
+              {(() => {
+                const studentsWithoutConsent = students.filter(
+                  (student) => !student.hasConsentForm
+                );
+                const studentsWithConsent = students.filter(
+                  (student) => student.hasConsentForm
+                );
+
+                if (studentsWithConsent.length > 0) {
+                  return (
+                    <>
+                      Bạn có chắc chắn muốn tạo phiếu đồng ý cho{" "}
+                      <strong>{studentsWithoutConsent.length} học sinh</strong>{" "}
+                      chưa có phiếu đồng ý?
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ mt: 1 }}
+                      >
+                        ({studentsWithConsent.length} học sinh đã có phiếu đồng
+                        ý trong chiến dịch này và sẽ được bỏ qua)
+                      </Typography>
+                    </>
+                  );
+                } else {
+                  return (
+                    <>
+                      Bạn có chắc chắn muốn tạo phiếu đồng ý cho{" "}
+                      <strong>{students.length} học sinh</strong> trong danh
+                      sách này không?
+                    </>
+                  );
+                }
+              })()}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
               Hệ thống sẽ tự động tạo phiếu đồng ý với trạng thái "Chưa đồng ý"
-              cho tất cả học sinh.
+              cho các học sinh chưa có phiếu.
               {schedule?.campaignType === 0
                 ? " Phụ huynh sẽ nhận được thông báo và cần xem xét phiếu đồng ý cho con em tham gia tiêm chủng."
                 : " Phụ huynh sẽ nhận được thông báo và cần xem xét phiếu đồng ý cho con em tham gia khám sức khỏe."}
