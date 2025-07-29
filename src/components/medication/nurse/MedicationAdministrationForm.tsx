@@ -162,11 +162,9 @@ const MedicationAdministrationForm: React.FC<
 
   // Check medication status on component mount and when medicationRequest changes
   useEffect(() => {
-    // Only check if ID exists and component is mounted
     let isMounted = true;
 
     if (medicationRequest.id) {
-      // Increase timeout to prevent frequent checking
       const timeoutId = setTimeout(() => {
         if (isMounted) {
           checkAndUpdateMedicationStatus(medicationRequest.id);
@@ -182,7 +180,7 @@ const MedicationAdministrationForm: React.FC<
     return () => {
       isMounted = false;
     };
-  }, [medicationRequest.id]);
+  }, []);
 
   const handleGiveMedicationClick = () => {
     setGivenDialogOpen(true);
@@ -222,7 +220,7 @@ const MedicationAdministrationForm: React.FC<
       await checkAndUpdateMedicationStatus(medicationRequest.id);
 
       // Show success message here instead of relying on parent notification
-      toast.success("Đã ghi nhận thông tin dùng thuốc");
+      // toast.success("Đã ghi nhận thông tin dùng thuốc");
 
       // Reset form and close dialog
       setDescription("");
@@ -437,7 +435,7 @@ const MedicationAdministrationForm: React.FC<
                       bgcolor: "success.50",
                     }}
                   >
-                    Hôm nay đã uống thuốc
+                    Đã hết lần uống thuốc hôm nay.
                   </Typography>
                   <Typography
                     variant="caption"

@@ -51,7 +51,7 @@ interface CompletedExpiredRequestsListProps {
 
 const getStatusLabel = (status: number, isExpired: boolean) => {
   if (isExpired) {
-    return <Chip label="Quá hạn" color="error" />;
+    return <Chip label="Trong quá trình" color="primary" />;
   }
 
   switch (status) {
@@ -144,7 +144,7 @@ const CompletedExpiredRequestsList: React.FC<
       return (
         <Typography variant="body1" color="textSecondary" sx={{ p: 2 }}>
           {showExpired
-            ? "Không có yêu cầu thuốc nào quá hạn."
+            ? "Không có yêu cầu thuốc nào trong quá trình."
             : "Không có yêu cầu thuốc nào trong danh sách này."}
         </Typography>
       );
@@ -260,7 +260,7 @@ const CompletedExpiredRequestsList: React.FC<
   return (
     <Box>
       <Typography variant="h6" gutterBottom>
-        Yêu cầu thuốc đã hoàn thành và quá hạn
+        Yêu cầu thuốc đã xử lý
       </Typography>
 
       {/* Summary Cards */}
@@ -279,9 +279,9 @@ const CompletedExpiredRequestsList: React.FC<
         <Card sx={{ minWidth: 200 }}>
           <CardContent>
             <Typography color="textSecondary" gutterBottom>
-              Quá hạn
+              Trong quá trình
             </Typography>
-            <Typography variant="h4" color="error.main">
+            <Typography variant="h4" color="primary">
               {expiredRequests.length}
             </Typography>
           </CardContent>
@@ -306,7 +306,7 @@ const CompletedExpiredRequestsList: React.FC<
           aria-label="completed expired tabs"
         >
           <Tab label={`Đã hoàn thành (${completedRequests.length})`} />
-          <Tab label={`Quá hạn (${expiredRequests.length})`} />
+          <Tab label={`Trong quá trình (${expiredRequests.length})`} />
           <Tab label={`Đã hủy (${cancelledRequests.length})`} />
         </Tabs>
       </Box>

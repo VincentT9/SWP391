@@ -269,7 +269,7 @@ const NurseMedicationDashboard: React.FC<NurseMedicationDashboardProps> = ({
             <Tab label="Thuốc cần cho uống" />
             <Tab label="Yêu cầu đã xác nhận" />
             <Tab label="Yêu cầu chờ xử lý" />
-            <Tab label="Yêu cầu hoàn thành & quá hạn" />
+            <Tab label="Kiểm tra yêu cầu" />
           </Tabs>
         </Box>
 
